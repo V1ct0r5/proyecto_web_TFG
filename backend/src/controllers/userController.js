@@ -51,3 +51,17 @@ exports.actualizarUsuario = async (req, res) => {
     }
 }
 
+// Controlador para eliminar un usuario
+exports.eliminarUsuario = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const usuarioEliminado = await userService.eliminarUsuario(id);
+        if (!usuarioEliminado) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar el usuario' });
+    }
+}
+
