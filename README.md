@@ -19,7 +19,7 @@ El objetivo de este TFG es diseñar y desarrollar una aplicación web que permit
     - **Visualización del progreso:** El sistema ofrecerá un **panel de control (dashboard)** que muestre el progreso de cada objetivo mediante gráficos (como barras, líneas, etc.) y tablas, facilitando la visualización clara y comprensible del avance.
     - **Análisis básico de progreso:** El sistema calculará y visualizará la tasa de progreso promedio por objetivo, permitiendo a los usuarios evaluar su avance de forma cuantitativa. Se generarán gráficos lineales que mostrarán las tendencias de progreso a lo largo del tiempo, facilitando la identificación de patrones y la evaluación del rendimiento. Además, se incluirán informes básicos que resuman el progreso general del usuario, proporcionando una visión global de su desempeño.
 3. **Aspectos técnicos:**
-    - **Arquitectura ?**
+    - **Arquitectura cliente-ervidor MVC**
     - **API RESTful:** Se implementará una **API RESTful** para permitir la transferencia de datos entre el cliente y el servidor de manera eficiente y escalable.
     - **Cumplimiento de accesibilidad:** Se asegurará que la aplicación cumpla con los **estándares de accesibilidad WCAG 2.1** (Nivel AA), garantizando que sea accesible para personas con discapacidades.
     - **Control de versiones:** El proyecto se gestionará utilizando **Git** para un control adecuado de versiones del código fuente.
