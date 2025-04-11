@@ -7,9 +7,10 @@ exports.obtenerUsuarios = async () => {
         const usuarios = await User.findAll();
         return usuarios;
     } catch (error) {
-        throw error;
+        console.error('Error al obtener usuarios:', error); // Registra el error en la consola
+        throw new Error('Error al obtener los usuarios: ' + error.message); // Lanza un error con mensaje descriptivo
     }
-}
+};
 
 // Funcion para obtener un usuario por su id
 exports.obtenerUsuarioPorId = async (id) => {

@@ -7,9 +7,10 @@ exports.obtenerUsuarios = async (req, res) => {
         const usuarios = await userService.obtenerUsuarios();
         res.status(200).json(usuarios);
     } catch (error) {
-        res.status(500).json({ error: 'Error al obtener los usuarios' });
+        console.error('Error al obtener usuarios:', error); // Registra el error en la consola
+        res.status(500).json({ error: 'Error al obtener los usuarios', message: error.message }); // Envía un mensaje de error detallado
     }
-}
+};
 
 // Controlador para crear un nuevo usuario
 exports.crearUsuario = async (req, res) => {
