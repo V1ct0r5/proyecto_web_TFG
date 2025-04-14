@@ -1,7 +1,3 @@
-Claro, aquí tienes un archivo .gitignore que puedes utilizar como punto de partida para tu proyecto. Este archivo está diseñado para proyectos Node.js con React, y cubre los casos de uso más comunes.
-
-Archivo .gitignore:
-
 # Dependencias
 node_modules/
 
