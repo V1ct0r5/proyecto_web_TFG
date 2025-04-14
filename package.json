@@ -16,9 +16,11 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "express": "^5.1.0",
+    "formik": "^2.4.6",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.0",
     "passport": "^0.7.0",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "yup": "^1.6.1"
   }
 }
