@@ -1,8 +1,15 @@
 const { Sequelize } = require('sequelize');
-
-const sequelize = new Sequelize('objetivos_personales', 'root', 'V194d2012@', {
-  host: 'localhost', // o la dirección del servidor de tu base de datos
-  dialect: 'mysql',
-});
+// Cambiar a variables de entorno
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASSWORD,
+    {
+        host: process.env.DB_HOST,
+        dialect: process.env.DB_DIALECT,
+    }
+);
 
 module.exports = sequelize;
+
+

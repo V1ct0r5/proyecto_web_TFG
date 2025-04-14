@@ -10,6 +10,9 @@ const Objetivo = sequelize.define("Objetivo", {
   nombre: {
     type: DataTypes.STRING(255),
     allowNull: false,
+    notEmpty: {
+      msg: "El nombre no puede estar vacío"
+    }
   },
   descripcion: {
     type: DataTypes.TEXT,
@@ -29,6 +32,10 @@ const Objetivo = sequelize.define("Objetivo", {
   },
   fecha_fin: {
     type: DataTypes.DATEONLY,
+    isAfter: {
+      args: sequelize.literal('fecha_inicio'),
+      msg: "La fecha de fin debe ser posterior a la fecha de inicio"
+    }
   }
 });
 
