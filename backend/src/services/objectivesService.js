@@ -1,4 +1,4 @@
-const Objetivo = require('../models/objetivo');
+const Objetivo = require('../models/objectives');
 
 exports.obtenerObjetivos = async () => {
     try {

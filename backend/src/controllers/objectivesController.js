@@ -1,8 +1,8 @@
-const objetivesService = require('../services/objetivesService');
+const objectivesService = require('../services/objectivesService');
 
 exports.obtenerObjetivos = async (req, res) => {
     try {
-        const objetivos = await objetivesService.obtenerObjetivos();
+        const objetivos = await objectivesService.obtenerObjetivos();
         res.json(objetivos);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -11,7 +11,7 @@ exports.obtenerObjetivos = async (req, res) => {
 
 exports.crearObjetivo = async (req, res) => {
     try {
-        const objetivo = await objetivosService.crearObjetivo(req.body);
+        const objetivo = await objectivesService.crearObjetivo(req.body);
         res.status(201).json(objetivo);
     } catch (error) {
         if (error.name === 'SequelizeValidationError') {
@@ -25,7 +25,7 @@ exports.crearObjetivo = async (req, res) => {
 
 exports.obtenerObjetivoPorId = async (req, res) => {
     try {
-        const objetivo = await objetivosService.obtenerObjetivoPorId(req.params.id);
+        const objetivo = await objectivesService.obtenerObjetivoPorId(req.params.id);
         if (objetivo) {
             res.json(objetivo);
         } else {
@@ -39,7 +39,7 @@ exports.obtenerObjetivoPorId = async (req, res) => {
 
 exports.actualizarObjetivo = async (req, res) => {
     try {
-        const objetivo = await objetivosService.actualizarObjetivo(req.params.id, req.body);
+        const objetivo = await objectivesService.actualizarObjetivo(req.params.id, req.body);
         res.json(objetivo);
     } catch (error) {
         if (error.name === 'SequelizeValidationError') {
@@ -52,7 +52,7 @@ exports.actualizarObjetivo = async (req, res) => {
 
 exports.eliminarObjetivo = async (req, res) => {
     try {
-        await objetivosService.eliminarObjetivo(req.params.id);
+        await objectivesService.eliminarObjetivo(req.params.id);
         res.sendStatus(204);
     } catch (error) {
         console.error('Error al eliminar el objetivo:', error); // Registra el error en la consola
