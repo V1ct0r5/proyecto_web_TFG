@@ -7,8 +7,7 @@ exports.obtenerUsuarios = async (req, res) => {
         const usuarios = await userService.obtenerUsuarios();
         res.status(200).json(usuarios);
     } catch (error) {
-        console.error('Error al obtener usuarios:', error); // Registra el error en la consola
-        res.status(500).json({ error: 'Error al obtener los usuarios', message: error.message }); // Envía un mensaje de error detallado
+        res.status(500).json({ error: 'Error al obtener los usuarios', message: error.message });
     }
 };
 
@@ -17,9 +16,11 @@ exports.crearUsuario = async (req, res) => {
     const usuarioData = req.body;
     try {
         const nuevoUsuario = await userService.crearUsuario(usuarioData);
-        res.status(201).json(nuevoUsuario);
+        // Eliminar la contraseña del objeto de respuesta
+        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON();
+        res.status(201).json(usuarioSinContrasena);     
     } catch (error) {
-        res.status(500).json({ error: 'Error al crear el usuario' });
+        res.status(500).json({ error: error.message || 'Error al crear el usuario' });
     }
 }
 

@@ -1,5 +1,5 @@
 const User = require('../models/user');
-const bycrypt = require('bcrypt');
+const bcrypt = require('bcrypt');
 
 // Funcion para obtener todos los usuarios
 exports.obtenerUsuarios = async () => {
@@ -26,9 +26,9 @@ exports.obtenerUsuarioPorId = async (id) => {
 exports.crearUsuario = async (usuarioData) => {
     try {
         // Encriptar la contraseña
-        const salt = await bycrypt.genSalt(10);
-        const hashedPassword = await bycrypt.hash(usuarioData.password, salt);
-        usuarioData.password = hashedPassword;
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(usuarioData.contrasena, salt);
+        usuarioData.contrasena = hashedPassword;
 
         const nuevoUsuario = await User.create(usuarioData);
         return nuevoUsuario;
@@ -41,10 +41,10 @@ exports.crearUsuario = async (usuarioData) => {
 exports.actualizarUsuario = async (id, usuarioData) => {
     try {
         // Encriptar la contraseña si se proporciona
-        if (usuarioData.password) {
-            const salt = await bycrypt.genSalt(10);
-            const hashedPassword = await bycrypt.hash(usuarioData.password, salt);
-            usuarioData.password = hashedPassword;
+        if (usuarioData.contrasena) {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(usuarioData.contrasena, salt);
+            usuarioData.contrasena = hashedPassword;
         }
 
         const usuario = await User.findByPk(id);
