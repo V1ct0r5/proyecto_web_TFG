@@ -24,6 +24,15 @@ exports.obtenerUsuarioPorId = async (id) => {
 
 // Funcion para crear un nuevo usuario
 exports.crearUsuario = async (usuarioData) => {
+
+    const { nombre_usuario, correo_electronico, contrasena } = usuarioData;
+
+
+    const existente = await User.findOne({ where: { correo_electronico } });
+    if (existente) {
+        throw new Error('El correo electrónico ya está en uso');
+    }
+
     try {
         // Encriptar la contraseña
         const salt = await bcrypt.genSalt(10);
@@ -53,7 +62,7 @@ exports.actualizarUsuario = async (id, usuarioData) => {
         }
         await usuario.update(usuarioData);
         // Devolver el usuario actualizado
-        return usuario;
+        return await User.findByPk(id);
     } catch (error) {
         throw error;
     }

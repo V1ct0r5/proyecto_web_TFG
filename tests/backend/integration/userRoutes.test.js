@@ -102,4 +102,9 @@ describe('User Routes', () => {
         const response = await request(app).get('/api/usuarios/9999');
         expect(response.status).toBe(404);
     });
+
+    afterAll(async () => {
+        // Cierra la conexión a la base de datos después de todas las pruebas.
+        await sequelize.close();
+    });
 });

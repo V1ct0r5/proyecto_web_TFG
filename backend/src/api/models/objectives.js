@@ -18,7 +18,7 @@ const Objetivo = sequelize.define("Objetivo", {
     type: DataTypes.TEXT,
   },
   tipo_objetivo: {
-    type: DataTypes.STRING(100), // Ej: "Salud", "Productividad", etc.
+    type: DataTypes.ENUM('Salud', 'Finanzas', 'Desarrollo personal', 'Relaciones', 'Carrera profesional', 'Otros'),
     allowNull: false,
   },
   valor_cuantitativo: {
@@ -36,7 +36,11 @@ const Objetivo = sequelize.define("Objetivo", {
       args: sequelize.literal('fecha_inicio'),
       msg: "La fecha de fin debe ser posterior a la fecha de inicio"
     }
-  }
+  },
+  estado: {
+    type: DataTypes.ENUM('Pendiente', 'En progreso', 'Completado'),
+    defaultValue: 'Pendiente',
+  },
 });
 
 module.exports = Objetivo;
