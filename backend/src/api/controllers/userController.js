@@ -1,5 +1,6 @@
 const e = require('express');
 const userService = require('../services/userService');
+const { validationResult } = require('express-validator');
 
 // Controlador para obtener todos los usuarios
 exports.obtenerUsuarios = async (req, res) => {
@@ -67,3 +68,44 @@ exports.eliminarUsuario = async (req, res) => {
     }
 }
 
+// Controlador para registrar un nuevo usuario
+exports.registrarUsuario = async (req, res) => {
+    const usuarioData = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const nuevoUsuario = await userService.crearUsuario(usuarioData);
+        const token = await nuevoUsuario.generarToken(); // Generar token para el nuevo usuario
+        // Eliminar la contraseña del objeto de respuesta
+        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON();
+        res.status(201).json(usuarioSinContrasena);
+    } catch (error) {
+        if(error.message === 'El correo electrónico ya está en uso') {
+            return res.status(409).json({ error: error.message });
+        }
+        console.error('Error al registrar el usuario:', error);
+        res.status(500).json({ message: 'Error al registrar el usuario' });
+    }
+}
+
+// Controlador para iniciar sesión
+exports.iniciarSesionUsuario = async (req, res) => {
+    const { correo_electronico, contrasena } = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+        const token = await userService.loginUsuario(correo_electronico, contrasena);
+        if (token) {
+            res.status(200).json({ token });
+        } else {
+            // Esto no debería alcanzarse si loginUsuario lanza un error
+            res.status(401).json({ message: 'Credenciales inválidas' });
+        }
+    } catch (error) {
+        res.status(401).json({ message: error.message || 'Credenciales inválidas' });
+    }
+};

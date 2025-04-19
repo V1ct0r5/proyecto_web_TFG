@@ -1,5 +1,7 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 // Funcion para obtener todos los usuarios
 exports.obtenerUsuarios = async () => {
@@ -68,6 +70,38 @@ exports.actualizarUsuario = async (id, usuarioData) => {
     }
 }
 
+// Funcion para la generación del token
+exports.generarAutenticacionToken = (usuario) => {
+    const payload = {
+        id: usuario.id,
+        nombre_usuario: usuario.nombre_usuario,
+        correo_electronico: usuario.correo_electronico
+    };
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+}
+
+// Función para autenticar un usuario
+exports.loginUsuario = async (correo_electronico, contrasena) => {
+    try {
+        const usuario = await User.findOne({ where: { correo_electronico } });
+        if (!usuario) {
+            throw new Error('Correo electrónico o contraseña incorrectos');
+        }
+
+        // Verificar la contraseña
+        const contrasenaValida = await bcrypt.compare(contrasena, usuario.contrasena);
+        if (!contrasenaValida) {
+            throw new Error('Correo electrónico o contraseña incorrectos');
+        }
+
+        // Autenticacion exitosa, Generar token
+        const token = exports.generarAutenticacionToken(usuario);
+        return { usuario, token };
+    } catch (error) {
+        throw error;
+    }
+};
+
 // Funcion para eliminar un usuario
 exports.eliminarUsuario = async (id) => {
     try {
@@ -81,3 +115,4 @@ exports.eliminarUsuario = async (id) => {
         throw error;
     }
 }
+

@@ -75,7 +75,26 @@ const validarActualizarUsuario = [
     }
 ];
 
+const validarLoginUsuario = [
+    body('correo_electronico')
+        .notEmpty()
+        .withMessage('El correo electrónico es obligatorio')
+        .isEmail()
+        .withMessage('El formato del correo electrónico es inválido'),
+    body('contrasena')
+        .notEmpty()
+        .withMessage('La contraseña es obligatoria'),
+    
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        next();
+    }];
+
 module.exports = {
     validarCrearUsuario,
-    validarActualizarUsuario
+    validarActualizarUsuario,
+    validarLoginUsuario,
 };
