@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../../config/database');
+const jwt = require('jsonwebtoken');
 
 const Usuario = sequelize.define("Usuario", {
   id: {
