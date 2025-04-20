@@ -1,4 +1,4 @@
-const User = require('../models/user');
+const Usuario = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -6,7 +6,7 @@ require('dotenv').config();
 // Funcion para obtener todos los usuarios
 exports.obtenerUsuarios = async () => {
     try {
-        const usuarios = await User.findAll();
+        const usuarios = await Usuario.findAll();
         return usuarios;
     } catch (error) {
         console.error('Error al obtener usuarios:', error); // Registra el error en la consola
@@ -17,7 +17,7 @@ exports.obtenerUsuarios = async () => {
 // Funcion para obtener un usuario por su id
 exports.obtenerUsuarioPorId = async (id) => {
     try {
-        const usuario = await User.findByPk(id);
+        const usuario = await Usuario.findByPk(id);
         return usuario;
     } catch (error) {
         throw error;
@@ -29,8 +29,11 @@ exports.crearUsuario = async (usuarioData) => {
 
     const { nombre_usuario, correo_electronico, contrasena } = usuarioData;
 
-
-    const existente = await User.findOne({ where: { correo_electronico } });
+    // Verificar si los campos obligatorios están presentes
+  if (!nombre_usuario || !correo_electronico || !contrasena) {
+    throw new Error('Datos incompletos');
+  }
+    const existente = await Usuario.findOne({ where: { correo_electronico } });
     if (existente) {
         throw new Error('El correo electrónico ya está en uso');
     }
@@ -41,7 +44,7 @@ exports.crearUsuario = async (usuarioData) => {
         const hashedPassword = await bcrypt.hash(usuarioData.contrasena, salt);
         usuarioData.contrasena = hashedPassword;
 
-        const nuevoUsuario = await User.create(usuarioData);
+        const nuevoUsuario = await Usuario.create(usuarioData);
         return nuevoUsuario;
     } catch (error) {
         throw error;
@@ -58,13 +61,13 @@ exports.actualizarUsuario = async (id, usuarioData) => {
             usuarioData.contrasena = hashedPassword;
         }
 
-        const usuario = await User.findByPk(id);
+        const usuario = await Usuario.findByPk(id);
         if (!usuario) {
-            throw new Error('Usuario no encontrado');
+            return null; // Devolver null si no se encuentra el usuario
         }
         await usuario.update(usuarioData);
         // Devolver el usuario actualizado
-        return await User.findByPk(id);
+        return await Usuario.findByPk(id);
     } catch (error) {
         throw error;
     }
@@ -83,7 +86,7 @@ exports.generarAutenticacionToken = (usuario) => {
 // Función para autenticar un usuario
 exports.loginUsuario = async (correo_electronico, contrasena) => {
     try {
-        const usuario = await User.findOne({ where: { correo_electronico } });
+        const usuario = await Usuario.findOne({ where: { correo_electronico } });
         if (!usuario) {
             throw new Error('Correo electrónico o contraseña incorrectos');
         }
@@ -105,7 +108,7 @@ exports.loginUsuario = async (correo_electronico, contrasena) => {
 // Funcion para eliminar un usuario
 exports.eliminarUsuario = async (id) => {
     try {
-        const usuario = await User.findByPk(id);
+        const usuario = await Usuario.findByPk(id);
         if (!usuario) {
             throw new Error('Usuario no encontrado');
         }
