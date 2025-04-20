@@ -2,7 +2,8 @@ const objectivesService = require('../services/objectivesService');
 
 exports.obtenerObjetivos = async (req, res) => {
     try {
-        const objetivos = await objectivesService.obtenerObjetivos();
+        const userId = req.user; // Obteniendo el ID del usuario desde el token
+        const objetivos = await objectivesService.obtenerObjetivos(userId);
         res.json(objetivos);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -11,7 +12,9 @@ exports.obtenerObjetivos = async (req, res) => {
 
 exports.crearObjetivo = async (req, res) => {
     try {
-        const objetivo = await objectivesService.crearObjetivo(req.body);
+        const userId = req.user;
+        const objetivoData = { ...req.body, id_usuario: userId }
+        const objetivo = await objectivesService.crearObjetivo(objetivoData);
         res.status(201).json(objetivo);
     } catch (error) {
         if (error.name === 'SequelizeValidationError') {
@@ -25,7 +28,8 @@ exports.crearObjetivo = async (req, res) => {
 
 exports.obtenerObjetivoPorId = async (req, res) => {
     try {
-        const objetivo = await objectivesService.obtenerObjetivoPorId(req.params.id);
+        const userId = req.user;
+        const objetivo = await objectivesService.obtenerObjetivoPorId(req.params.id, userId);
         if (objetivo) {
             res.json(objetivo);
         } else {
@@ -39,7 +43,8 @@ exports.obtenerObjetivoPorId = async (req, res) => {
 
 exports.actualizarObjetivo = async (req, res) => {
     try {
-        const objetivo = await objectivesService.actualizarObjetivo(req.params.id, req.body);
+        const userId = req.user;
+        const objetivo = await objectivesService.actualizarObjetivo(req.params.id, req.body, userId);
         res.json(objetivo);
     } catch (error) {
         if (error.name === 'SequelizeValidationError') {
@@ -52,8 +57,13 @@ exports.actualizarObjetivo = async (req, res) => {
 
 exports.eliminarObjetivo = async (req, res) => {
     try {
-        await objectivesService.eliminarObjetivo(req.params.id);
-        res.sendStatus(204);
+        const userId = req.user;
+        const deleted = await objectivesService.eliminarObjetivo(req.params.id, userId);
+        if (deleted) {
+      res.sendStatus(204);
+    } else {
+      res.status(404).json({ message: 'Objetivo no encontrado o no pertenece al usuario' });
+    }
     } catch (error) {
         console.error('Error al eliminar el objetivo:', error); // Registra el error en la consola
         res.status(500).json({ message: error.message });

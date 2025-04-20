@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../config/database');
+const Usuario = require('./user');
 
 const Objetivo = sequelize.define("Objetivo", {
   id_objetivo: {
@@ -41,6 +42,16 @@ const Objetivo = sequelize.define("Objetivo", {
     type: DataTypes.ENUM('Pendiente', 'En progreso', 'Completado'),
     defaultValue: 'Pendiente',
   },
+  id_usuario: { // Nueva columna para la clave foránea
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: Usuario, // Referencia al modelo Usuario
+      key: 'id'       // La clave primaria en el modelo Usuario
+    }
+  }
 });
+
+Objetivo.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
 module.exports = Objetivo;

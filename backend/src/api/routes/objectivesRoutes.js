@@ -11,11 +11,11 @@ const authMiddleware = require('../../middlewares/authMiddleware');
 router.use(authMiddleware);
 
 // Rutas para objetivos
-router.get('/', objectivesController.obtenerObjetivos);
-router.post('/', validarCrearObjetivo, objectivesController.crearObjetivo);
-router.get('/:id', objectivesController.obtenerObjetivoPorId);
-router.put('/:id', validarActualizarObjetivo, objectivesController.actualizarObjetivo);
-router.delete('/:id', objectivesController.eliminarObjetivo);
+router.get('/objectives', objectivesController.obtenerObjetivos);
+router.post('/objectives', validarCrearObjetivo, objectivesController.crearObjetivo);
+router.get('/objectives/:id', objectivesController.obtenerObjetivoPorId);
+router.put('/objectives/:id', validarActualizarObjetivo, objectivesController.actualizarObjetivo);
+router.delete('/objectives/:id', objectivesController.eliminarObjetivo);
 
 
 module.exports = router;
