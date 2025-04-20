@@ -1,20 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const usuariosController = require('../controllers/userController');
-const { validarCrearUsuario, validarActualizarUsuario, validarLoginUsuario } = require('../middlewares/userValidation');
-// const authMiddleware = require('../middlewares/authMiddleware');
+const { validarCrearUsuario, validarActualizarUsuario, validarLoginUsuario } = require('../../middlewares/userValidation');
+const authMiddleware = require('../../middlewares/authMiddleware');
 
-// Rutas de autenticación
-router.post('/login', validarLoginUsuario, usuariosController.login);
-router.post('/register', validarCrearUsuario, usuariosController.register);
+// Rutas de autenticación (bajo /api/auth)
+router.post('/auth/register', validarCrearUsuario, usuariosController.registrarUsuario);
+router.post('/auth/login', validarLoginUsuario, usuariosController.iniciarSesionUsuario);
 
 
-// Rutas para usuarios
-router.get('/', usuariosController.obtenerUsuarios);
-router.post('/', validarCrearUsuario, usuariosController.crearUsuario);
-router.get('/:id', usuariosController.obtenerUsuarioPorId);
-router.put('/:id', validarActualizarUsuario, usuariosController.actualizarUsuario);
-router.delete('/:id', usuariosController.eliminarUsuario);
+// Rutas para usuarios (protegidas por autenticación)
+router.get('/users', authMiddleware, usuariosController.obtenerUsuarios);
+router.post('/users', authMiddleware, validarCrearUsuario, usuariosController.crearUsuario);
+router.get('/users/:id', authMiddleware, usuariosController.obtenerUsuarioPorId);
+router.put('/users/:id', authMiddleware, validarActualizarUsuario, usuariosController.actualizarUsuario);
+router.delete('/users/:id', authMiddleware, usuariosController.eliminarUsuario);
+
 
 
 module.exports = router;
