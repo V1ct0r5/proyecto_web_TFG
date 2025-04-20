@@ -25,7 +25,7 @@ sequelize.sync()
   });
 
 // Rutas
-app.use('/usuarios', usuariosRoutes);
-app.use('/objetivos', objetivosRoutes);
+app.use('/api', usuariosRoutes);
+app.use('/api', objetivosRoutes);
 
 module.exports = app;

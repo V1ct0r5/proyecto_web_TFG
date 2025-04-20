@@ -77,10 +77,10 @@ exports.registrarUsuario = async (req, res) => {
     }
     try {
         const nuevoUsuario = await userService.crearUsuario(usuarioData);
-        const token = await nuevoUsuario.generarToken(); // Generar token para el nuevo usuario
+        const token = await userService.generarAutenticacionToken(nuevoUsuario); // Generar token para el nuevo usuario
         // Eliminar la contraseña del objeto de respuesta
         const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON();
-        res.status(201).json(usuarioSinContrasena);
+        res.status(201).json({...usuarioSinContrasena, token}); // Incluir el token en la respuesta
     } catch (error) {
         if(error.message === 'El correo electrónico ya está en uso') {
             return res.status(409).json({ error: error.message });
