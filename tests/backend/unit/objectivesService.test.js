@@ -1,8 +1,8 @@
-const objectivesService = require('../../../backend/services/objectivesService');
-const Objetivo = require('../../../backend/models/objetives');
+const objectivesService = require('../../../backend/src/api/services/objectivesService');
+const Objetivo = require('../../../backend/src/api/models/objectives');
 const { expect } = require('chai');
 
-jest.mock('../../../backend/models/objetives');
+jest.mock('../../../backend/src/api/models/objectives');
 
 describe('Objetivos Service', () => {
     beforeEach(() => {

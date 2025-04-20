@@ -1,6 +1,6 @@
 const request = require('supertest');
 const app = require('../../../backend/app');
-const { sequelize } = require('../../../backend/src/models/objetives');
+const { sequelize } = require('../../../backend/src/api/models/objectives');
 
 
 describe('Objectives Routes', () => {
