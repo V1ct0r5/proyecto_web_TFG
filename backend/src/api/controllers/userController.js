@@ -77,7 +77,7 @@ exports.registrarUsuario = async (req, res) => {
     }
     try {
         const nuevoUsuario = await userService.crearUsuario(usuarioData);
-        const token = await userService.generarAutenticacionToken(nuevoUsuario); // Generar token para el nuevo usuario
+        const token = userService.generarAutenticacionToken(nuevoUsuario); // Generar token para el nuevo usuario
         // Eliminar la contraseña del objeto de respuesta
         const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON();
         res.status(201).json({...usuarioSinContrasena, token}); // Incluir el token en la respuesta
@@ -98,11 +98,10 @@ exports.iniciarSesionUsuario = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const token = await userService.loginUsuario(correo_electronico, contrasena);
-        if (token) {
-            res.status(200).json({ token });
+        const resultadoLogin = await userService.loginUsuario(correo_electronico, contrasena);
+        if (resultadoLogin && resultadoLogin.token) { // Verifica que resultadoLogin exista y tenga la propiedad token
+            res.status(200).json({ token: resultadoLogin.token }); // Accede al token desde el objeto
         } else {
-            // Esto no debería alcanzarse si loginUsuario lanza un error
             res.status(401).json({ message: 'Credenciales inválidas' });
         }
     } catch (error) {

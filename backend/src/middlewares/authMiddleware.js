@@ -12,7 +12,7 @@ const authMiddleware = (req, res, next) => {
                 if(err){
                     return res.status(403).json({ message: 'Token inválido' });
                 }
-                req.user = decoded.id; // El payload del token contiene el id del usuario
+                req.user = user.id; // El payload del token contiene el id del usuario
                 next();
             });
         }
