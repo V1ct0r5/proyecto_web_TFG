@@ -18,9 +18,13 @@ exports.obtenerUsuarios = async () => {
 exports.obtenerUsuarioPorId = async (id) => {
     try {
         const usuario = await Usuario.findByPk(id);
+        if(!usuario) {
+            return null; // Devolver null si no se encuentra el usuario
+        }
         return usuario;
     } catch (error) {
-        throw error;
+        console.error('Error al obtener usuario por ID:', error);
+        throw new Error('Error al obtener el usuario por ID: ' + error.message);
     }
 }
 
@@ -41,10 +45,14 @@ exports.crearUsuario = async (usuarioData) => {
     try {
         // Encriptar la contraseña
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(usuarioData.contrasena, salt);
-        usuarioData.contrasena = hashedPassword;
+        const hashedPassword = await bcrypt.hash(contrasena, salt);
+        const nuevoUsuarioData = {
+            nombre_usuario,
+            correo_electronico,
+            contrasena: hashedPassword,
+        };
 
-        const nuevoUsuario = await Usuario.create(usuarioData);
+        const nuevoUsuario = await Usuario.create(nuevoUsuarioData);
         return nuevoUsuario;
     } catch (error) {
         throw error;
@@ -110,7 +118,7 @@ exports.eliminarUsuario = async (id) => {
     try {
         const usuario = await Usuario.findByPk(id);
         if (!usuario) {
-            throw new Error('Usuario no encontrado');
+            return null;
         }
         await usuario.destroy();
         return usuario;
