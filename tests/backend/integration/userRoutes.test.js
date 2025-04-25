@@ -1,12 +1,22 @@
 // tests/backend/integration/userRoutes.test.js
+require('dotenv').config({ path: '../../../.env.test' });
 const request = require('supertest');
 const app = require('../../../backend/app');
-const { sequelize } = require('../../../backend/src/models/user');
+const { sequelize } = require('../../../backend/src/config/database');
+const { sequelize: userSequelize } = require('../../../backend/src/config/database');
+const YAML = require('yamljs');
 
 describe('User Routes', () => {
+
+    beforeAll(async () => {
+        // Sincroniza la base de datos de prueba antes de todas las pruebas.
+        await sequelize.authenticate();
+        await sequelize.sync({ force: true }); // Elimina y recrea las tablas de usuarios
+    });
+
     beforeEach(async () => {
         // Sincroniza la base de datos de prueba antes de cada prueba.
-        await sequelize.sync({ force: true }); // Elimina y recrea las tablas
+        await sequelize.models.Usuario.destroy({ where: {} }); // Limpia la tabla de usuarios
     });
 
     it('GET /api/usuarios - debería devolver una lista de usuarios', async () => {

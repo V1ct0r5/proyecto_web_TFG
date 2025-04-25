@@ -2,6 +2,7 @@
 const userService = require('../../../backend/src/api/services/userService');
 const User = require('../../../backend/src/api/models/user');
 const bcrypt = require('bcrypt');
+const e = require('express');
 
 jest.mock('../../../backend/src/api/models/user');
 jest.mock('bcrypt');
@@ -28,16 +29,16 @@ describe('UserService', () => {
     describe('crearUsuario', () => {
         it('debería crear un nuevo usuario con datos válidos', async () => {
             User.findOne.mockResolvedValue(null);
-            const mockedHashedPassword = 'mockedHashedPassword';
             bcrypt.genSalt.mockResolvedValue(salt);
             bcrypt.hash.mockResolvedValue(hashedPassword);
             User.create.mockResolvedValue(usuarioExistente);
 
             const resultado = await userService.crearUsuario(usuarioDataValido);
+
             expect(User.findOne).toHaveBeenCalledWith({ where: { correo_electronico: usuarioDataValido.correo_electronico } });
             expect(bcrypt.genSalt).toHaveBeenCalledWith(10);
             expect(bcrypt.hash).toHaveBeenCalledWith(usuarioDataValido.contrasena, salt);
-            expect(User.create).toHaveBeenCalledWith({ ...usuarioDataValido, contrasena: mockedHashedPassword });
+            expect(User.create).toHaveBeenCalledWith({ ...usuarioDataValido, contrasena: hashedPassword });
             expect(resultado).toEqual(usuarioExistente);
         });
 
@@ -117,42 +118,55 @@ describe('UserService', () => {
 
     describe('actualizarUsuario', () => {
         it('debería actualizar un usuario existente con datos válidos', async () => {
-            const nuevoNombre = 'Updated User';
-            const usuarioActualizado = { ...usuarioExistente, nombre_usuario: nuevoNombre };
-            const mockUpdateResult = [1]; // Simulate successful update
+            const idUsuario = usuarioExistente.id;
+            const datosActualizados = { nombre_usuario: 'Nuevo Nombre' };
+            const usuarioActualizado = { ...usuarioExistente, ...datosActualizados };
 
-            User.findByPk.mockResolvedValue(usuarioExistente); // Simula solo la búsqueda
-            User.update.mockResolvedValue(mockUpdateResult); // Simula la actualización
-            User.findByPk.mockResolvedValue(usuarioActualizado); // Simula la obtención del usuario actualizado
+            const mockUsuarioInstance = { // Simula una instancia de modelo
+                ...usuarioExistente,
+                update: jest.fn().mockResolvedValue(usuarioActualizado), // Simula el método update
+            };
 
-            const resultado = await userService.actualizarUsuario(usuarioExistente.id, { nombre_usuario: nuevoNombre });
-
-            expect(User.findByPk).toHaveBeenCalledWith(usuarioExistente.id);
-            expect(User.update).toHaveBeenCalledWith({ nombre_usuario: nuevoNombre }, { where: { id: usuarioExistente.id } });
+            User.findByPk.mockResolvedValueOnce(mockUsuarioInstance); 
+            User.findByPk.mockResolvedValueOnce(usuarioActualizado); 
+        
+            const resultado = await userService.actualizarUsuario(idUsuario, datosActualizados);
+        
+            // Verifica las llamadas a los métodos
+            expect(User.findByPk).toHaveBeenNthCalledWith(1, idUsuario); // Primera llamada
+            expect(mockUsuarioInstance.update).toHaveBeenCalledWith(datosActualizados);
+            expect(User.findByPk).toHaveBeenNthCalledWith(2, idUsuario); // Segunda llamada
             expect(resultado).toEqual(usuarioActualizado);
         });
 
         it('debería actualizar la contraseña si se proporciona', async () => {
-            const nuevaContrasena = 'newPassword';
+            const idUsuario = usuarioExistente.id;
+            const nuevaContrasena = 'newPassword1234';
+            const datosActualizados = { contrasena: nuevaContrasena };
             const nuevoHashedPassword = 'newHashedPassword';
+            const salt = 'mockedSalt';
             const usuarioActualizado = { ...usuarioExistente, contrasena: nuevoHashedPassword };
             const mockUpdateResult = [1];
     
-            User.findByPk.mockResolvedValue(usuarioExistente);
+            const mockUsuarioInstance = {
+                ...usuarioExistente,
+                update: jest.fn().mockResolvedValue(usuarioActualizado),
+            };
+            
             bcrypt.genSalt.mockResolvedValue(salt);
             bcrypt.hash.mockResolvedValue(nuevoHashedPassword);
-            User.update.mockResolvedValue(mockUpdateResult);
-            User.findByPk.mockResolvedValue(usuarioActualizado);
+
+
+            User.findByPk.mockResolvedValueOnce(mockUsuarioInstance);
+            User.findByPk.mockResolvedValueOnce(usuarioActualizado);
     
-            const resultado = await userService.actualizarUsuario(usuarioExistente.id, { contrasena: nuevaContrasena });
+            const resultado = await userService.actualizarUsuario(idUsuario, datosActualizados);
     
-            expect(User.findByPk).toHaveBeenCalledWith(usuarioExistente.id);
             expect(bcrypt.genSalt).toHaveBeenCalledWith(10);
             expect(bcrypt.hash).toHaveBeenCalledWith(nuevaContrasena, salt);
-            expect(User.update).toHaveBeenCalledWith(
-                { contrasena: nuevoHashedPassword },
-                { where: { id: usuarioExistente.id } }
-            );
+            expect(User.findByPk).toHaveBeenNthCalledWith(1, idUsuario);
+            expect(mockUsuarioInstance.update).toHaveBeenCalledWith({ contrasena: nuevoHashedPassword });
+            expect(User.findByPk).toHaveBeenNthCalledWith(2, idUsuario);
             expect(resultado).toEqual(usuarioActualizado);
         });
     
@@ -164,38 +178,61 @@ describe('UserService', () => {
         });
     
         it('no debería hashear la contraseña si no se proporciona', async () => {
-            User.findByPk.mockResolvedValue(usuarioExistente);
-            User.update.mockResolvedValue([1]);
-            User.findByPk.mockResolvedValue({ ...usuarioExistente, nombre_usuario: 'Nuevo' });
+            const idUsuario = usuarioExistente.id;
+            const datosActualizados = { nombre_usuario: 'Nuevo Nombre' };
+            User.findByPk.mockResolvedValue({ ...usuarioExistente,  ...datosActualizados });
     
-            await userService.actualizarUsuario(usuarioExistente.id, { nombre_usuario: 'Nuevo' });
-    
+            const mockUsuarioInstance = {
+                ...usuarioExistente,
+                update: jest.fn().mockResolvedValue(undefined),
+            };
+
+            User.findByPk.mockResolvedValueOnce(mockUsuarioInstance);
+            User.findByPk.mockResolvedValueOnce(usuarioExistente);
+
+            await userService.actualizarUsuario(idUsuario, datosActualizados);
+
             expect(bcrypt.genSalt).not.toHaveBeenCalled();
             expect(bcrypt.hash).not.toHaveBeenCalled();
-            expect(User.update).toHaveBeenCalledWith({ nombre_usuario: 'Nuevo' }, { where: { id: usuarioExistente.id } });
+            expect(User.findByPk).toHaveBeenNthCalledWith(1, idUsuario);
+            expect(mockUsuarioInstance.update).toHaveBeenCalledWith(datosActualizados);
+            expect(User.findByPk).toHaveBeenNthCalledWith(2, idUsuario);
         });
     
         it('debería manejar errores al actualizar el usuario', async () => {
-            User.findByPk.mockResolvedValue(usuarioExistente);
-            User.update.mockRejectedValue(new Error('Error al actualizar'));
-    
-            await expect(userService.actualizarUsuario(usuarioExistente.id, { nombre_usuario: 'Updated' })).rejects.toThrow('Error al actualizar');
-            expect(User.update).toHaveBeenCalledWith({ nombre_usuario: 'Updated' }, { where: { id: usuarioExistente.id } });
+            const idUsuario = usuarioExistente.id;
+            const datosActualizados = { nombre_usuario: 'Updated' };
+            const errorActualizacion = new Error('Error al actualizar');
+
+            const mockUsuarioInstance = {
+                ...usuarioExistente,
+                update: jest.fn().mockRejectedValue(errorActualizacion),
+            };
+
+            User.findByPk.mockResolvedValueOnce(mockUsuarioInstance);
+
+            await expect(userService.actualizarUsuario(idUsuario, datosActualizados)).rejects.toThrow(errorActualizacion);
+            expect(mockUsuarioInstance.update).toHaveBeenCalledWith(datosActualizados);
         });
     });
 
     describe('eliminarUsuario', () => {
         it('debería eliminar un usuario existente y devolver sus datos', async () => {
-            User.findByPk.mockResolvedValue({
+            const idUsuario = usuarioExistente.id;
+
+            const mockDestroy = jest.fn().mockResolvedValue(undefined);
+            const mockUsuarioInstance = {
                 ...usuarioExistente,
-                destroy: jest.fn().mockResolvedValue(1), // Simula la función destroy directamente en el objeto
-            });
+                destroy: mockDestroy, // Simula el método destroy
+            };
 
-            const resultado = await userService.eliminarUsuario(usuarioExistente.id);
-
-            expect(User.findByPk).toHaveBeenCalledWith(usuarioExistente.id);
-            expect(User.findByPk.mock.results[0].value.destroy).toHaveBeenCalledWith();
-            expect(resultado).toEqual({ message: 'Usuario eliminado correctamente', id: usuarioExistente.id });
+            User.findByPk.mockResolvedValue(mockUsuarioInstance);
+        
+            const resultado = await userService.eliminarUsuario(idUsuario);
+        
+            expect(User.findByPk).toHaveBeenCalledWith(idUsuario);
+            expect(mockDestroy).toHaveBeenCalledWith();
+            expect(resultado).toEqual(mockUsuarioInstance); // Compara con la instancia del usuario
         });
 
         it('debería devolver null si el usuario no existe', async () => {
@@ -207,14 +244,17 @@ describe('UserService', () => {
         });
 
         it('debería manejar errores al eliminar el usuario', async () => {
-            User.findByPk.mockResolvedValue({
+            const idUsuario = usuarioExistente.id;
+            const mockDestroy = jest.fn().mockRejectedValue(new Error('Error al eliminar'));
+            const mockUsuarioInstanceConError = {
                 ...usuarioExistente,
-                destroy: jest.fn().mockRejectedValue(new Error('Error al eliminar')), // Simula el error en destroy
-            });
-
-            await expect(userService.eliminarUsuario(usuarioExistente.id)).rejects.toThrow('Error al eliminar');
-            expect(User.findByPk).toHaveBeenCalledWith(usuarioExistente.id);
-            expect(User.findByPk.mock.results[0].value.destroy).toHaveBeenCalledWith();
+                destroy: mockDestroy,
+            };
+            User.findByPk.mockResolvedValue(mockUsuarioInstanceConError);
+            await expect(userService.eliminarUsuario(idUsuario))
+                .rejects.toThrow('Error al eliminar');
+            expect(User.findByPk).toHaveBeenCalledWith(idUsuario);
+            expect(mockDestroy).toHaveBeenCalledWith();
         });
     });
 });
