@@ -3,19 +3,23 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ObjectivesPage from './pages/ObjectivesPage';
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/objectives" element={<ObjectivesPage />} />
+      {/* El AuthProvider envuelve toda la aplicación para proporcionar el contexto de autenticación */}
+      <AuthProvider>
+        <div className="App">
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/objectives" element={<ObjectivesPage />} />
 
-          <Route path="/" element={<LoginPage />} />
-        </Routes>
-      </div>
+            <Route path="/" element={<LoginPage />} />
+          </Routes>
+        </div>
+      </AuthProvider>
     </Router>
   );
 }
