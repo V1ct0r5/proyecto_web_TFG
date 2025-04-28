@@ -1,26 +1,31 @@
 import React from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../services/apiService";
 
 function LoginForm() {
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [error, setError] = React.useState("");
+    const [loading, setLoading] = React.useState(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(""); // Limpiar errores previos
+        setLoading(true); // Iniciar el estado de carga
     
         try {
-            const response = await axios.post("http://localhost:5000/api/login", {
+            const response = await axios.post("http://localhost:3000/api/login", {
                 correo_electronico: email,
                 contrasena: password,
             });
 
             // Si el login es exitoso, guardar el token en el localStorage
             const { token } = response.data;
-            localStorage.setItem("token", token);
+            login(token); // Llamar a la función de login del contexto
 
             // Redirigir al usuario a la página de objetivos
             navigate("/objectives");
@@ -46,6 +51,7 @@ function LoginForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={loading} // Deshabilitar el campo si está cargando
                 />
             </div>
             <div>
@@ -56,13 +62,13 @@ function LoginForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={loading} // Deshabilitar el campo si está cargando
                 />
             </div>
             {error && <p style={{ color: "red" }}>{error}</p>}
-            <button type="submit">Iniciar Sesión</button>
-            <p>
-                ¿No tienes una cuenta? <a href="/register">Regístrate aquí</a>
-            </p>
+            <button type="submit" disabled={loading}>
+                {loading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
+            </button>
         </form>
     );
 }

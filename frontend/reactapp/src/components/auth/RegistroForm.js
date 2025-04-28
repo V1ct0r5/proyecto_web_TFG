@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 
 function RegistroForm() {
@@ -10,12 +11,15 @@ function RegistroForm() {
     const [confirmPassword, setConfirmPassword] = React.useState("");
     const [error, setError] = React.useState("");
     const [success, setSuccess] = React.useState("");
+    const [loading, setLoading] = React.useState(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(""); // Limpiar errores previos
         setSuccess(""); // Limpiar mensajes de éxito previos
+        setLoading(true); // Iniciar el estado de carga
 
         // Validar que las contraseñas coincidan
         if (password !== confirmPassword) {
@@ -24,7 +28,7 @@ function RegistroForm() {
         }
 
         try{
-            const response = await axios.post("http://localhost:5000/api/auth/register", {
+            const response = await axios.post("http://localhost:3000/api/auth/register", {
                 nombre: username,
                 correo_electronico: email,
                 contrasena: password,
@@ -37,12 +41,12 @@ function RegistroForm() {
             // Opcional: Guardar el token y redirigir directamente a objetivos si el backend lo devuelve en el registro
             const { token } = response.data;
             if (token) {
-                localStorage.setItem('token', token);
+                login(token); // Llamar a la función de login del contexto
                 navigate('/objectives');
             } else {
                 // Si el backend no devuelve token en el registro, redirigir al login después de un retardo
                 setTimeout(() => {
-                navigate('/login');
+                    navigate('/login');
                 }, 2000); // Redirigir después de 2 segundos
             }
         } catch (err) {
@@ -71,6 +75,7 @@ function RegistroForm() {
                     value={username}
                     onChange={(e) => setNombre(e.target.value)}
                     required
+                    disabled={loading} // Deshabilitar el campo si está cargando
                 />
             </div>
 
@@ -82,6 +87,7 @@ function RegistroForm() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={loading} // Deshabilitar el campo si está cargando
                 />
             </div>
 
@@ -93,6 +99,7 @@ function RegistroForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={loading} // Deshabilitar el campo si está cargando
                 />
             </div>
 
@@ -104,14 +111,14 @@ function RegistroForm() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
+                    disabled={loading} // Deshabilitar el campo si está cargando
                 />
             </div>
             {error && <p style={{ color: "red" }}>{error}</p>}
             {success && <p style={{ color: "green" }}>{success}</p>}
-            <button type="submit">Registrar</button>
-            <p>
-                ¿Ya tienes una cuenta? <a href="/login">Iniciar sesión</a>
-            </p>
+            <button type="submit" disabled={loading}>
+            {loading ? 'Registrando...' : 'Registrarse'}
+            </button>
         </form>
     );
 }
