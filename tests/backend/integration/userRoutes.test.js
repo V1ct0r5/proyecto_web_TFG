@@ -4,7 +4,6 @@ const request = require('supertest');
 const app = require('../../../backend/app');
 const { sequelize } = require('../../../backend/src/config/database');
 const { sequelize: userSequelize } = require('../../../backend/src/config/database');
-const YAML = require('yamljs');
 
 describe('User Routes', () => {
 

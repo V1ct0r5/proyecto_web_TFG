@@ -30,7 +30,7 @@ apiService.interceptors.request.use(
 
 // Interceptor para manejar respuestas de error
 // Este interceptor se ejecuta después de que la respuesta es recibida
-apiService.service.interceptors.response.use(
+apiService.interceptors.response.use(
     response => response,
     error => {
         // Si la respuesta es un error

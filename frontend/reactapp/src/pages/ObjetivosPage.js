@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import ObectivosForm from "../components/objetivos/ObjetivosForm";
-import { use } from "passport";
+import ObjetivosForm from "../components/objetivos/ObjetivosForm";
 
 function ObjetivosPage() {
     const [hasObjectives, setHasObjectives] = React.useState(false);
@@ -48,7 +47,7 @@ function ObjetivosPage() {
     }, [navigate]); // Eliminar la dependencia de navigate para evitar bucles infinitos
 
     // Función que se ejecutará cuando el formulario de objetivos se envíe con éxito
-    const handleFormSubmit = () => {
+    const handleObjectiveCreated = () => {
         setHasObjectives(true); // Actualizar el estado para indicar que el usuario tiene objetivos
     };
     
@@ -66,7 +65,7 @@ function ObjetivosPage() {
         { !hasObjectives ? (
             <div>
                 <h2>Parece que no tienes objetivos todavía. ¡Vamos a crear el primero!</h2>
-                <ObectivosForm onObjectiveCreated={handleObjectiveCreated} /> {/* Pasar la función de manejo de envío */}
+                <ObjetivosForm onObjectiveCreated={handleObjectiveCreated} /> {/* Pasar la función de manejo de envío */}
             </div>
         ) : (
             <div>

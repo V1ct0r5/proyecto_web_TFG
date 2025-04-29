@@ -3,7 +3,7 @@ const request = require('supertest');
 const app = require('../../../backend/app');
 const { sequelize } = require('../../../backend/src/config/database');
 const { userSequelize } = require('../../../backend/src/config/database');
-const YAML = require('yamljs');
+const jwt = require('jsonwebtoken');
 
 
 describe('Objectives Routes', () => {
