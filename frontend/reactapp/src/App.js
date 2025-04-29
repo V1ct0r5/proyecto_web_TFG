@@ -1,9 +1,10 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ObjectivesPage from './pages/ObjectivesPage';
+import LoginPage from '../src/pages/LoginPage';
+import RegisterPage from '../src/pages/RegistroPage';
+import ObjectivesPage from '../src/pages/ObjetivosPage';
 import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
   return (
@@ -12,9 +13,19 @@ function App() {
       <AuthProvider>
         <div className="App">
           <Routes>
+            {/* Rutas públicas */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/objectives" element={<ObjectivesPage />} />
+
+            {/* Rutas protegidas */}
+            <Route 
+              path="/objectives" 
+              element={
+                <ProtectedRoute>
+                  <ObjectivesPage />
+                </ProtectedRoute>
+              } 
+            />
 
             <Route path="/" element={<LoginPage />} />
           </Routes>
