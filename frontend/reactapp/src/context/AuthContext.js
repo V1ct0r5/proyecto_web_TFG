@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import api from "../services/api";
-import { use } from "passport";
+import api from "../services/apiService";
 
 // 1. Crear el contexto
 const AuthContext = createContext(null);
