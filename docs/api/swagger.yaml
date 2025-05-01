@@ -2,10 +2,22 @@ openapi: 3.0.0
 info:
   title: API de Usuarios y Objetivos
   version: 1.0.0
+  description: Documentación de la API para la gestión de usuarios y objetivos personales.
+
+tags:
+  - name: Autenticación
+    description: Rutas para el registro e inicio de sesión de usuarios.
+  - name: Usuarios
+    description: Rutas para la gestión de usuarios (creación, obtención, actualización, eliminación).
+  - name: Objetivos
+    description: Rutas para la gestión de objetivos personales asociados a un usuario.
+
 paths:
-  /usuarios/:
-    post:
-      summary: Crea un nuevo usuario
+  /api/auth/register:
+    post: # <-- El tag va aquí, debajo del tipo de petición
+      tags: [Autenticación]
+      summary: Registra un nuevo usuario
+      description: Permite registrar un nuevo usuario. No requiere autenticación.
       requestBody:
         required: true
         content:
@@ -15,10 +27,129 @@ paths:
               properties:
                 nombre_usuario:
                   type: string
+                  description: Nombre único del usuario.
+                  example: "nuevo_usuario"
                 correo_electronico:
                   type: string
+                  format: email
+                  description: Correo electrónico del usuario (debe ser único).
+                  example: "nuevo.usuario@example.com"
                 contrasena:
                   type: string
+                  description: Contraseña del usuario.
+                  format: password
+                  example: "passwordsegura"
+              required:
+                - nombre_usuario
+                - correo_electronico
+                - contrasena
+      responses:
+        '201':
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: ID del usuario.
+                  nombre_usuario:
+                    type: string
+                  correo_electronico:
+                    type: string
+                  fecha_registro:
+                    type: string
+                    format: date-time
+        '400':
+          description: Datos de registro inválidos o correo ya en uso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/auth/login:
+    post: # <-- El tag va aquí, debajo del tipo de petición
+      tags: [Autenticación]
+      summary: Inicia sesión de usuario
+      description: Permite iniciar sesión con credenciales y obtener un token JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                correo_electronico:
+                  type: string
+                  format: email
+                  description: Correo electrónico del usuario.
+                  example: "juan.perez@example.com"
+                contrasena:
+                  type: string
+                  description: Contraseña del usuario.
+                  format: password
+                  example: "unaContrasenaSegura123"
+              required:
+                - correo_electronico
+                - contrasena
+      responses:
+        '200':
+          description: Inicio de sesión exitoso, token JWT retornado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Token de autenticación JWT.
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/users:
+    post: # <-- El tag va aquí
+      tags: [Usuarios]
+      summary: Crea un nuevo usuario (Ruta protegida)
+      description: Permite crear un nuevo usuario en el sistema. Requiere autenticación (ej. por un administrador).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre_usuario:
+                  type: string
+                  description: Nombre único del usuario.
+                  example: "juan_perez_admin"
+                correo_electronico:
+                  type: string
+                  format: email
+                  description: Correo electrónico del usuario (debe ser único).
+                  example: "juan.perez.admin@example.com"
+                contrasena:
+                  type: string
+                  description: Contraseña del usuario.
+                  format: password
+                  example: "unaContrasenaSeguraAdmin123"
+              required:
+                - nombre_usuario
+                - correo_electronico
+                - contrasena
       responses:
         '201':
           description: Usuario creado exitosamente
@@ -29,20 +160,51 @@ paths:
                 properties:
                   id:
                     type: integer
+                    description: ID único del usuario creado.
+                    example: 2
                   nombre_usuario:
                     type: string
+                    description: Nombre de usuario.
+                    example: "juan_perez_admin"
                   correo_electronico:
                     type: string
-                  contrasena:
-                    type: string
+                    format: email
+                    description: Correo electrónico del usuario.
+                    example: "juan.perez.admin@example.com"
                   fecha_registro:
                     type: string
+                    format: date-time
+                    description: Fecha y hora de registro del usuario.
+                    example: "2023-10-27T10:00:00Z"
         '400':
-          description: Solicitud incorrecta
+          description: Solicitud incorrecta o datos inválidos (ej. correo ya registrado)
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "El correo electrónico ya está en uso"
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '500':
           description: Error interno del servidor
-    get:
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+    get: # <-- El tag va aquí
+      tags: [Usuarios]
       summary: Obtiene todos los usuarios
+      description: Retorna una lista de todos los usuarios registrados. Requiere autenticación.
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Lista de usuarios obtenida exitosamente
@@ -55,25 +217,50 @@ paths:
                   properties:
                     id:
                       type: integer
+                      description: ID único del usuario.
+                      example: 1
                     nombre_usuario:
                       type: string
+                      description: Nombre de usuario.
+                      example: "juan_perez"
                     correo_electronico:
                       type: string
-                    contrasena:
-                      type: string
+                      format: email
+                      description: Correo electrónico del usuario.
+                      example: "juan.perez@example.com"
                     fecha_registro:
                       type: string
+                      format: date-time
+                      description: Fecha y hora de registro.
+                      example: "2023-10-27T10:00:00Z"
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '500':
           description: Error interno del servidor
-  /usuarios/{id}:
-    get:
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+  /api/users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          description: ID único del usuario a obtener, actualizar o eliminar.
+          example: 1
+    get: # <-- El tag va aquí
+      tags: [Usuarios]
       summary: Obtiene un usuario por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      description: Retorna un usuario específico basado en su ID. Requiere autenticación.
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Usuario obtenido exitosamente
@@ -84,26 +271,51 @@ paths:
                 properties:
                   id:
                     type: integer
+                    description: ID único del usuario.
+                    example: 1
                   nombre_usuario:
                     type: string
+                    description: Nombre de usuario.
+                    example: "juan_perez"
                   correo_electronico:
                     type: string
-                  contrasena:
-                    type: string
+                    format: email
+                    description: Correo electrónico del usuario.
+                    example: "juan.perez@example.com"
                   fecha_registro:
                     type: string
+                    format: date-time
+                    description: Fecha y hora de registro.
+                    example: "2023-10-27T10:00:00Z"
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '404':
           description: Usuario no encontrado
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Usuario no encontrado"
         '500':
           description: Error interno del servidor
-    put:
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+    put: # <-- El tag va aquí
+      tags: [Usuarios]
       summary: Actualiza un usuario por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      description: Actualiza la información de un usuario específico basado en su ID. Requiere autenticación.
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -113,10 +325,18 @@ paths:
               properties:
                 nombre_usuario:
                   type: string
+                  description: Nuevo nombre de usuario.
+                  example: "juan_perez_actualizado"
                 correo_electronico:
                   type: string
+                  format: email
+                  description: Nuevo correo electrónico.
+                  example: "nuevo.correo@example.com"
                 contrasena:
                   type: string
+                  description: Nueva contraseña.
+                  format: password
+                  example: "otraContrasenaSegura456"
       responses:
         '200':
           description: Usuario actualizado exitosamente
@@ -127,36 +347,94 @@ paths:
                 properties:
                   id:
                     type: integer
+                    description: ID único del usuario actualizado.
+                    example: 1
                   nombre_usuario:
                     type: string
+                    description: Nombre de usuario actualizado.
+                    example: "juan_perez_actualizado"
                   correo_electronico:
                     type: string
-                  contrasena:
-                    type: string
+                    format: email
+                    description: Correo electrónico actualizado.
+                    example: "nuevo.correo@example.com"
                   fecha_registro:
                     type: string
+                    format: date-time
+                    description: Fecha y hora de registro (sin cambios).
+                    example: "2023-10-27T10:00:00Z"
+        '400':
+          description: Solicitud incorrecta o datos inválidos
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "El correo electrónico ya está en uso"
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '404':
           description: Usuario no encontrado
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Usuario no encontrado"
         '500':
           description: Error interno del servidor
-    delete:
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+    delete: # <-- El tag va aquí
+      tags: [Usuarios]
       summary: Elimina un usuario por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      description: Elimina un usuario específico basado en su ID. Requiere autenticación.
+      security:
+        - bearerAuth: []
       responses:
         '204':
-          description: Usuario eliminado exitosamente
+          description: Usuario eliminado exitosamente (No Content)
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '404':
           description: Usuario no encontrado
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Usuario no encontrado"
         '500':
           description: Error interno del servidor
-  /objetivos/:
-    post:
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+  /api/objetivos:
+    post: # <-- El tag va aquí
+      tags: [Objetivos]
       summary: Crea un nuevo objetivo
+      description: Permite al usuario autenticado crear un nuevo objetivo. Requiere autenticación.
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -167,26 +445,47 @@ paths:
                 nombre:
                   type: string
                   description: Nombre del objetivo.
+                  example: "Aprender React"
                 descripcion:
                   type: string
-                  description: Descripción del objetivo.
+                  description: Descripción detallada del objetivo.
+                  example: "Completar un curso online de React."
                 tipo_objetivo:
                   type: string
-                  description: Tipo de objetivo (ej: "Salud", "Productividad").
+                  description: Categoría del objetivo (ej: "Desarrollo personal", "Salud", "Finanzas").
+                  example: "Desarrollo personal"
                 valor_cuantitativo:
                   type: number
-                  description: Valor cuantitativo del objetivo.
+                  description: Un valor numérico asociado al objetivo si aplica.
+                  example: 1
                 unidad_medida:
                   type: string
-                  description: Unidad de medida del valor cuantitativo.
+                  description: Unidad para el valor cuantitativo (ej: "libros", "horas", "kg").
+                  example: "curso(s)"
                 fecha_inicio:
                   type: string
                   format: date
-                  description: Fecha de inicio del objetivo (YYYY-MM-DD).
+                  description: Fecha de inicio del objetivo.
+                  example: "2024-05-01"
                 fecha_fin:
                   type: string
                   format: date
-                  description: Fecha de fin del objetivo (YYYY-MM-DD).
+                  description: Fecha de fin esperada para el objetivo.
+                  example: "2024-08-31"
+                estado:
+                  type: string
+                  description: Estado actual del objetivo (ej: "Pendiente", "En progreso", "Completado").
+                  example: "Pendiente"
+                  enum:
+                    - "Pendiente"
+                    - "En progreso"
+                    - "Completado"
+                    - "Cancelado"
+              required:
+                - nombre
+                - tipo_objetivo
+                - fecha_inicio
+                - fecha_fin
       responses:
         '201':
           description: Objetivo creado exitosamente
@@ -197,36 +496,82 @@ paths:
                 properties:
                   id_objetivo:
                     type: integer
-                    description: ID del objetivo.
+                    description: ID único del objetivo creado.
+                    example: 101
                   nombre:
                     type: string
                     description: Nombre del objetivo.
+                    example: "Aprender React"
                   descripcion:
                     type: string
-                    description: Descripción del objetivo.
+                    description: Descripción detallada.
+                    example: "Completar un curso online de React."
                   tipo_objetivo:
                     type: string
-                    description: Tipo de objetivo.
+                    description: Categoría.
+                    example: "Desarrollo personal"
                   valor_cuantitativo:
                     type: number
                     description: Valor cuantitativo.
+                    example: 1
                   unidad_medida:
                     type: string
                     description: Unidad de medida.
+                    example: "curso(s)"
                   fecha_inicio:
                     type: string
                     format: date
-                    description: Fecha de inicio (YYYY-MM-DD).
+                    description: Fecha de inicio.
+                    example: "2024-05-01"
                   fecha_fin:
                     type: string
                     format: date
-                    description: Fecha de fin (YYYY-MM-DD).
+                    description: Fecha de fin.
+                    example: "2024-08-31"
+                  estado:
+                    type: string
+                    description: Estado actual.
+                    example: "Pendiente"
+                  id_usuario:
+                    type: integer
+                    description: ID del usuario propietario.
+                    example: 1
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
         '400':
-          description: Solicitud incorrecta
+          description: Solicitud incorrecta o datos inválidos
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Faltan campos requeridos"
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '500':
           description: Error interno del servidor
-    get:
-      summary: Obtiene todos los objetivos
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+
+    get: # <-- El tag va aquí
+      tags: [Objetivos]
+      summary: Obtiene todos los objetivos del usuario autenticado
+      description: Retorna una lista de todos los objetivos creados por el usuario autenticado. Requiere autenticación.
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Lista de objetivos obtenida exitosamente
@@ -239,41 +584,80 @@ paths:
                   properties:
                     id_objetivo:
                       type: integer
-                      description: ID del objetivo.
+                      description: ID único del objetivo.
+                      example: 101
                     nombre:
                       type: string
                       description: Nombre del objetivo.
+                      example: "Aprender React"
                     descripcion:
                       type: string
-                      description: Descripción del objetivo.
+                      description: Descripción detallada.
+                      example: "Completar un curso online de React."
                     tipo_objetivo:
                       type: string
-                      description: Tipo de objetivo.
+                      description: Categoría.
+                      example: "Desarrollo personal"
                     valor_cuantitativo:
                       type: number
                       description: Valor cuantitativo.
+                      example: 1
                     unidad_medida:
                       type: string
                       description: Unidad de medida.
+                      example: "curso(s)"
                     fecha_inicio:
                       type: string
                       format: date
-                      description: Fecha de inicio (YYYY-MM-DD).
+                      description: Fecha de inicio.
+                      example: "2024-05-01"
                     fecha_fin:
                       type: string
                       format: date
-                      description: Fecha de fin (YYYY-MM-DD).
+                      description: Fecha de fin.
+                      example: "2024-08-31"
+                    estado:
+                      type: string
+                      description: Estado actual.
+                      example: "Pendiente"
+                    id_usuario:
+                      type: integer
+                      description: ID del usuario propietario.
+                      example: 1
+                    createdAt:
+                      type: string
+                      format: date-time
+                    updatedAt:
+                      type: string
+                      format: date-time
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '500':
           description: Error interno del servidor
-  /objetivos/{id}:
-    get:
-      summary: Obtiene un objetivo por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+  /api/objetivos/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          description: ID único del objetivo a obtener, actualizar o eliminar.
+          example: 101
+    get: # <-- El tag va aquí
+      tags: [Objetivos]
+      summary: Obtiene un objetivo específico por ID
+      description: Retorna un objetivo específico del usuario autenticado basado en su ID. Requiere autenticación.
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Objetivo obtenido exitosamente
@@ -284,42 +668,81 @@ paths:
                 properties:
                   id_objetivo:
                     type: integer
-                    description: ID del objetivo.
+                    description: ID único del objetivo.
+                    example: 101
                   nombre:
                     type: string
                     description: Nombre del objetivo.
+                    example: "Aprender React"
                   descripcion:
                     type: string
-                    description: Descripción del objetivo.
+                    description: Descripción detallada.
+                    example: "Completar un curso online de React."
                   tipo_objetivo:
                     type: string
-                    description: Tipo de objetivo.
+                    description: Categoría.
+                    example: "Desarrollo personal"
                   valor_cuantitativo:
                     type: number
                     description: Valor cuantitativo.
+                    example: 1
                   unidad_medida:
                     type: string
                     description: Unidad de medida.
+                    example: "curso(s)"
                   fecha_inicio:
                     type: string
                     format: date
-                    description: Fecha de inicio (YYYY-MM-DD).
+                    description: Fecha de inicio.
+                    example: "2024-05-01"
                   fecha_fin:
                     type: string
                     format: date
-                    description: Fecha de fin (YYYY-MM-DD).
+                    description: Fecha de fin.
+                    example: "2024-08-31"
+                  estado:
+                    type: string
+                    description: Estado actual.
+                    example: "Pendiente"
+                  id_usuario:
+                    type: integer
+                    description: ID del usuario propietario.
+                    example: 1
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '404':
-          description: Objetivo no encontrado
+          description: Objetivo no encontrado (o no pertenece al usuario autenticado)
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Objetivo no encontrado"
         '500':
           description: Error interno del servidor
-    put:
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+    put: # <-- El tag va aquí
+      tags: [Objetivos]
       summary: Actualiza un objetivo por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      description: Actualiza la información de un objetivo específico del usuario autenticado. Requiere autenticación.
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -330,26 +753,43 @@ paths:
                 nombre:
                   type: string
                   description: Nombre del objetivo.
+                  example: "Aprender Node.js y Express"
                 descripcion:
                   type: string
-                  description: Descripción del objetivo.
+                  description: Descripción detallada del objetivo.
+                  example: "Completar un proyecto con Node.js y Express."
                 tipo_objetivo:
                   type: string
-                  description: Tipo de objetivo.
+                  description: Categoría del objetivo.
+                  example: "Desarrollo profesional"
                 valor_cuantitativo:
                   type: number
-                  description: Valor cuantitativo.
+                  description: Un valor numérico asociado.
+                  example: 1
                 unidad_medida:
                   type: string
-                  description: Unidad de medida.
+                  description: Unidad.
+                  example: "proyecto"
                 fecha_inicio:
                   type: string
                   format: date
-                  description: Fecha de inicio (YYYY-MM-DD).
+                  description: Fecha de inicio.
+                  example: "2024-09-01"
                 fecha_fin:
                   type: string
                   format: date
-                  description: Fecha de fin (YYYY-MM-DD).
+                  description: Fecha de fin esperada.
+                  example: "2024-12-31"
+                estado:
+                  type: string
+                  description: Nuevo estado del objetivo.
+                  example: "En progreso"
+                  enum:
+                    - "Pendiente"
+                    - "En progreso"
+                    - "Completado"
+                    - "Cancelado"
+              required: []
       responses:
         '200':
           description: Objetivo actualizado exitosamente
@@ -360,46 +800,122 @@ paths:
                 properties:
                   id_objetivo:
                     type: integer
-                    description: ID del objetivo.
+                    description: ID único del objetivo actualizado.
+                    example: 101
                   nombre:
                     type: string
-                    description: Nombre del objetivo.
+                    description: Nombre del objetivo actualizado.
+                    example: "Aprender Node.js y Express"
                   descripcion:
                     type: string
-                    description: Descripción del objetivo.
+                    description: Descripción detallada actualizada.
+                    example: "Completar un proyecto con Node.js y Express."
                   tipo_objetivo:
                     type: string
-                    description: Tipo de objetivo.
+                    description: Categoría actualizada.
+                    example: "Desarrollo profesional"
                   valor_cuantitativo:
                     type: number
                     description: Valor cuantitativo.
+                    example: 1
                   unidad_medida:
                     type: string
-                    description: Unidad de medida.
+                    description: Unidad de medida actualizada.
+                    example: "proyecto"
                   fecha_inicio:
                     type: string
                     format: date
-                    description: Fecha de inicio (YYYY-MM-DD).
+                    description: Fecha de inicio actualizada.
+                    example: "2024-09-01"
                   fecha_fin:
                     type: string
                     format: date
-                    description: Fecha de fin (YYYY-MM-DD).
+                    description: Fecha de fin actualizada.
+                    example: "2024-12-31"
+                  estado:
+                    type: string
+                    description: Estado actualizado.
+                    example: "En progreso"
+                  id_usuario:
+                    type: integer
+                    description: ID del usuario propietario.
+                    example: 1
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+        '400':
+          description: Solicitud incorrecta o datos inválidos
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Datos de actualización inválidos"
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '404':
-          description: Objetivo no encontrado
+          description: Objetivo no encontrado (o no pertenece al usuario autenticado)
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Objetivo no encontrado"
         '500':
           description: Error interno del servidor
-    delete:
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+    delete: # <-- El tag va aquí
+      tags: [Objetivos]
       summary: Elimina un objetivo por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      description: Elimina un objetivo específico del usuario autenticado basado en su ID. Requiere autenticación.
+      security:
+        - bearerAuth: []
       responses:
         '204':
-          description: Objetivo eliminado exitosamente
+          description: Objetivo eliminado exitosamente (No Content)
+        '401':
+           description: No autorizado - Token no proporcionado o inválido
         '404':
-          description: Objetivo no encontrado
+          description: Objetivo no encontrado (o no pertenece al usuario autenticado)
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Objetivo no encontrado"
         '500':
           description: Error interno del servidor
+          content:
+             application/json:
+               schema:
+                 type: object
+                 properties:
+                   error:
+                     type: string
+                     example: "Database error"
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Autenticación usando un token JWT. Formato: Bearer <token>'
