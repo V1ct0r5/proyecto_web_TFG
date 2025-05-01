@@ -12,4 +12,5 @@ module.exports = {
   transform: {
     '^.+\\.js$': 'babel-jest', // Usa babel-jest para transformar los archivos .js
   },
+  globalTeardown: '<rootDir>/global-teardown.js'
 };
