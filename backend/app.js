@@ -1,31 +1,45 @@
 const express = require('express');
-const sequelize = require('./src/config/database');
+const db = require('./src/config/database');
+
 const usuariosRoutes = require('./src/api/routes/userRoutes');
 const objetivosRoutes = require('./src/api/routes/objectivesRoutes');
+
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('../docs/api/swagger.yaml');
 
-// Crear la aplicación Express
+
 const app = express();
 
-// Middleware para parsear JSON
 app.use(express.json());
 
-// Middleware para servir archivos estáticos
+// Descomenta si usas Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Conexión y sincronización con la base de datos
-sequelize.sync()
-  .then(() => {
-    console.log('Modelos sincronizados con la base de datos.');
-  })
-  .catch((err) => {
-    console.error('Error al sincronizar modelos:', err);
-  });
 
-// Rutas
-app.use('/api', usuariosRoutes);
-app.use('/api', objetivosRoutes);
+async function startApplication() {
+  try {
+    await db.initializeDatabase();
+
+    console.log('Base de datos y modelos inicializados.');
+
+    const usuariosRoutes = require('./src/api/routes/userRoutes');
+    const objetivosRoutes = require('./src/api/routes/objectivesRoutes');
+
+    app.use('/api', usuariosRoutes);
+    app.use('/api', objetivosRoutes);
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en el puerto ${PORT}`);
+    });
+
+  } catch (error) {
+    console.error('La aplicación no pudo arrancar debido a un error de base de datos:', error);
+    process.exit(1);
+  }
+}
+
+startApplication();
 
 module.exports = app;
