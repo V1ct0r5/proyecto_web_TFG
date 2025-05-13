@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Define la url base de la API
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = "http://localhost:3001/api";
 
 // Crea una instancia de axios con la configuración base
 const apiService = axios.create({
@@ -24,6 +24,7 @@ apiService.interceptors.request.use(
     },
     (error) => {
         // Manejo de errores de la solicitud antes de enviarla
+        console.error('Request Error:', error);
         return Promise.reject(error);
     }
 );
@@ -34,10 +35,11 @@ apiService.interceptors.response.use(
     response => response,
     error => {
         // Si la respuesta es un error
-        console.error('Error en la API:', error.response || error.message);
+        console.error('API Response Error:', error.response || error.message);
         if(error.response && (error.response.status === 401 || error.response.status === 403)) {
             // Si el error es de autorización, redirigir al usuario a la página de login
-            console.warn('Token inválido o expirado. Redirigiendo a la página de login...');
+            console.warn('Authentication/Authorization error. Redirecting to login...');
+            localStorage.removeItem("token");
         }
 
         return Promise.reject(error);
@@ -47,14 +49,15 @@ apiService.interceptors.response.use(
 // Funciones para realizar solicitudes a la API
 const api = {
     // Rutas de autenticación
-    register: (userData) => api.post('/auth/register', userData),
+    register: (userData) => apiService.post('/auth/register', userData),
     login: (credentials) => apiService.post('/auth/login', credentials),
+    logout: () => apiService.delete('/auth/logout'),
 
     // Rutas de objetivos
-    getObjectives: () => api.get('/objectives'),
-    createObjective: (objectiveData) => api.post('/objectives', objectiveData),
-    updateObjective: (objectiveId, objectiveData) => api.put(`/objectives/${objectiveId}`, objectiveData),
-    deleteObjective: (objectiveId) => api.delete(`/objectives/${objectiveId}`)
+    getObjectives: () => apiService.get('/objectives'),
+    createObjective: (objectiveData) => apiService.post('/objectives', objectiveData),
+    updateObjective: (objectiveId, objectiveData) => apiService.put(`/objectives/${objectiveId}`, objectiveData),
+    deleteObjective: (objectiveId) => apiService.delete(`/objectives/${objectiveId}`)
 };
 
 // Exporta la instancia de axios y las funciones de la API
