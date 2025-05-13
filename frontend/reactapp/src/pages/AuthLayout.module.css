@@ -1,0 +1,73 @@
+/* Estilos para el fondo de la página de autenticación */
+.authPage {
+    display: flex;
+    min-height: 100vh;
+    min-width: 100vw;
+    align-items: center;
+    justify-content: center;
+    --tw-bg-opacity: 1;
+    background-color: rgb(249 250 251 / var(--tw-bg-opacity));
+    padding: 3rem 1rem;
+    margin: 0 auto;
+    
+}
+/* Estilos para el contenedor blanco del formulario */
+.formContainer { /* Usamos 'formContainer' */
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 36rem;
+    margin: 0 auto;
+    border-radius: var(--radius);
+    --tw-bg-opacity: 1;
+    background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+    padding: 2rem 1.8rem;
+    --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rgb(0 0 0 / .1);
+    --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+/* Estilos para el título del formulario */
+.formTitle { /* Usamos 'formTitle' */
+    font-size: 1.9rem;
+    font-weight: 700; /* Negrita */
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+    text-align: center;
+    color: #1f2937; /* Color de texto oscuro */
+}
+
+/* Estilos para el error general del formulario (si no usas Toast aún) */
+.formErrorGeneral { /* Usamos 'formErrorGeneral' para diferenciar del inline */
+    color: #ef4444; /* Rojo */
+    font-size: 0.875rem; /* Tamaño de fuente */
+    margin-top: 0.25rem;
+    margin-bottom: 1rem; /* Espacio debajo del error */
+    text-align: center; /* Centrar el mensaje de error general */
+}
+
+/* Estilos para el pie de formulario (enlace de registro) */
+.formFooter { /* Usamos 'formFooter' */
+    margin-top: 1.1rem; /* Espacio arriba del pie */
+    text-align: center;
+    font-size: 1.2rem;
+    color: #6b7280; /* Gris */
+    margin-bottom: 0;
+}
+
+/* Estilos para el enlace dentro del pie de formulario */
+.formLink { /* Usamos 'formLink' */
+    color: #2563eb; /* Azul */
+    text-decoration: none;
+}
+
+.formLink:hover {
+    text-decoration: underline;
+}
+
+/* Opcional: Estilos para checkbox si lo necesitas (del código que proporcionaste, pero no lo incluimos ahora) */
+/*
+.checkboxContainer { ... }
+.checkbox { ... }
+.checkboxLabel { ... }
+*/
