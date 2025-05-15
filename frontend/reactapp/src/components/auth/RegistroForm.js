@@ -1,124 +1,157 @@
-import React from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../services/apiService";
+import { useForm } from "react-hook-form";
+
+import FormGroup from "../ui/FormGroup";
+import Input from "../ui/Input";
+import Button from "../ui/Button";
 
 
 function RegistroForm() {
-    const [username, setNombre] = React.useState("");
-    const [email, setEmail] = React.useState("");
-    const [password, setPassword] = React.useState("");
-    const [confirmPassword, setConfirmPassword] = React.useState("");
-    const [error, setError] = React.useState("");
-    const [success, setSuccess] = React.useState("");
-    const [loading, setLoading] = React.useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [loading, setLoading] = useState(false);
+
     const navigate = useNavigate();
     const { login } = useAuth();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(""); // Limpiar errores previos
-        setSuccess(""); // Limpiar mensajes de éxito previos
-        setLoading(true); // Iniciar el estado de carga
+    const { register, handleSubmit, formState: { errors }, watch } = useForm();
 
-        // Validar que las contraseñas coincidan
-        if (password !== confirmPassword) {
-            setError("Las contraseñas no coinciden.");
-            return;
-        }
+    const password = watch("contrasena", "");
 
-        try{
-            const response = await axios.post("http://localhost:3000/api/auth/register", {
-                nombre: username,
-                correo_electronico: email,
-                contrasena: password,
-                confirmar_contrasena: confirmPassword,
-            });
+    const onSubmit = async (data) => {
+        setError("");
+        setSuccess("");
+        setLoading(true);
 
-            // Si el registro es exitoso
+        const userData = {
+            nombre_usuario: data.username,
+            correo_electronico: data.email,
+            contrasena: data.password,
+            confirmar_contrasena: data.confirmPassword,
+        };
+
+        try {
+            const response = await api.register(userData);
+
             setSuccess("Registro exitoso. Ahora puedes iniciar sesión.");
+            console.log("Registro exitoso:", response.data);
 
-            // Opcional: Guardar el token y redirigir directamente a objetivos si el backend lo devuelve en el registro
-            const { token } = response.data;
+            const { token, usuario } = response.data;
             if (token) {
-                login(token); // Llamar a la función de login del contexto
+                console.log("Token recibido en el registro. Iniciando sesión automáticamente.");
+                login(token, usuario);
                 navigate('/objectives');
             } else {
-                // Si el backend no devuelve token en el registro, redirigir al login después de un retardo
-                setTimeout(() => {
-                    navigate('/login');
-                }, 2000); // Redirigir después de 2 segundos
+                setTimeout(() => { navigate('/login'); }, 2000);
             }
+
         } catch (err) {
             console.error("Error al registrar:", err);
-            // Mostrar mensaje de error del backend si está disponible
-            if (err.response && err.response.data && err.response.data.error) {
-                // Para errores de validación, mostrar todos los errores
-                setError(err.response.data.errors.map(error => error.msg).join(", "));
-            } else if (error.response && error.response.data && error.response.data.error) {
-                // Para errores generales, mostrar el mensaje de error
-                setError(err.response.data.error);
+            if (err.response && err.response.data) {
+                if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+                    setError("Errores de validación: " + err.response.data.errors.map(e => e.msg || e.message || 'Error de validación desconocido').join(", "));
+                } else if (err.response.data.message) {
+                    setError(err.response.data.message);
+                } else if (err.response.data.error) {
+                    setError(err.response.data.error);
+                } else { setError("Error desconocido en el registro."); }
+            } else {
+                setError("Error de red o del servidor al intentar registrar. Por favor, inténtalo de nuevo.");
             }
-            else {
-                setError("Error al registrar. Por favor, inténtalo de nuevo.");
-            }
+        } finally {
+            setLoading(false);
         }
     };
 
+
     return (
-        <form onSubmit={handleSubmit}>
-            <div>
-                <label htmlFor="username">Nombre de Usuario:</label>
-                <input
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <FormGroup
+                label="Nombre de Usuario"
+                htmlFor="username"
+                required={true}
+                error={errors.username?.message}
+            >
+                <Input
                     type="text"
                     id="username"
-                    value={username}
-                    onChange={(e) => setNombre(e.target.value)}
-                    required
-                    disabled={loading} // Deshabilitar el campo si está cargando
+                    placeholder="Tu nombre de usuario"
+                    {...register("username", {
+                        required: "El nombre de usuario es obligatorio",
+                        minLength: { value: 3, message: "El nombre de usuario debe tener al menos 3 caracteres" }
+                    })}
+                    disabled={loading}
+                    isError={!!errors.username}
                 />
-            </div>
-
-            <div>
-                <label htmlFor="email">Correo Electrónico:</label>
-                <input
+            </FormGroup>
+            <FormGroup
+                label="Correo electrónico"
+                htmlFor="email"
+                required={true}
+                error={errors.email?.message}
+            >
+                <Input
                     type="email"
                     id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading} // Deshabilitar el campo si está cargando
+                    placeholder="tu@correo.com"
+                    {...register("email", {
+                        required: "El correo electrónico es obligatorio",
+                        pattern: {
+                            value: /^\S+@\S+$/i,
+                            message: "Formato de correo electrónico no válido"
+                        }
+                    })}
+                    disabled={loading}
+                    isError={!!errors.email}
                 />
-            </div>
-
-            <div>
-                <label htmlFor="password">Contraseña:</label>
-                <input
+            </FormGroup>
+            <FormGroup
+                label="Contraseña"
+                htmlFor="password"
+                required={true}
+                error={errors.password?.message}
+            >
+                <Input
                     type="password"
                     id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading} // Deshabilitar el campo si está cargando
+                    placeholder="Tu contraseña"
+                    {...register("password", {
+                        required: "La contraseña es obligatoria",
+                        minLength: {
+                            value: 6,
+                            message: "La contraseña debe tener al menos 6 caracteres"
+                        }
+                    })}
+                    disabled={loading}
+                    isError={!!errors.password}
                 />
-            </div>
-
-            <div>
-                <label htmlFor="confirmPassword">Confirmar Contraseña:</label>
-                <input
+            </FormGroup>
+            <FormGroup
+                label="Confirmar Contraseña"
+                htmlFor="confirmPassword"
+                required={true}
+                error={errors.confirmPassword?.message}
+            >
+                <Input
                     type="password"
                     id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    disabled={loading} // Deshabilitar el campo si está cargando
+                    placeholder="Confirma tu contraseña"
+                    {...register("confirmPassword", {
+                        required: "Por favor, confirma tu contraseña",
+                        validate: value => value === password || "Las contraseñas no coinciden"
+                    })}
+                    disabled={loading}
+                    isError={!!errors.confirmPassword}
                 />
-            </div>
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {success && <p style={{ color: "green" }}>{success}</p>}
-            <button type="submit" disabled={loading}>
-            {loading ? 'Registrando...' : 'Registrarse'}
-            </button>
+            </FormGroup>
+            {error && <p className="error-message">{error}</p>}
+            {success && <p className="success-message">{success}</p>}
+            <Button type="submit" disabled={loading}>
+                {loading ? 'Registrando...' : 'Registrarse'}
+            </Button>
         </form>
     );
 }
