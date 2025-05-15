@@ -1,175 +1,276 @@
-import React from "react";
+import React, { useState } from "react";
 import api from "../../services/apiService";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import FormGroup from "../ui/FormGroup";
+import Input from "../ui/Input";
+import Button from "../ui/Button";
+import objetivosStyles from "./ObjetivosForm.module.css";
 
-function ObjetivosForm({ onObjectiveCreated  }) {
-    const [nombre, setNombre] = useState('');
-    const [descripcion, setDescripcion] = useState('');
-    const [tipoObjetivo, setTipoObjetivo] = useState('');
-    const [valorCuantitativo, setValorCuantitativo] = useState('');
-    const [unidadMedida, setUnidadMedida] = useState('');
-    const [fechaInicio, setFechaInicio] = useState('');
-    const [fechaFin, setFechaFin] = useState('');
-    const [estado, setEstado] = useState('Pendiente'); // Estado inicial del objetivo
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [loading, setLoading] = useState(false); // Estado de carga
+function ObjetivosForm({ onObjectiveCreated }) {
+	const [error, setError] = useState("");
+	const [success, setSuccess] = useState("");
+	const [loading, setLoading] = useState(false);
 
-    const tipoObjetivoOptions = [
-        'Salud',
-        'Finanzas',
-        'Desarrollo personal',
-        'Relaciones',
-        'Carrera profesional',
-        'Otros'
-    ];
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+		reset,
+		watch,
+	} = useForm();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setSuccess('');
-        setLoading(true); // Iniciar el estado de carga
+	const tipoObjetivoOptions = [
+		"Salud",
+		"Finanzas",
+		"Desarrollo personal",
+		"Relaciones",
+		"Carrera profesional",
+		"Otros",
+	];
 
-        // Preparar los datos del objetivo
-        const objectiveData = {
-            nombre,
-            descripcion: descripcion || null,
-            tipoObjetivo: tipoObjetivo,
-            valorCuantitativo: valorCuantitativo ? parseFloat(valorCuantitativo) : null,
-            unidadMedida: unidadMedida || null,
-            fechaInicio: fechaInicio || null,
-            fechaFin: fechaFin || null,
-            estado: estado,
-        };
+	const fechaInicio = watch("fechaInicio", "");
 
-        try {
-            const response = await api.createObjective(objectiveData);
+	const onSubmit = async (data) => {
+		setError("");
+		setSuccess("");
+		setLoading(true);
 
-            setSuccess('Objetivo creado con éxito.');
-            // Limpiar los campos del formulario
-            setNombre('');
-            setDescripcion('');
-            setTipoObjetivo('');
-            setValorCuantitativo('');
-            setUnidadMedida('');
-            setFechaInicio('');
-            setFechaFin('');
-            setEstado('Pendiente');
+		const objectiveData = {
+			nombre: data.nombre,
+			descripcion: data.descripcion || null,
+			tipo_objetivo: data.tipoObjetivo,
+			valor_cuantitativo:
+				data.valorCuantitativo !== "" &&
+					data.valorCuantitativo !== null &&
+					!isNaN(data.valorCuantitativo)
+					? parseFloat(data.valorCuantitativo)
+					: null,
+			unidad_medida: data.unidadMedida || null,
+			fecha_inicio: data.fechaInicio || null,
+			fecha_fin: data.fechaFin || null,
+			estado: data.estado || "Pendiente",
+		};
 
-            // Llama a la función pasada por props para notificar que se ha creado un objetivo
-            if (onObjectiveCreated) {
-                onObjectiveCreated(response.data); // Pasa el nuevo objetivo creado
-            }
+		try {
+			const response = await api.createObjective(objectiveData);
+			if (onObjectiveCreated) {
+				onObjectiveCreated(response.data);
+			}
+			setSuccess("Objetivo creado con éxito.");
+			reset();
+			setError(null);
+		} catch (err) {
+			console.error(
+				"Error al crear el objetivo:",
+				err.response ? err.response.data : err.message
+			);
+			let errorMessage =
+				"Error al crear el objetivo. Por favor, inténtalo de nuevo.";
+			if (err.response && err.response.data) {
+				if (
+					err.response.data.errors &&
+					Array.isArray(err.response.data.errors)
+				) {
+					errorMessage =
+						"Errores de validación: " +
+						err.response.data.errors
+							.map((e) => e.msg || e.message || "desconocido")
+							.join(", ");
+				} else if (err.response.data.message) {
+					errorMessage = err.response.data.message;
+				} else if (err.response.data.error) {
+					errorMessage = err.response.data.error;
+				}
+			} else {
+				errorMessage = "Error de red o del servidor.";
+			}
+			setError(errorMessage);
+			setSuccess(null);
 
-        } catch (error) {
-            console.error('Error al crear el objetivo:', error);
-            // Mostrar mensaje(s) de error del backend si está(n) disponible(s)
-            if ( error.response && error.response.data && error.response.data.errors) {
-                setError(error.response.data.errors.map(e => e.msg).join(', '));
-            } else if(error.response && error.response.data && error.response.data.message) {
-                setError(error.response.data.message); // Errores generales
-            } else {
-                setError('Error al crear el objetivo. Por favor, inténtalo de nuevo.');
-            }
-        } finally {
-            setLoading(false); // Finalizar el estado de carga
-        }
-    };
+			if (onObjectiveCreated) {
+				onObjectiveCreated(null, errorMessage);
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <div>
-                <label htmlFor="nombre">Nombre del objetivo:</label>
-                <input
-                    type="text"
-                    id="nombre"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    required
-                    disabled={loading} // Deshabilitar el campo si está cargando
-                />
-            </div>
+	return (
+		<div>
+			{error && <p className="error-message">{error}</p>}
+			{success && <p className="success-message">{success}</p>}
 
-            <div>
-                <label htmlFor="descripcion">Descripción:</label>
-                <textarea
-                    id="descripcion"
-                    value={descripcion}
-                    onChange={(e) => setDescripcion(e.target.value)}
-                    disabled={loading} 
-                />
-            </div>
+			<form onSubmit={handleSubmit(onSubmit)} noValidate>
+				<div className={objetivosStyles.formGroupContainer}>
+					<FormGroup
+						label="Nombre del objetivo"
+						htmlFor="nombre"
+						required={true}
+						error={errors.nombre?.message}
+					>
+						<Input
+							type="text"
+							id="nombre"
+							placeholder="Ej. Correr 5km diarios"
+							{...register("nombre", {
+								required: "El nombre es obligatorio",
+								minLength: {
+									value: 3,
+									message: "El nombre debe tener al menos 3 caracteres",
+								},
+							})}
+							disabled={loading}
+							isError={!!errors.nombre}
+						/>
+					</FormGroup>
+					<FormGroup
+						label="Descripción"
+						htmlFor="descripcion"
+						error={errors.descripcion?.message}
+					>
+						<Input
+							type="textarea"
+							id="descripcion"
+							placeholder="Describe los detalles de tu objetivo"
+							{...register("descripcion")}
+							disabled={loading}
+							isError={!!errors.descripcion}
+						/>
+					</FormGroup>
+					<div className={objetivosStyles.formGrid}>
+						<FormGroup
+							label="Tipo de objetivo"
+							htmlFor="tipoObjetivo"
+							required={true}
+							error={errors.tipoObjetivo?.message}
+						>
+							<Input
+								type="select"
+								id="tipoObjetivo"
+								{...register("tipoObjetivo", {
+									required: "El tipo de objetivo es obligatorio",
+									validate: (value) =>
+										value !== "" || "El tipo de objetivo es obligatorio",
+								})}
+								disabled={loading}
+								isError={!!errors.tipoObjetivo}
+							>
+								<option value="">Selecciona un tipo</option>
+								{tipoObjetivoOptions.map((option, index) => (
+									<option key={index} value={option}>
+										{option}
+									</option>
+								))}
+							</Input>
+						</FormGroup>
 
-            <div>
-                <label htmlFor="tipoObjetivo">Tipo de objetivo:</label>
-                <select
-                    id="tipoObjetivo"
-                    value={tipoObjetivo}
-                    onChange={(e) => setTipoObjetivo(e.target.value)}
-                    required
-                    disabled={loading} 
-                >
-                    <option value="">Selecciona un tipo</option>
-                    {tipoObjetivoOptions.map((option, index) => (
-                        <option key={index} value={option}>{option}</option>
-                    ))}
-                </select>
-            </div>
-            
-            <div>
-                <label htmlFor="valorCuantitativo">Valor cuantitativo (Opcional):</label>
-                <input
-                    type="number"
-                    id="valorCuantitativo"
-                    step="0.01" // Permitir decimales
-                    value={valorCuantitativo}
-                    onChange={(e) => setValorCuantitativo(e.target.value)}
-                    disabled={loading} 
-                />
-            </div>
+						<FormGroup
+							label="Estado"
+							htmlFor="estado"
+							error={errors.estado?.message}
+						>
+							<Input
+								type="select"
+								id="estado"
+								{...register("estado")}
+								disabled={loading}
+								isError={!!errors.estado}
+							>
+								<option value="Pendiente">Pendiente</option>
+							</Input>
+						</FormGroup>
 
-            <div>
-                <label htmlFor="unidadMedida">Unidad de medida (Opcional):</label>
-                <input
-                    type="text"
-                    id="unidadMedida"
-                    value={unidadMedida}
-                    onChange={(e) => setUnidadMedida(e.target.value)}
-                    disabled={loading} 
-                />
-            </div>
+						<FormGroup
+							label="Valor cuantitativo"
+							htmlFor="valorCuantitativo"
+							error={errors.valorCuantitativo?.message}
+						>
+							<Input
+								type="number"
+								id="valorCuantitativo"
+								step="0.01"
+								placeholder="Ej. 5"
+								{...register("valorCuantitativo", {
+									valueAsNumber: true,
+									validate: (value) =>
+										!value ||
+										(!isNaN(value) && isFinite(value)) ||
+										"Debe ser un número válido",
+								})}
+								disabled={loading}
+								isError={!!errors.valorCuantitativo}
+							/>
+						</FormGroup>
 
-            <div>
-                <label htmlFor="fechaInicio">Fecha de inicio (Opcional):</label>
-                <input
-                    type="date"
-                    id="fechaInicio"
-                    value={fechaInicio}
-                    onChange={(e) => setFechaInicio(e.target.value)}
-                    disabled={loading} 
-                />
-            </div>
+						<FormGroup
+							label="Unidad de medida"
+							htmlFor="unidadMedida"
+							error={errors.unidadMedida?.message}
+						>
+							<Input
+								type="text"
+								id="unidadMedida"
+								placeholder="Ej. kilómetros"
+								{...register("unidadMedida")}
+								disabled={loading}
+								isError={!!errors.unidadMedida}
+							/>
+						</FormGroup>
 
-            <div>
-                <label htmlFor="fechaFin">Fecha de fin (Opcional):</label>
-                <input
-                    type="date"
-                    id="fechaFin"
-                    value={fechaFin}
-                    onChange={(e) => setFechaFin(e.target.value)}
-                    disabled={loading} 
-                />
-            </div>
-            
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {success && <p style={{ color: "green" }}>{success}</p>}
-
-            <button type="submit" disabled={loading}>
-                {loading ? 'Creando...' : 'Crear Objetivo'}
-            </button>
-        </form>
-    );
+						<FormGroup
+							label="Fecha de inicio"
+							htmlFor="fechaInicio"
+							error={errors.fechaInicio?.message}
+						>
+							<Input
+								type="date"
+								id="fechaInicio"
+								placeholder="dd/mm/aaaa"
+								{...register("fechaInicio", {
+									validate: (value) =>
+										!value || !isNaN(new Date(value)) || "Fecha inválida",
+								})}
+								disabled={loading}
+								isError={!!errors.fechaInicio}
+							/>
+						</FormGroup>
+						<FormGroup
+							label="Fecha de finalización"
+							htmlFor="fechaFin"
+							error={errors.fechaFin?.message}
+						>
+							<Input
+								type="date"
+								id="fechaFin"
+								placeholder="dd/mm/aaaa"
+								{...register("fechaFin", {
+									validate: (value) => {
+										if (!value) return true;
+										const startDate = watch("fechaInicio");
+										if (isNaN(new Date(value))) return "Fecha inválida";
+										if (
+											startDate &&
+											new Date(value) &&
+											new Date(startDate) &&
+											new Date(value) <= new Date(startDate)
+										) {
+											return "La fecha de fin debe ser posterior a la fecha de inicio";
+										}
+										return true;
+									},
+								})}
+								disabled={loading}
+								isError={!!errors.fechaFin}
+							/>
+						</FormGroup>
+					</div>{" "}
+				</div>{" "}
+				<Button type="submit" disabled={loading}>
+					{loading ? "Creando..." : "Crear objetivo"}
+				</Button>
+			</form>
+		</div>
+	);
 }
 
 export default ObjetivosForm;
-
