@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// Define la url base de la API
 const API_BASE_URL = "http://localhost:3001/api";
 
 // Crea una instancia de axios con la configuración base
@@ -12,7 +11,6 @@ const apiService = axios.create({
 });
 
 // Interceptor para agregar el token de autorización a las solicitudes
-// Este interceptor se ejecuta antes de que la solicitud sea enviada
 apiService.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
@@ -30,7 +28,6 @@ apiService.interceptors.request.use(
 );
 
 // Interceptor para manejar respuestas de error
-// Este interceptor se ejecuta después de que la respuesta es recibida
 apiService.interceptors.response.use(
     response => response,
     error => {
@@ -60,5 +57,4 @@ const api = {
     deleteObjective: (objectiveId) => apiService.delete(`/objectives/${objectiveId}`)
 };
 
-// Exporta la instancia de axios y las funciones de la API
 export default api;
