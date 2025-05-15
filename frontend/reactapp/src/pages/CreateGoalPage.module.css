@@ -1,0 +1,22 @@
+
+.objetivos-page {
+    min-height: 100vh;
+    background-color: #f9fafb;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+
+  .objetivos-container {
+    max-width: 768px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  @media (min-width: 640px) {
+    .objetivos-page {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
