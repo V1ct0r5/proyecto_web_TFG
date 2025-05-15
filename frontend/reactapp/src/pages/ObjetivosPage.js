@@ -1,79 +1,116 @@
-import React, { useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ObjetivosForm from "../components/objetivos/ObjetivosForm";
+import api from "../services/apiService";
+import { useAuth } from "../context/AuthContext";
+import styles from "./AuthLayout.module.css";
+import buttonStyles from "../components/ui/Button.module.css";
+
 
 function ObjetivosPage() {
-    const [hasObjectives, setHasObjectives] = React.useState(false);
-    const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState(null);
+    const [objetivos, setObjetivos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
+
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
+
+    const hasObjectives = objetivos.length > 0;
+    // ¡CORRECCIÓN AQUÍ! Usar 'user.nombre_usuario'
+    const userName = user ? user.nombre_usuario : 'Usuario';
+
+    const handleObjectiveCreated = (nuevoObjetivo, errorMessage = null) => {
+        if (nuevoObjetivo) {
+            setObjetivos([nuevoObjetivo, ...objetivos]);
+            setSuccess('Objetivo creado con éxito.');
+            setError(null);
+        } else if (errorMessage) {
+            setError(errorMessage);
+            setSuccess(null);
+        }
+    };
+
 
     useEffect(() => {
-        const checkObjectives = async () => {
-            const token = localStorage.getItem("token"); // Obtener el token del almacenamiento local
-            if (!token) {
-                navigate("/login"); // Redirigir al usuario a la página de inicio de sesión
-                return;
-            }
-
+        const fetchObjectives = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/api/objetives", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                // Comprobar si el usuario ya tiene objetivos
-                if (response.data && response.data.length > 0) {
-                    setHasObjectives(true);
-                } else {
-                    setHasObjectives(false);
-                }
-            } catch (error) {
-                console.error("Error al verificar los objetivos:", error);
-                // Si el error es 401 o 403, redirigir al usuario a la página de inicio de sesión
-                if(error.response && (error.response.status === 401 || error.response.status === 403)) {
+                const response = await api.getObjectives();
+                setObjetivos(response.data);
+            } catch (err) {
+                console.error("Error al cargar los objetivos:", err.response ? err.response.data : err.message);
+                if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                    logout();
                     navigate("/login");
                 } else {
-                    setError("Error al cargar tus objetivos.");
+                    setError("Error al cargar tus objetivos. " + (err.response && err.response.data.message ? err.response.data.message : err.message));
                 }
             } finally {
-                setLoading(false); // Finalizar la carga
+                setLoading(false);
             }
         };
 
-        checkObjectives();
-    }, [navigate]); // Eliminar la dependencia de navigate para evitar bucles infinitos
+        const token = localStorage.getItem("token");
+        if (!token) {
+            logout();
+            navigate("/login");
+            setLoading(false);
+        } else {
+            fetchObjectives();
+        }
 
-    // Función que se ejecutará cuando el formulario de objetivos se envíe con éxito
-    const handleObjectiveCreated = () => {
-        setHasObjectives(true); // Actualizar el estado para indicar que el usuario tiene objetivos
-    };
-    
-    if(loading) {
-        return <div>Cargando...</div>; // Mostrar un mensaje de carga mientras se verifica el estado
+
+    }, [navigate, logout]);
+
+
+    const handleLogout = async () => {
+        setLoading(true);
+        try {
+            await api.logout();
+        } catch (err) {
+            console.error("Error al cerrar sesión en el backend:", err);
+        } finally {
+            logout();
+        }
     }
 
-    if(error) {
-        return <div style={{ color: 'red' }}>{error}</div>; // Mostrar un mensaje de error si ocurre un problema
+    if (loading && !objetivos.length) {
+        return (
+            <div className={styles.authPage}>
+                <p>Cargando objetivos...</p>
+            </div>
+        );
     }
+
+    if (error && !objetivos.length && !loading) {
+        return (
+            <div className={styles.authPage}>
+                <p className={styles.formErrorGeneral || "error-message"}>{error}</p>
+            </div>
+        );
+    }
+
 
     return (
-        <div className="objetivos">
-        <h1>Mis Objetivos</h1>
-        { !hasObjectives ? (
-            <div>
-                <h2>Parece que no tienes objetivos todavía. ¡Vamos a crear el primero!</h2>
-                <ObjetivosForm onObjectiveCreated={handleObjectiveCreated} /> {/* Pasar la función de manejo de envío */}
+        <div className={styles.authPage}>
+            {user && (
+                <header className={styles.pageHeader}>
+                    <div className={styles.userInfo}>Hola, {userName}</div>
+                    <button onClick={handleLogout} className={buttonStyles.buttonSecondary || 'button-secondary'}>
+                        Cerrar Sesión
+                    </button>
+                </header>
+            )}
+
+            <div className={styles.mainContentArea}>
+                <div className={styles.formContainer}>
+                    <h2 className={styles.formTitle}>
+                        {hasObjectives ? "Crea un nuevo objetivo" : "Crea tu primer objetivo"}
+                    </h2>
+                    <ObjetivosForm onObjectiveCreated={handleObjectiveCreated} />
+                </div>
             </div>
-        ) : (
-            <div>
-                {/* Aquí se mostrará la lista de objetivos una vez implementada */}
-                <h2>Tus objetivos ya han sido establecidos. Aquí los tienes:</h2>
-            {/* <ListaObjetivos /> */}
-            </div>
-        )}
+
         </div>
     );
 }
