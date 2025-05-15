@@ -1,64 +1,56 @@
 .input,
-.select, /* Añadimos select para tener estilos comunes */
-.textarea { /* Añadimos textarea */
+.select,
+.textarea {
     display: block;
     width: 100%;
-    padding: 0.5rem 0.75rem; /* Padding del ejemplo */
-    border: 1px solid #d1d5db; /* Borde del ejemplo */
-    border-radius: 0.375rem; /* Bordes redondeados del ejemplo */
-    font-size: 1.4rem;
-    font-weight: 200;
-    line-height: 1.6;
-    color: #495057; /* O el color del ejemplo si es diferente */
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
     background-color: #fff;
     background-clip: padding-box;
-    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Transición suave */
+    transition: all 0.2s ease-in-out;
+    box-sizing: border-box;
 }
 
-/* Estilo específico para el textarea */
 .textarea {
-    min-height: 100px; /* O el valor que prefieras */
+    min-height: 100px;
     resize: vertical;
 }
 
-/* Estilo para selects (desplegables) */
-/* .select {
-     /* Estilos de select personalizados si los necesitas (flecha, etc.) */
-     /* appearance: none; ... */
-/* }
-
-
-/* Estilo para placeholders */
 .input::placeholder,
 .textarea::placeholder,
 .select option[value=""]:first-child {
-    color: #a0a0a0; /* Gris claro */
+    color: #a0a0a0;
     opacity: 1;
 }
-
 
 .input:focus,
 .select:focus,
 .textarea:focus {
-    outline: none; /* Eliminar el outline por defecto */
-    border-color: #2563eb; /* Borde azul al enfocar del ejemplo */
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); /* Sombra azul suave al enfocar del ejemplo */
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
 }
 
-/* Estilos deshabilitados */
 .input:disabled,
 .select:disabled,
 .textarea:disabled {
-  background-color: #e9ecef;
-  opacity: 1;
-  cursor: not-allowed;
+    background-color: #e9ecef;
+    opacity: 1;
+    cursor: not-allowed;
 }
 
-/* Opcional: Estilo para el estado de error del input */
-/* Requiere pasar una prop `isError` al componente Input y aplicar esta clase condicionalmente */
-.inputError { /* O .input.error si prefieres combinar */
-    border-color: #ef4444; /* Borde rojo del ejemplo */
+.input.error,
+textarea.error,
+select.error {
+    border-color: #ef4444;
 }
-.inputError:focus {
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2); /* Sombra roja al enfocar del ejemplo */
+
+.input.error:focus,
+.select.error:focus,
+.textarea.error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5);
 }
