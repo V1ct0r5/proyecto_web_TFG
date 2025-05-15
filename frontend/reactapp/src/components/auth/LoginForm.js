@@ -1,74 +1,101 @@
-import React from "react";
-import axios from "axios";
+import React, { useState } from "react";
+import api from "../../services/apiService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import api from "../../services/apiService";
+import { useForm } from "react-hook-form";
+import Input from "../ui/Input";
+import Button from "../ui/Button";
+import FormGroup from "../ui/FormGroup";
 
 function LoginForm() {
-    const [email, setEmail] = React.useState("");
-    const [password, setPassword] = React.useState("");
-    const [error, setError] = React.useState("");
-    const [loading, setLoading] = React.useState(false);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm();
+
     const navigate = useNavigate();
     const { login } = useAuth();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(""); // Limpiar errores previos
-        setLoading(true); // Iniciar el estado de carga
-    
+    const onSubmit = async (data) => {
+        setError("");
+        setLoading(true);
+
         try {
-            const response = await axios.post("http://localhost:3000/api/login", {
-                correo_electronico: email,
-                contrasena: password,
+            const response = await api.login({
+                correo_electronico: data.email,
+                contrasena: data.password,
             });
 
-            // Si el login es exitoso, guardar el token en el localStorage
-            const { token } = response.data;
-            login(token); // Llamar a la función de login del contexto
+            login(response.data.token, response.data.usuario);
 
-            // Redirigir al usuario a la página de objetivos
             navigate("/objectives");
-
         } catch (err) {
-            console.error("Error al iniciar sesión:", err);
-            // Mostrar mensaje de error del backend si está disponible
-            if (err.response && err.response.data && err.response.data.error) {
-                setError(err.response.data.error);
+            console.error(
+                "Error al iniciar sesión:",
+                err.response ? err.response.data : err.message
+            );
+            if (err.response && err.response.data && err.response.data.message) {
+                setError(err.response.data.message);
             } else {
                 setError("Error al iniciar sesión. Por favor, inténtalo de nuevo.");
             }
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <div>
-                <label htmlFor="email">Correo Electrónico:</label>
-                <input
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <FormGroup
+                label="Correo electrónico"
+                htmlFor="email"
+                required={true}
+                error={errors.email?.message}
+            >
+                <Input
                     type="email"
                     id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading} // Deshabilitar el campo si está cargando
+                    placeholder="tu@correo.com"
+                    {...register("email", {
+                        required: "El correo electrónico es obligatorio",
+                        pattern: {
+                            value: /^\S+@\S+$/i,
+                            message: "Formato de correo electrónico no válido",
+                        },
+                    })}
+                    disabled={loading}
+                    isError={!!errors.email}
                 />
-            </div>
-            <div>
-                <label htmlFor="password">Contraseña:</label>
-                <input
+            </FormGroup>
+            <FormGroup
+                label="Contraseña"
+                htmlFor="password"
+                required={true}
+                error={errors.password?.message}
+            >
+                <Input
                     type="password"
                     id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading} // Deshabilitar el campo si está cargando
+                    placeholder="Tu contraseña"
+                    {...register("password", {
+                        required: "La contraseña es obligatoria",
+                        minLength: {
+                            value: 6,
+                            message: "La contraseña debe tener al menos 6 caracteres",
+                        },
+                    })}
+                    disabled={loading}
+                    isError={!!errors.password}
                 />
-            </div>
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            <button type="submit" disabled={loading}>
-                {loading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
-            </button>
+            </FormGroup>
+            {error && <p className="error-message">{error}</p>}
+            <Button type="submit" disabled={loading}>
+                {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+            </Button>
         </form>
     );
 }
