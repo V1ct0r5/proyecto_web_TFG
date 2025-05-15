@@ -1,34 +1,26 @@
-/* frontend/reactapp/src/components/ui/FormGroup.module.css */
-
-/* Contenedor para un grupo de formulario (Label + Input/Select/etc + Error) */
 .formGroup {
-    margin-bottom: 1.5rem; /* Espacio vertical entre grupos (coincide con el ejemplo) */
+    margin-bottom: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 5px; /* Espacio entre label e input/error */
+    gap: 5px;
 }
 
-/* Estilo para la etiqueta <label> */
 .formLabel {
     display: block;
-    margin-bottom: 0;
-    font-size: 1.2rem; /* Tamaño de fuente del ejemplo */
-    font-weight: 500; /* Peso de fuente del ejemplo */
-    color: #374151; /* Color del ejemplo */
+    margin-bottom: 0.25rem;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #374151;
 }
 
-/* Estilo para el indicador de requerido (el asterisco) */
 .formRequired {
-    color: #ef4444; /* Rojo del ejemplo */
+    color: #ef4444;
     margin-left: 4px;
-    /* font-weight: bold; /* Ya está en el color */
 }
 
-/* Estilo para el mensaje de error inline */
 .formErrorInline {
-    color: #ef4444; /* Rojo del ejemplo */
-    font-size: 0.875rem; /* Tamaño de fuente del ejemplo */
-    margin-top: 0.25rem; /* Espacio arriba */
-    margin-bottom: 0; /* Sin margen abajo (el gap del formGroup lo maneja) */
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0;
 }
-
