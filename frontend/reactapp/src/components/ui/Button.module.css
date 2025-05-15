@@ -1,30 +1,73 @@
-/* frontend/reactapp/src/components/ui/Button.module.css */
-
 .button {
-    width: 100%;
-    height: 3rem; /* Altura del botón del ejemplo */
-    padding: 0.5rem 1rem; /* Padding del ejemplo */
-    background-color: #2563eb; /* Color primario del ejemplo */
-    color: white;
-    font-weight: 600; /* Peso de fuente del ejemplo */
-    font-size: 120%;
-    border: none;
-    border-radius: 0.375rem; /* Bordes redondeados del ejemplo */
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out; /* Transición del ejemplo */
-    text-align: center;
-    margin-top: 1.5rem; /* Espacio arriba del botón del ejemplo */
-
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+  font-size: 1.125rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  text-align: center;
+  margin-top: 1.5rem;
 }
 
 .button:hover {
-    background-color: #1d4ed8; /* Tono más oscuro al pasar el ratón del ejemplo */
-    /* box-shadow: none; /* Eliminar sombra si no la quieres */
+  background-color: #1d4ed8;
+}
+
+.button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
 }
 
 .button:disabled {
-  /* Puedes usar la clase del ejemplo */
   opacity: 0.5;
   cursor: not-allowed;
-  /* background-color: #cccccc; /* Si quieres un gris en lugar de solo opacidad */
+}
+
+.buttonSecondary {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: #cdcfd3;
+  color: #1f2937;
+  font-weight: 500;
+  font-size: 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  text-align: center;
+}
+
+.buttonSecondary:hover {
+  background-color: #d1d5db;
+}
+
+.buttonSecondary:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.5);
+}
+
+.buttonSecondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buttonLink {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: underline;
+  margin: 0;
+}
+
+.buttonLink:hover {
+  text-decoration: none;
 }
