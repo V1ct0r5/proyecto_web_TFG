@@ -1,19 +1,67 @@
-// frontend/reactapp/src/components/ui/Input.js
 import React from 'react';
-import styles from './Input.module.css'; // Importar estilos específicos del input
+import styles from './Input.module.css';
 
-// Componente de Input reutilizable
-// Acepta todas las props estándar de un input HTML, incluyendo ref para usar con RHF
-// El 'ref' se pasa usando React.forwardRef para que RHF pueda adjuntarlo al elemento DOM
-const Input = React.forwardRef(({ className, ...props }, ref) => {
-  const inputClasses = `${styles.input} ${className || ''}`;
+const Input = React.forwardRef(({ type, id, placeholder, value, onChange, disabled, isError, children, ...rest }, ref) => {
 
-  return (
-    <input className={inputClasses} ref={ref} {...props} />
-  );
+    let elementClass = styles.input;
+    let elementType = 'input';
+
+    if (type === 'textarea') {
+        elementClass = styles.textarea;
+        elementType = 'textarea';
+    } else if (type === 'select') {
+        elementClass = styles.select;
+        elementType = 'select';
+    }
+
+    const inputClassName = isError
+        ? `${elementClass} ${styles.error}`
+        : elementClass;
+
+    if (elementType === 'textarea') {
+        return (
+            <textarea
+                id={id}
+                className={inputClassName}
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+                disabled={disabled}
+                ref={ref}
+                {...rest}
+            />
+        );
+    }
+
+    if (elementType === 'select') {
+        return (
+            <select
+                id={id}
+                className={inputClassName}
+                value={value}
+                onChange={onChange}
+                disabled={disabled}
+                ref={ref}
+                {...rest}
+            >
+                {children}
+            </select>
+        );
+    }
+
+    return (
+        <input
+            type={type}
+            id={id}
+            className={inputClassName}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            disabled={disabled}
+            ref={ref}
+            {...rest}
+        />
+    );
 });
-
-// Renombrar para mejor depuración en React DevTools
-Input.displayName = 'Input';
 
 export default Input;
