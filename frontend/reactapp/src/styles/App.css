@@ -1,17 +1,15 @@
-/* frontend/reactapp/src/App.css - MODIFICADO */
-*, *:before, *:after {
-  box-sizing: border-box; /* Asegura que el padding y el border no afecten al ancho total */
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
 }
 
-/* Añade esta regla para controlar el tamaño base de la fuente y lograr el efecto de zoom */
 html {
-  font-size: 18px; /* O 20px, o el valor que prefieras para escalar */
-  /* Esto afecta la base de cálculo para todas las unidades 'rem'. */
+    font-size: 18px;
 }
 
 
-:root{
-    /* Tus variables CSS existentes */
+:root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -40,56 +38,51 @@ body {
     font-family: "Inter", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f4f7f6; /* Un gris muy suave para el fondo */
-    color: #333; /* Texto principal en gris oscuro */
+    background-color: #f4f7f6;
+    color: #333;
     line-height: 1.6;
-    /* Opcional: font-size: 1rem; aquí para asegurar que el body usa el tamaño base del html */
 }
 
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-      monospace;
+        monospace;
 }
 
-/* Considera si esta regla es necesaria si tus páginas manejan su propio layout de pantalla completa */
-/* Si la mantienes, podría usarse para envolver el Router principal, por ejemplo */
 .App {
-    min-height: 100vh; /* Asegura que la app ocupe al menos el alto de la ventana */
-    display: flex; /* Usar flexbox para centrar o estructurar el contenido */
-    justify-content: center; /* Centrar horizontalmente */
-    /* align-items: center; */ /* Si cada página tiene su propio 100vh, align-items: center puede empujar el contenido al centro vertical. Considera si quieres align-items: flex-start (por defecto) o center. */
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
 }
 
-/* Considera definir tamaños y pesos estándar para los encabezados aquí si no confías completamente en los estilos de módulo */
-h1, h2, h3, h4, h5, h6 {
-    color: #333; /* Color para encabezados */
-    margin-bottom: 1rem; /* Espacio por defecto debajo de los encabezados */
-    /* Remover 'inherit' si quieres tamaños y pesos estándar por defecto */
-    /* font-weight: bold; */
-    /* font-size: 2em; */ /* Ejemplo, ajusta según necesites */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #333;
+    margin-bottom: 1rem;
 }
 
-/* Estilos básicos para enlaces */
 a {
-    color: #007bff; /* Color primario para enlaces */
-    text-decoration: none; /* Sin subrayado por defecto */
+    color: #007bff;
+    text-decoration: none;
 }
 
 a:hover {
-    text-decoration: underline; /* Subrayado al pasar el ratón */
+    text-decoration: underline;
 }
 
-/* Estilos para mensajes de error y éxito generales - Ajusta el tamaño para consistencia y usa rem */
 .error-message {
-    color: #dc3545; /* Rojo para errores */
+    color: #dc3545;
+    /* Rojo para errores */
     margin-top: 0.5rem;
-    font-size: 0.875rem; /* Cambiado de 0.9rem a 0.875rem para posible consistencia con .form-error */
+    font-size: 0.875rem;
 }
 
 .success-message {
-    color: #28a745; /* Verde para éxito */
+    color: #28a745;
     margin-top: 0.5rem;
-    font-size: 0.875rem; /* Cambiado de 0.9rem a 0.875rem para posible consistencia */
-}
+    font-size: 0.875rem;
 
-/* Puedes añadir más estilos globales aquí */
+}
