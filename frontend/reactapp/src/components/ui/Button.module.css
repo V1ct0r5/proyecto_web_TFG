@@ -31,8 +31,8 @@
 .buttonSecondary {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background-color: #cdcfd3;
-  color: #1f2937;
+  background-color: #dc3545;
+  color: white;
   font-weight: 500;
   font-size: 1rem;
   border: none;
@@ -43,12 +43,12 @@
 }
 
 .buttonSecondary:hover {
-  background-color: #d1d5db;
+  background-color: #c82333;
 }
 
 .buttonSecondary:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.5);
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.5);
 }
 
 .buttonSecondary:disabled {
