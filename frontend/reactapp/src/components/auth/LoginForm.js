@@ -6,9 +6,10 @@ import { useForm } from "react-hook-form";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import FormGroup from "../ui/FormGroup";
+import { toast } from 'react-toastify';
+
 
 function LoginForm() {
-    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
     const {
@@ -21,7 +22,6 @@ function LoginForm() {
     const { login } = useAuth();
 
     const onSubmit = async (data) => {
-        setError("");
         setLoading(true);
 
         try {
@@ -32,16 +32,19 @@ function LoginForm() {
 
             login(response.data.token, response.data.usuario);
 
+            toast.success('¡Bienvenido!');
+
             navigate("/objectives");
+
         } catch (err) {
             console.error(
                 "Error al iniciar sesión:",
                 err.response ? err.response.data : err.message
             );
             if (err.response && err.response.data && err.response.data.message) {
-                setError(err.response.data.message);
+                toast.error(err.response.data.message);
             } else {
-                setError("Error al iniciar sesión. Por favor, inténtalo de nuevo.");
+                toast.error("Error al iniciar sesión. Por favor, inténtalo de nuevo.");
             }
         } finally {
             setLoading(false);
@@ -92,10 +95,14 @@ function LoginForm() {
                     isError={!!errors.password}
                 />
             </FormGroup>
-            {error && <p className="error-message">{error}</p>}
             <Button type="submit" disabled={loading}>
                 {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
+            {loading && (
+                <div className="loading-overlay">
+                    <p>Cargando...</p>
+                </div>
+            )}
         </form>
     );
 }
