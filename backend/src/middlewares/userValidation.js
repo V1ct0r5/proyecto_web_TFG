@@ -13,14 +13,12 @@ const validarCrearUsuario = [
         .isEmail()
         .withMessage('El formato del correo electrónico es inválido'),
     body('contrasena')
-        .notEmpty()
-        .withMessage('La contraseña es obligatoria')
-        .isLength({ min: 8 })
-        .withMessage('La contraseña debe tener al menos 8 caracteres')
-        .matches(/\d/)
-        .withMessage('La contraseña debe contener al menos un número')
-        .matches(/[a-zA-Z]/)
-        .withMessage('La contraseña debe contener al menos una letra'),
+            .notEmpty().withMessage('La contraseña es obligatoria')
+            .isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres') // <--- Cambia a 8
+            .matches(/[A-Z]/).withMessage('La contraseña debe contener al menos una mayúscula') // <--- Añade esto
+            .matches(/[a-z]/).withMessage('La contraseña debe contener al menos una minúscula') // <--- Añade esto
+            .matches(/[0-9]/).withMessage('La contraseña debe contener al menos un número') // <--- Añade esto
+            .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/).withMessage('La contraseña debe contener al menos un carácter especial'),
     body('confirmar_contrasena')
         .notEmpty()
         .withMessage('La confirmación de la contraseña es obligatoria')
