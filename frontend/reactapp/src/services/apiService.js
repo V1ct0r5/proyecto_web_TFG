@@ -46,7 +46,26 @@ apiService.interceptors.response.use(
 // Funciones para realizar solicitudes a la API
 const api = {
     // Rutas de autenticación
-    register: (userData) => apiService.post('/auth/register', userData),
+    register: async (userData) => {
+        try {
+            // Espera la respuesta de la llamada POST
+            const response = await apiService.post('/auth/register', userData);
+
+            // Procesa la respuesta exitosa para extraer token y user
+            const user = response.data;
+            let token = response.data.token;
+
+            const authHeader = response.headers['authorization'] || response.headers['Authorization'];
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                token = authHeader.substring(7);
+            }
+
+            return { token: token, user: user };
+
+        } catch (error) {
+            throw error;
+        }
+    },
     login: (credentials) => apiService.post('/auth/login', credentials),
     logout: () => apiService.delete('/auth/logout'),
 
