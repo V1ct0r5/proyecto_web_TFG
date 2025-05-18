@@ -26,28 +26,26 @@ const validarCrearObjetivo = [
         .withMessage('La unidad de medida debe tener como máximo 50 caracteres'),
 
     body('fecha_inicio')
-        .optional()
-        .if(body('fecha_inicio').exists()) // Solo valida si el campo existe
+        .optional({ checkFalsy: true })
         .isDate().withMessage('La fecha de inicio no es válida')
         .custom((value) => {
-            if(!value) return true; // Si no hay valor, no se valida
+            if(!value) return true;
 
             const currentDate = new Date();
-            currentDate.setHours(0, 0, 0, 0); // Establece la hora a 00:00:00 para comparar solo la fecha
+            currentDate.setHours(0, 0, 0, 0);
             const startDate = new Date(value);
-            startDate.setHours(0, 0, 0, 0); // Establece la hora a 00:00:00 para comparar solo la fecha
+            startDate.setHours(0, 0, 0, 0);
             return startDate >= currentDate;
         })
         .withMessage('La fecha de inicio debe ser mayor o igual a la fecha actual'),
 
     body('fecha_fin')
-        .optional()
-        .if(body('fecha_fin').exists()) // Solo valida si el campo existe
+        .optional({ checkFalsy: true })
         .isDate()
         .withMessage('La fecha de fin no es válida')
         .custom((value, { req }) => {
             if (!value) {
-                return true; // Si es opcional y no se proporciona
+                return true;
             }
     
             const fechaFin = new Date(value);
@@ -102,7 +100,7 @@ const validarActualizarObjetivo = [
         .withMessage('La unidad de medida debe tener como máximo 50 caracteres'),
 
         body('fecha_inicio')
-        .optional()
+        .optional({ checkFalsy: true })
         .isDate()
         .withMessage('La fecha de inicio no es válida')
         .custom((value) => {
@@ -117,7 +115,7 @@ const validarActualizarObjetivo = [
         .withMessage('La fecha de inicio debe ser mayor o igual a la fecha actual'),
 
     body('fecha_fin')
-        .optional()
+        .optional({ checkFalsy: true })
         .isDate()
         .withMessage('La fecha de fin no es válida')
         .custom((value, { req }) => {
