@@ -1,10 +1,16 @@
 import React, { useState } from "react";
 import api from "../../services/apiService";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import FormGroup from "../ui/FormGroup";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import objetivosStyles from "./ObjetivosForm.module.css";
+
+import DatePicker from '../ui/DatePicker/DatePicker';
+import { format, isValid } from 'date-fns';
+
+import { toast } from 'react-toastify';
+
 
 function ObjetivosForm({ onObjectiveCreated }) {
 	const [error, setError] = useState("");
@@ -17,18 +23,16 @@ function ObjetivosForm({ onObjectiveCreated }) {
 		formState: { errors },
 		reset,
 		watch,
+		control,
 	} = useForm();
 
 	const tipoObjetivoOptions = [
-		"Salud",
-		"Finanzas",
-		"Desarrollo personal",
-		"Relaciones",
-		"Carrera profesional",
-		"Otros",
+		"Salud", "Finanzas", "Desarrollo personal",
+		"Relaciones", "Carrera profesional", "Otros",
 	];
 
-	const fechaInicio = watch("fechaInicio", "");
+	const fechaInicioValue = watch("fechaInicio");
+
 
 	const onSubmit = async (data) => {
 		setError("");
@@ -39,61 +43,84 @@ function ObjetivosForm({ onObjectiveCreated }) {
 			nombre: data.nombre,
 			descripcion: data.descripcion || null,
 			tipo_objetivo: data.tipoObjetivo,
-			valor_cuantitativo:
-				data.valorCuantitativo !== "" &&
-					data.valorCuantitativo !== null &&
-					!isNaN(data.valorCuantitativo)
-					? parseFloat(data.valorCuantitativo)
-					: null,
+			valor_cuantitativo: data.valorCuantitativo === null || isNaN(data.valorCuantitativo) ? null : data.valorCuantitativo,
 			unidad_medida: data.unidadMedida || null,
-			fecha_inicio: data.fechaInicio || null,
-			fecha_fin: data.fechaFin || null,
+			fecha_inicio: data.fechaInicio && isValid(new Date(data.fechaInicio)) ? format(new Date(data.fechaInicio), 'yyyy-MM-dd') : null,
+			fecha_fin: data.fechaFin && isValid(new Date(data.fechaFin)) ? format(new Date(data.fechaFin), 'yyyy-MM-dd') : null,
 			estado: data.estado || "Pendiente",
 		};
 
+		console.log("Objeto a enviar a la API (objectiveData):", objectiveData);
+
 		try {
 			const response = await api.createObjective(objectiveData);
+
 			if (onObjectiveCreated) {
 				onObjectiveCreated(response.data);
 			}
 			setSuccess("Objetivo creado con éxito.");
-			reset();
 			setError(null);
+
+			reset();
+
 		} catch (err) {
 			console.error(
 				"Error al crear el objetivo:",
 				err.response ? err.response.data : err.message
 			);
-			let errorMessage =
-				"Error al crear el objetivo. Por favor, inténtalo de nuevo.";
+
+			let displayMessage = "Error al crear el objetivo. Por favor, inténtalo de nuevo.";
+
 			if (err.response && err.response.data) {
-				if (
-					err.response.data.errors &&
-					Array.isArray(err.response.data.errors)
-				) {
-					errorMessage =
-						"Errores de validación: " +
-						err.response.data.errors
-							.map((e) => e.msg || e.message || "desconocido")
-							.join(", ");
+				if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+					displayMessage = "Errores de validación: " + err.response.data.errors.map((e) => e.msg || e.message || "desconocido").join(", ");
+
+					setError(displayMessage);
+					// toast.error(displayMessage);
+					setSuccess(null);
+
+					setLoading(false);
+					return;
+
 				} else if (err.response.data.message) {
-					errorMessage = err.response.data.message;
+					displayMessage = err.response.data.message;
+
+					setError(displayMessage);
+					toast.error(displayMessage);
+					setSuccess(null);
+
 				} else if (err.response.data.error) {
-					errorMessage = err.response.data.error;
+					displayMessage = err.response.data.error;
+
+					setError(displayMessage);
+					toast.error(displayMessage);
+					setSuccess(null);
+
+				} else {
+					displayMessage = "Error del servidor: Formato de error desconocido.";
+
+					setError(displayMessage);
+					toast.error(displayMessage);
+					setSuccess(null);
 				}
-			} else {
-				errorMessage = "Error de red o del servidor.";
+			} else if (err.message) {
+				displayMessage = "Error de conexión: " + err.message;
+
+				setError(displayMessage);
+				toast.error(displayMessage);
+				setSuccess(null);
 			}
-			setError(errorMessage);
-			setSuccess(null);
 
 			if (onObjectiveCreated) {
-				onObjectiveCreated(null, errorMessage);
+				onObjectiveCreated(null, displayMessage);
 			}
+
+
 		} finally {
 			setLoading(false);
 		}
 	};
+
 
 	return (
 		<div>
@@ -123,6 +150,7 @@ function ObjetivosForm({ onObjectiveCreated }) {
 							isError={!!errors.nombre}
 						/>
 					</FormGroup>
+
 					<FormGroup
 						label="Descripción"
 						htmlFor="descripcion"
@@ -137,7 +165,8 @@ function ObjetivosForm({ onObjectiveCreated }) {
 							isError={!!errors.descripcion}
 						/>
 					</FormGroup>
-					<div className={objetivosStyles.formGrid}>
+
+					
 						<FormGroup
 							label="Tipo de objetivo"
 							htmlFor="tipoObjetivo"
@@ -163,23 +192,7 @@ function ObjetivosForm({ onObjectiveCreated }) {
 								))}
 							</Input>
 						</FormGroup>
-
-						<FormGroup
-							label="Estado"
-							htmlFor="estado"
-							error={errors.estado?.message}
-						>
-							<Input
-								type="select"
-								id="estado"
-								{...register("estado")}
-								disabled={loading}
-								isError={!!errors.estado}
-							>
-								<option value="Pendiente">Pendiente</option>
-							</Input>
-						</FormGroup>
-
+						<div className={objetivosStyles.formGrid}>
 						<FormGroup
 							label="Valor cuantitativo"
 							htmlFor="valorCuantitativo"
@@ -188,7 +201,7 @@ function ObjetivosForm({ onObjectiveCreated }) {
 							<Input
 								type="number"
 								id="valorCuantitativo"
-								step="0.01"
+								step="1"
 								placeholder="Ej. 5"
 								{...register("valorCuantitativo", {
 									valueAsNumber: true,
@@ -217,57 +230,67 @@ function ObjetivosForm({ onObjectiveCreated }) {
 							/>
 						</FormGroup>
 
+
 						<FormGroup
 							label="Fecha de inicio"
 							htmlFor="fechaInicio"
 							error={errors.fechaInicio?.message}
 						>
-							<Input
-								type="date"
-								id="fechaInicio"
-								placeholder="dd/mm/aaaa"
-								{...register("fechaInicio", {
-									validate: (value) =>
-										!value || !isNaN(new Date(value)) || "Fecha inválida",
-								})}
-								disabled={loading}
-								isError={!!errors.fechaInicio}
+							<Controller
+								name="fechaInicio"
+								control={control}
+								rules={{
+									validate: (value) => {
+										if (!value) return true;
+										return isValid(new Date(value)) || "Fecha inválida";
+									},
+								}}
+								render={({ field }) => (
+									<DatePicker
+										{...field} // Usamos el spread field
+										placeholder="Selecciona una fecha"
+										disabled={loading}
+										isError={!!errors.fechaInicio}
+									/>
+								)}
 							/>
 						</FormGroup>
+
 						<FormGroup
 							label="Fecha de finalización"
 							htmlFor="fechaFin"
 							error={errors.fechaFin?.message}
 						>
-							<Input
-								type="date"
-								id="fechaFin"
-								placeholder="dd/mm/aaaa"
-								{...register("fechaFin", {
+							<Controller
+								name="fechaFin"
+								control={control}
+								rules={{
 									validate: (value) => {
 										if (!value) return true;
+										if (!isValid(new Date(value))) return "Fecha inválida";
 										const startDate = watch("fechaInicio");
-										if (isNaN(new Date(value))) return "Fecha inválida";
-										if (
-											startDate &&
-											new Date(value) &&
-											new Date(startDate) &&
-											new Date(value) <= new Date(startDate)
-										) {
+										if (startDate && isValid(new Date(startDate)) && new Date(value) <= new Date(startDate)) {
 											return "La fecha de fin debe ser posterior a la fecha de inicio";
 										}
 										return true;
 									},
-								})}
-								disabled={loading}
-								isError={!!errors.fechaFin}
+								}}
+								render={({ field }) => (
+									<DatePicker
+										{...field} // Usamos el spread field
+										placeholder="Selecciona una fecha"
+										disabled={loading}
+										isError={!!errors.fechaFin}
+										minDate={fechaInicioValue ? new Date(fechaInicioValue) : null}
+									/>
+								)}
 							/>
 						</FormGroup>
-					</div>{" "}
-				</div>{" "}
-				<Button type="submit" disabled={loading}>
-					{loading ? "Creando..." : "Crear objetivo"}
-				</Button>
+					</div>
+					<Button type="submit" disabled={loading}>
+						{loading ? "Creando..." : "Crear objetivo"}
+					</Button>
+				</div>
 			</form>
 		</div>
 	);
