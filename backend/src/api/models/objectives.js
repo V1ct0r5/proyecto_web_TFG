@@ -34,12 +34,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     fecha_fin: {
       type: DataTypes.DATEONLY,
-      validate: {
-        isAfter: {
-          args: sequelize.literal('fecha_inicio'),
-          msg: "La fecha de fin debe ser posterior a la fecha de inicio"
-        }
-      }
     },
     estado: {
       type: DataTypes.ENUM('Pendiente', 'En progreso', 'Completado'),
