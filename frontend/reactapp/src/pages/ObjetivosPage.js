@@ -5,13 +5,13 @@ import api from "../services/apiService";
 import { useAuth } from "../context/AuthContext";
 import styles from "./AuthLayout.module.css";
 import buttonStyles from "../components/ui/Button.module.css";
-
+import { toast } from 'react-toastify';
+import { set } from "react-hook-form";
 
 function ObjetivosPage() {
     const [objetivos, setObjetivos] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
+
 
     const navigate = useNavigate();
     const { user, logout } = useAuth();
@@ -23,17 +23,16 @@ function ObjetivosPage() {
     const handleObjectiveCreated = (nuevoObjetivo, errorMessage = null) => {
         if (nuevoObjetivo) {
             setObjetivos([nuevoObjetivo, ...objetivos]);
-            setSuccess('Objetivo creado con éxito.');
-            setError(null);
+            toast.success('Objetivo creado con éxito.');
         } else if (errorMessage) {
-            setError(errorMessage);
-            setSuccess(null);
+            toast.error(errorMessage);
         }
     };
 
 
     useEffect(() => {
         const fetchObjectives = async () => {
+            setLoading(true);
             try {
                 const response = await api.getObjectives();
                 setObjetivos(response.data);
@@ -43,7 +42,7 @@ function ObjetivosPage() {
                     logout();
                     navigate("/login");
                 } else {
-                    setError("Error al cargar tus objetivos. " + (err.response && err.response.data.message ? err.response.data.message : err.message));
+                    toast.error("Error al cargar tus objetivos. " + (err.response && err.response.data.message ? err.response.data.message : err.message));
                 }
             } finally {
                 setLoading(false);
@@ -67,38 +66,28 @@ function ObjetivosPage() {
         setLoading(true);
         try {
             await api.logout();
+            toast.success('Sesión cerrada con éxito.');
         } catch (err) {
             console.error("Error al cerrar sesión en el backend:", err);
+            toast.error('Error al cerrar sesión.');
         } finally {
             logout();
+            setLoading(false);
         }
     }
 
-    if (loading && !objetivos.length) {
-        return (
-            <div className={styles.authPage}>
-                <p>Cargando objetivos...</p>
-            </div>
-        );
-    }
-
-    if (error && !objetivos.length && !loading) {
-        return (
-            <div className={styles.authPage}>
-                <p className={styles.formErrorGeneral || "error-message"}>{error}</p>
-            </div>
-        );
-    }
 
 
     return (
         <div className={styles.authPage}>
             {user && (
                 <header className={styles.pageHeader}>
-                    <div className={styles.userInfo}>Hola, {userName}</div>
+                    <div className={styles.userInfo}>Hola, {userName}!</div>
+                    <div className={styles.rightContent}>
                     <button onClick={handleLogout} className={buttonStyles.buttonSecondary || 'button-secondary'}>
                         Cerrar Sesión
                     </button>
+                    </div>
                 </header>
             )}
 
@@ -110,6 +99,12 @@ function ObjetivosPage() {
                     <ObjetivosForm onObjectiveCreated={handleObjectiveCreated} />
                 </div>
             </div>
+
+            {loading && (
+                 <div className="loading-overlay">
+                    <p>Cargando...</p>  
+                </div>
+            )}
 
         </div>
     );
