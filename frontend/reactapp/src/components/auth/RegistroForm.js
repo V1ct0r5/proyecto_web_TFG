@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/apiService";
 import { useForm } from "react-hook-form";
+import { toast } from 'react-toastify';
 
 import FormGroup from "../ui/FormGroup";
 import Input from "../ui/Input";
@@ -19,11 +20,12 @@ function RegistroForm() {
 
     const { register, handleSubmit, formState: { errors }, watch } = useForm();
 
-    const password = watch("contrasena", "");
+    const password = watch("password", "");
 
     const onSubmit = async (data) => {
-        setError("");
-        setSuccess("");
+
+        setError(null);
+        setSuccess(null);
         setLoading(true);
 
         const userData = {
@@ -34,33 +36,51 @@ function RegistroForm() {
         };
 
         try {
-            const response = await api.register(userData);
+            const result = await api.register(userData);
 
-            setSuccess("Registro exitoso. Ahora puedes iniciar sesión.");
-            console.log("Registro exitoso:", response.data);
+            if (result?.token && result?.user) {
+                login(result.token, result.user);
+                setSuccess("Registro exitoso. Redirigiendo...");
+                setError(null);
 
-            const { token, usuario } = response.data;
-            if (token) {
-                console.log("Token recibido en el registro. Iniciando sesión automáticamente.");
-                login(token, usuario);
-                navigate('/objectives');
+                navigate("/objectives");
+
             } else {
-                setTimeout(() => { navigate('/login'); }, 2000);
+                setError("Error inesperado en la respuesta del servidor.");
+                toast.error("Error en la respuesta del servidor.");
             }
 
         } catch (err) {
-            console.error("Error al registrar:", err);
-            if (err.response && err.response.data) {
-                if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
-                    setError("Errores de validación: " + err.response.data.errors.map(e => e.msg || e.message || 'Error de validación desconocido').join(", "));
+            console.error('Error al intentar registrar:', err);
+
+            let errorMessage = "Error de red o del servidor al intentar registrar. Por favor, inténtalo de nuevo.";
+
+            if (err.response && err.response.status === 409) {
+                errorMessage = err.response.data && err.response.data.message
+                    ? err.response.data.message
+                    : "El correo electrónico ya está registrado.";
+            } else if (err.response && err.response.data) {
+                if (
+                    err.response.data.errors &&
+                    Array.isArray(err.response.data.errors)
+                ) {
+                    errorMessage =
+                        "Errores de validación: " +
+                        err.response.data.errors
+                            .map((e) => e.msg || e.message || "desconocido")
+                            .join(", ");
                 } else if (err.response.data.message) {
-                    setError(err.response.data.message);
-                } else if (err.response.data.error) {
-                    setError(err.response.data.error);
-                } else { setError("Error desconocido en el registro."); }
-            } else {
-                setError("Error de red o del servidor al intentar registrar. Por favor, inténtalo de nuevo.");
+                    errorMessage = err.response.data.message;
+                } else {
+                    errorMessage = "Error del servidor: Formato de error desconocido.";
+                }
+            } else if (err.message) {
+                errorMessage = "Error de conexión: " + err.message;
             }
+
+            setError(errorMessage);
+            toast.error(errorMessage);
+
         } finally {
             setLoading(false);
         }
@@ -121,8 +141,19 @@ function RegistroForm() {
                     {...register("password", {
                         required: "La contraseña es obligatoria",
                         minLength: {
-                            value: 6,
-                            message: "La contraseña debe tener al menos 6 caracteres"
+                            value: 8,
+                            message: "La contraseña debe tener al menos 8 caracteres"
+                        },
+                        validate: {
+                            hasUppercase: (value) =>
+                                /[A-Z]/.test(value) || "La contraseña debe contener al menos una mayúscula",
+                            hasLowercase: (value) =>
+                                /[a-z]/.test(value) || "La contraseña debe contener al menos una minúscula",
+                            hasNumber: (value) =>
+                                /[0-9]/.test(value) || "La contraseña debe contener al menos un número",
+                            hasSpecialChar: (value) =>
+                                /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/.test(value) ||
+                                "La contraseña debe contener al menos un carácter especial"
                         }
                     })}
                     disabled={loading}
@@ -141,7 +172,7 @@ function RegistroForm() {
                     placeholder="Confirma tu contraseña"
                     {...register("confirmPassword", {
                         required: "Por favor, confirma tu contraseña",
-                        validate: value => value === password || "Las contraseñas no coinciden"
+                        validate: value => value.trim() === password.trim() || "Las contraseñas no coinciden"
                     })}
                     disabled={loading}
                     isError={!!errors.confirmPassword}
