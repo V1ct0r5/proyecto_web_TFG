@@ -31,10 +31,13 @@ function LoginForm() {
             });
 
             login(response.data.token, response.data.usuario);
-
             toast.success('¡Bienvenido!');
 
-            navigate("/objectives");
+                if (response.data.hasObjectives) {
+                    navigate("/dashboard");
+                } else {
+                    navigate("/objectives");
+                }
 
         } catch (err) {
             console.error(
