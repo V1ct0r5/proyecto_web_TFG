@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import ObjetivosForm from "../components/objetivos/ObjetivosForm";
 import api from "../services/apiService";
 import { useAuth } from "../context/AuthContext";
-import styles from "./AuthLayout.module.css";
+import styles from "../layouts/AuthLayout.module.css";
 import buttonStyles from "../components/ui/Button.module.css";
 import { toast } from 'react-toastify';
 import { set } from "react-hook-form";
@@ -17,13 +17,13 @@ function ObjetivosPage() {
     const { user, logout } = useAuth();
 
     const hasObjectives = objetivos.length > 0;
-    // ¡CORRECCIÓN AQUÍ! Usar 'user.nombre_usuario'
     const userName = user ? user.nombre_usuario : 'Usuario';
 
     const handleObjectiveCreated = (nuevoObjetivo, errorMessage = null) => {
         if (nuevoObjetivo) {
             setObjetivos([nuevoObjetivo, ...objetivos]);
             toast.success('Objetivo creado con éxito.');
+            navigate('/dashboard');
         } else if (errorMessage) {
             toast.error(errorMessage);
         }
@@ -80,17 +80,6 @@ function ObjetivosPage() {
 
     return (
         <div className={styles.authPage}>
-            {user && (
-                <header className={styles.pageHeader}>
-                    <div className={styles.userInfo}>Hola, {userName}!</div>
-                    <div className={styles.rightContent}>
-                    <button onClick={handleLogout} className={buttonStyles.buttonSecondary || 'button-secondary'}>
-                        Cerrar Sesión
-                    </button>
-                    </div>
-                </header>
-            )}
-
             <div className={styles.mainContentArea}>
                 <div className={styles.formContainer}>
                     <h2 className={styles.formTitle}>
@@ -101,7 +90,7 @@ function ObjetivosPage() {
             </div>
 
             {loading && (
-                 <div className="loading-overlay">
+                <div className="loading-overlay">
                     <p>Cargando...</p>  
                 </div>
             )}
