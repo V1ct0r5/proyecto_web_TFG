@@ -5,32 +5,7 @@
 }
 
 html {
-    font-size: 18px;
-}
-
-
-:root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
-    --radius: .5rem;
-    --font-sans: "Inter", sans-serif;
+    font-size: 14px;
 }
 
 body {
@@ -48,11 +23,7 @@ code {
         monospace;
 }
 
-.App {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-}
+
 
 h1,
 h2,
@@ -61,7 +32,7 @@ h4,
 h5,
 h6 {
     color: #333;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
 }
 
 a {
@@ -73,11 +44,25 @@ a:hover {
     text-decoration: underline;
 }
 
+.formContainer {
+    background-color: #FFFFFF;
+    box-shadow: 4px 4px 6px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0.6rem;
+    padding: 1.2rem;
+    width: 100%; /* Asegura que ocupe el 100% del espacio disponible en su contenedor */
+    min-width: 20rem;
+    margin-bottom: 2rem;
+}
+
+.formContainer:last-of-type {
+    margin-bottom: 0;
+}
+
+
 .error-message {
     color: #dc3545;
-    /* Rojo para errores */
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
+    margin-top: 0.4rem;
+    font-size: 0.7rem;
 }
 
 .success-message {
@@ -89,20 +74,29 @@ a:hover {
 
 .loading-overlay {
     position: fixed;
-    /* Posición fija respecto a la ventana */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(255, 255, 255, 0.7);
-    /* Fondo semi-transparente blanco */
     display: flex;
     justify-content: center;
-    /* Centra horizontalmente */
     align-items: center;
-    /* Centra verticalmente */
     z-index: 1000;
-    /* Asegura que esté por encima de otros elementos */
     font-size: 1.5rem;
     color: #333;
+}
+
+.add-objective-button-container {
+    display: flex; /* Convertir en contenedor Flexbox */
+    justify-content: flex-end; /* Centrar el contenido horizontalmente */
+    align-items: center;
+    margin-top: 1.5rem;
+    width: 100%;
+}
+
+.objetivos-page-content { /* Crea esta nueva regla con el nombre de clase exacto */
+    display: flex;
+    flex-direction: column; /* <-- Apila los hijos (h2 y tarjetas) verticalmente */
+    gap: 1rem;
 }
