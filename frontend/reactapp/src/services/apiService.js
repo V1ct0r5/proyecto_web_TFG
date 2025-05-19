@@ -13,17 +13,17 @@ const apiService = axios.create({
 // Interceptor para agregar el token de autorización a las solicitudes
 apiService.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            // Si hay un token, lo agrega a los headers de la solicitud
-            config.headers['Authorization'] = `Bearer ${token}`;
+        console.log("API Interceptor: Intercepting request to:", config.url); // Log the URL
+        const token = localStorage.getItem("token");
+        console.log("API Interceptor: Token found in localStorage:", token ? "Exists" : "Does NOT exist"); // Log if token exists
+
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+            console.log("API Interceptor: Authorization header added."); // Log if header is added
+        } else {
+             console.log("API Interceptor: No token found, Authorization header NOT added."); // Log if header is NOT added
         }
-        return config;
-    },
-    (error) => {
-        // Manejo de errores de la solicitud antes de enviarla
-        console.error('Request Error:', error);
-        return Promise.reject(error);
+        return config;
     }
 );
 
