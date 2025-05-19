@@ -5,10 +5,12 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(null);
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const storedToken = localStorage.getItem("token");
         const storedUser = localStorage.getItem("user");
+
         if (storedToken && storedUser) {
             setToken(storedToken);
             try {
@@ -21,13 +23,14 @@ export const AuthProvider = ({ children }) => {
                 setUser(null);
             }
         } else {
-            if (storedToken || storedUser) {
+             if (storedToken || storedUser) {
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
-                setToken(null);
-                setUser(null);
-            }
+             }
+             setToken(null);
+             setUser(null);
         }
+        setLoading(false);
     }, []);
 
     useEffect(() => {
@@ -35,28 +38,26 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("token", token);
         } else {
             localStorage.removeItem("token");
-            setUser(null);
         }
     }, [token]);
 
     const login = (newToken, userData) => {
         setToken(newToken);
         setUser(userData);
-        localStorage.setItem("token", newToken); // Guarda el token
-        localStorage.setItem("user", JSON.stringify(userData)); // Guarda el objeto user (como string JSON)
+        localStorage.setItem("user", JSON.stringify(userData));
     };
 
     const logout = () => {
         setToken(null);
         setUser(null);
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        localStorage.removeItem("user");
     };
 
     const authValue = {
         token,
         user,
         isAuthenticated: !!token,
+        loading,
         login,
         logout,
     };
