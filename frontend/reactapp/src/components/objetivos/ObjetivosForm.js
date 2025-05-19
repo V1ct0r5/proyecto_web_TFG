@@ -48,6 +48,7 @@ function ObjetivosForm({ onObjectiveCreated }) {
 			fecha_inicio: data.fechaInicio && isValid(new Date(data.fechaInicio)) ? format(new Date(data.fechaInicio), 'yyyy-MM-dd') : null,
 			fecha_fin: data.fechaFin && isValid(new Date(data.fechaFin)) ? format(new Date(data.fechaFin), 'yyyy-MM-dd') : null,
 			estado: data.estado || "Pendiente",
+			valor_actual: data.valorActual === null || isNaN(data.valorActual) ? null : data.valorActual,
 		};
 
 		console.log("Objeto a enviar a la API (objectiveData):", objectiveData);
@@ -76,7 +77,6 @@ function ObjetivosForm({ onObjectiveCreated }) {
 					displayMessage = "Errores de validación: " + err.response.data.errors.map((e) => e.msg || e.message || "desconocido").join(", ");
 
 					setError(displayMessage);
-					// toast.error(displayMessage);
 					setSuccess(null);
 
 					setLoading(false);
@@ -123,10 +123,9 @@ function ObjetivosForm({ onObjectiveCreated }) {
 
 
 	return (
-		<div>
+		<div className="formContainer">
 			{error && <p className="error-message">{error}</p>}
 			{success && <p className="success-message">{success}</p>}
-
 			<form onSubmit={handleSubmit(onSubmit)} noValidate>
 				<div className={objetivosStyles.formGroupContainer}>
 					<FormGroup
@@ -150,7 +149,6 @@ function ObjetivosForm({ onObjectiveCreated }) {
 							isError={!!errors.nombre}
 						/>
 					</FormGroup>
-
 					<FormGroup
 						label="Descripción"
 						htmlFor="descripcion"
@@ -165,34 +163,53 @@ function ObjetivosForm({ onObjectiveCreated }) {
 							isError={!!errors.descripcion}
 						/>
 					</FormGroup>
-
-					
+					<FormGroup
+						label="Tipo de objetivo"
+						htmlFor="tipoObjetivo"
+						required={true}
+						error={errors.tipoObjetivo?.message}
+					>
+						<Input
+							type="select"
+							id="tipoObjetivo"
+							{...register("tipoObjetivo", {
+								required: "El tipo de objetivo es obligatorio",
+								validate: (value) =>
+									value !== "" || "El tipo de objetivo es obligatorio",
+							})}
+							disabled={loading}
+							isError={!!errors.tipoObjetivo}
+						>
+							<option value="">Selecciona un tipo</option>
+							{tipoObjetivoOptions.map((option, index) => (
+								<option key={index} value={option}>
+									{option}
+								</option>
+							))}
+						</Input>
+					</FormGroup>
+					<div className={objetivosStyles.formGrid}>
 						<FormGroup
-							label="Tipo de objetivo"
-							htmlFor="tipoObjetivo"
-							required={true}
-							error={errors.tipoObjetivo?.message}
+							label="Valor actual"
+							htmlFor="valorActual"
+							error={errors.valorActual?.message}
 						>
 							<Input
-								type="select"
-								id="tipoObjetivo"
-								{...register("tipoObjetivo", {
-									required: "El tipo de objetivo es obligatorio",
+								type="number"
+								id="valorActual"
+								step="0.01" // Permite decimales, ajusta según necesites
+								placeholder="Ej. 2.5"
+								{...register("valorActual", {
+									valueAsNumber: true,
 									validate: (value) =>
-										value !== "" || "El tipo de objetivo es obligatorio",
+										!value ||
+										(!isNaN(value) && isFinite(value)) ||
+										"Debe ser un número válido",
 								})}
 								disabled={loading}
-								isError={!!errors.tipoObjetivo}
-							>
-								<option value="">Selecciona un tipo</option>
-								{tipoObjetivoOptions.map((option, index) => (
-									<option key={index} value={option}>
-										{option}
-									</option>
-								))}
-							</Input>
+								isError={!!errors.valorActual}
+							/>
 						</FormGroup>
-						<div className={objetivosStyles.formGrid}>
 						<FormGroup
 							label="Valor cuantitativo"
 							htmlFor="valorCuantitativo"
@@ -214,7 +231,6 @@ function ObjetivosForm({ onObjectiveCreated }) {
 								isError={!!errors.valorCuantitativo}
 							/>
 						</FormGroup>
-
 						<FormGroup
 							label="Unidad de medida"
 							htmlFor="unidadMedida"
@@ -229,8 +245,8 @@ function ObjetivosForm({ onObjectiveCreated }) {
 								isError={!!errors.unidadMedida}
 							/>
 						</FormGroup>
-
-
+					</div>
+					<div className={objetivosStyles.dateFieldsGrid}> {/* <-- NUEVO div aquí */}
 						<FormGroup
 							label="Fecha de inicio"
 							htmlFor="fechaInicio"
@@ -239,23 +255,10 @@ function ObjetivosForm({ onObjectiveCreated }) {
 							<Controller
 								name="fechaInicio"
 								control={control}
-								rules={{
-									validate: (value) => {
-										if (!value) return true;
-										return isValid(new Date(value)) || "Fecha inválida";
-									},
-								}}
-								render={({ field }) => (
-									<DatePicker
-										{...field} // Usamos el spread field
-										placeholder="Selecciona una fecha"
-										disabled={loading}
-										isError={!!errors.fechaInicio}
-									/>
-								)}
+								rules={{ validate: (value) => { if (!value) return true; return isValid(new Date(value)) || "Fecha inválida"; }, }}
+								render={({ field }) => (<DatePicker {...field} placeholder="Selecciona una fecha" disabled={loading} isError={!!errors.fechaInicio} />)}
 							/>
 						</FormGroup>
-
 						<FormGroup
 							label="Fecha de finalización"
 							htmlFor="fechaFin"
@@ -264,29 +267,12 @@ function ObjetivosForm({ onObjectiveCreated }) {
 							<Controller
 								name="fechaFin"
 								control={control}
-								rules={{
-									validate: (value) => {
-										if (!value) return true;
-										if (!isValid(new Date(value))) return "Fecha inválida";
-										const startDate = watch("fechaInicio");
-										if (startDate && isValid(new Date(startDate)) && new Date(value) <= new Date(startDate)) {
-											return "La fecha de fin debe ser posterior a la fecha de inicio";
-										}
-										return true;
-									},
-								}}
-								render={({ field }) => (
-									<DatePicker
-										{...field} // Usamos el spread field
-										placeholder="Selecciona una fecha"
-										disabled={loading}
-										isError={!!errors.fechaFin}
-										minDate={fechaInicioValue ? new Date(fechaInicioValue) : null}
-									/>
-								)}
+								rules={{ validate: (value) => { if (!value) return true; if (!isValid(new Date(value))) return "Fecha inválida"; const startDate = watch("fechaInicio"); if (startDate && isValid(new Date(startDate)) && new Date(value) <= new Date(startDate)) { return "La fecha de fin debe ser posterior a la fecha de inicio"; } return true; }, }}
+								render={({ field }) => (<DatePicker {...field} placeholder="Selecciona una fecha" disabled={loading} isError={!!errors.fechaFin} minDate={fechaInicioValue ? new Date(fechaInicioValue) : null} />)}
 							/>
 						</FormGroup>
 					</div>
+
 					<Button type="submit" disabled={loading}>
 						{loading ? "Creando..." : "Crear objetivo"}
 					</Button>
