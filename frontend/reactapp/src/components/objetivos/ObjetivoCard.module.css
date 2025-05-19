@@ -1,0 +1,259 @@
+/* src/components/objetivos/ObjetivoCard.module.css */
+
+/* --- VARIABLES DE COLOR (Mantén o mueve a CSS global) --- */
+:root {
+    --color-primary: #4F46E5;
+    /* Azul índigo */
+    --color-primary-hover: #4338CA;
+    --color-secondary: #10B981;
+    /* Verde esmeralda */
+    --color-secondary-hover: #059669;
+    --color-warning: #F59E0B;
+    /* Amarillo ámbar */
+    --color-destructive: #EF4444;
+    /* Rojo */
+    --color-muted: #F3F4F6;
+    /* Gris claro */
+    --color-muted-foreground: #6B7280;
+    --color-background: #FFFFFF;
+    --color-foreground: #1F2937;
+    /* Texto oscuro principal */
+    --color-card: #FFFFFF;
+    /* Fondo de la tarjeta */
+    --color-card-foreground: #1F2937;
+    /* Texto principal de la tarjeta */
+    --color-border: #E5E7EB;
+    /* Bordes */
+    --font-sans: 'Inter', sans-serif;
+    /* Asegúrate de importar fuentes globalmente */
+    --font-heading: 'Montserrat', sans-serif;
+    /* Asegúrate de importar fuentes globalmente */
+    --radius: 0.4rem;
+    /* Radio de bordes */
+}
+
+/* --- ESTILOS BASE DE LA TARJETA --- */
+.objetivo-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background-color: var(--color-card);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 00;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background-color: var(--color-card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.objetivo-card:hover {
+    transform: translateY(-20px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+}
+
+/* --- CONTENIDO PRINCIPAL CON PADDING --- */
+.cardContent {
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* --- CABECERA (Contiene Título y Badge Categoría) --- */
+.cardHeaderContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Título */
+.cardTitle {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-card-foreground);
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* Badge de Categoría (Adaptado de .badge) */
+.categoryBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-foreground);
+}
+
+.categoryBadgeIcon {
+    font-size: 1em;
+}
+
+/* --- DESCRIPCIÓN --- */
+.cardDescription {
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+    margin-top: 0;
+    /* Espacio manejado por el gap del cardContent */
+    line-height: 1.5;
+}
+
+.cardDescription p {
+    margin: 0;
+}
+
+
+/* --- SECCIÓN DE PROGRESO --- */
+.progressContainer {
+    /* Contenedor de "Progreso 70%" y la barra */
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.progressHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-foreground);
+}
+
+/* Barra de progreso visual */
+.progressBar {
+    background-color: var(--color-muted);
+    border-radius: 9999px;
+    overflow: hidden;
+    height: 0.4rem;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.progressFill {
+    height: 100%;
+    transition: width 0.5s ease-in-out;
+    border-radius: 9999px;
+}
+
+.progressFillLow {
+    background-color: var(--color-destructive);
+}
+
+/* Rojo */
+.progressFillMedium {
+    background-color: var(--color-warning);
+}
+
+/* Amarillo */
+.progressFillHigh {
+    background-color: var(--color-secondary);
+}
+
+.progressValues {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-top: px;
+}
+
+.progressValueBox {
+    display: flex;
+    flex-direction: column;
+}
+
+.progressValueLabel {
+    font-size: 0.7rem;
+    color: var(--color-muted-foreground);
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.progressValueNumber {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-card-foreground);
+}
+
+
+/* --- FECHA DE ÚLTIMA ACTUALIZACIÓN --- */
+.progressDate {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    color: var(--color-muted-foreground);
+    margin-top: 4px;
+}
+
+
+.dataLabel {
+    font-weight: 500;
+}
+
+
+/* --- PIE DE PÁGINA Y BOTONES --- */
+.cardFooter {
+    padding: 0.8rem 0 0.2rem 0.1rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.cardActions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.4rem 0.8rem;
+    /* Padding general de botón (ajusta para small si quieres) */
+    border-radius: var(--radius);
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    background-color: transparent;
+}
+
+.buttonOutline {
+    border: 1px solid var(--color-border);
+    color: var(--color-foreground);
+}
+
+.buttonOutline:hover {
+    background-color: var(--color-muted);
+}
+
+.buttonSmall {
+    padding: 0.22rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: var(--radius);
+    /* Bordes también pequeños */
+}
+
+/* Estilos específicos para botones Editar y Detalles (si necesitas colores en texto/icono) */
+/* En el ejemplo, el texto de Editar es oscuro y el de Detalles es oscuro, */
+/* lo cual ya cubre buttonOutline. Si quisieras iconos de color, podrías hacer: */
+/* .btnEdit .buttonIcon { color: var(--color-warning); } */
+/* .btnDetails .buttonIcon { color: var(--color-primary); } */
