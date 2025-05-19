@@ -1,0 +1,53 @@
+.header {
+    width: 100%;
+    padding: 0.7rem 1.6rem;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    color: #343a40;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    margin-bottom: 0;
+}
+
+.leftContent {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.headerLogoCircle {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background-color: hsl(245, 79%, 59%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.headerBrand {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #212529;
+}
+
+.rightContent {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.userInfo {
+    font-size: 1rem;
+    color: #333;
+    font-weight: 500;
+}
