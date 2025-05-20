@@ -1,51 +1,54 @@
-.form-container {
+/* Contenedor principal del formulario */
+.formContainer {
     background-color: #FFFFFF;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: 0.5rem;
-    padding: 1.5rem;
+    padding: 1.5rem; /* Padding base para móviles */
+    width: 100%; /* Ocupa el ancho disponible */
+    max-width: 768px; /* Limita el ancho máximo en pantallas grandes (ajusta según diseño) */
+    margin: 0 auto 2rem auto; /* Centra el contenedor horizontalmente y añade margen inferior */
 }
 
-@media (min-width: 768px) {
-    .form-container {
-        padding: 1.6rem;
+/* Media query para ajustar padding en pantallas más grandes */
+@media (min-width: 768px) { /* md breakpoint */
+    .formContainer {
+        padding: 2rem; /* Aumenta el padding en pantallas grandes */
     }
 }
 
+/* Contenedor general para agrupar FormGroups con espaciado */
 .formGroupContainer {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 1rem; /* Espacio vertical entre grupos de formulario */
 }
 
+/* Grid para campos cuantitativos (Valor actual, Valor cuantitativo, Unidad de medida) */
 .formGrid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.8rem;
+    grid-template-columns: 1fr; /* Una columna por defecto en móviles */
+    gap: 1rem; /* Espacio entre campos */
 }
 
-@media (min-width: 768px) {
+/* Media query para layout de 3 columnas en desktop */
+@media (min-width: 768px) { /* md breakpoint */
     .formGrid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.2rem;
+        grid-template-columns: repeat(3, 1fr); /* 3 columnas de igual ancho */
+        gap: 1.5rem; /* Aumenta el espacio entre columnas en pantallas grandes */
     }
 }
 
-.formError {
-    font-size: 0.7rem;
-    color: #ef4444;
-}
-
+/* Grid para campos de fecha (Fecha de inicio, Fecha de finalización) */
 .dateFieldsGrid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem; /* Espacio entre las fechas cuando están apiladas */
+    grid-template-columns: 1fr; /* Una columna por defecto en móviles */
+    gap: 1rem; /* Espacio vertical entre campos de fecha en móviles */
 }
 
-
-@media (min-width: 768px) {
+/* Media query para layout de 2 columnas en desktop */
+@media (min-width: 768px) { /* md breakpoint */
     .dateFieldsGrid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.2rem;
+        grid-template-columns: repeat(2, 1fr); /* 2 columnas de igual ancho */
+        gap: 1.5rem; /* Aumenta el espacio entre columnas en pantallas grandes */
     }
 }
-

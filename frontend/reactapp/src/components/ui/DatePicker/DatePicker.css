@@ -1,15 +1,16 @@
-/* frontend/reactapp/src/components/ui/DatePicker/DatePicker.css */
+/* Estilos para el componente DatePicker, basado en react-calendar y un input personalizado */
 
 /* Contenedor principal: Necesario para el posicionamiento relativo del dropdown */
 .date-picker-container {
     position: relative;
-    width: 100%;
+    width: 100%; /* Ocupa todo el ancho disponible del contenedor padre (FormGroup) */
+    /* Considera añadir display: inline-block; si quieres que se comporte como un elemento en línea */
 }
 
-/* Contenedor del input de texto y botón de limpiar */
+/* Contenedor del input de texto visible y el botón de limpiar */
 .date-picker-input-container {
-    position: relative;
-    display: flex;
+    position: relative; /* Necesario para posicionar el botón de limpiar absolutamente */
+    display: flex; /* Ayuda a alinear el input y el botón */
     align-items: center;
     width: 100%;
 }
@@ -17,115 +18,163 @@
 /* Estilos para el input de texto visible */
 .date-display-input {
     width: 100%;
-    height: 40px;
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    height: 40px; /* Altura fija para el input */
+    padding: 8px 12px; /* Padding interno */
+    border: 1px solid #ccc; /* Borde por defecto */
+    border-radius: 4px; /* Borde redondeado */
     font-size: 1rem;
     background-color: #fff;
-    cursor: pointer;
-    box-sizing: border-box;
+    cursor: pointer; /* Indica que es clickeable */
+    box-sizing: border-box; /* Incluye padding y borde en el tamaño total */
+    line-height: 1.5; /* Asegura alineación vertical del texto */
+    padding-right: 30px; /* Espacio para el botón de limpiar */
 }
 
+/* Estilo de borde para estado de error */
 .is-error .date-display-input {
-    border-color: #f44336;
+    border-color: #f44336; /* Color rojo para error */
 }
 
+/* Estilo de hover para el input */
 .date-display-input:hover {
-    border-color: #aaa;
+    border-color: #a0a0a0; /* Borde ligeramente más oscuro al pasar el mouse */
 }
 
+/* Estilo de focus para el input */
 .date-display-input:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    outline: none; /* Elimina el outline por defecto */
+    border-color: #6366f1; /* Color de borde al enfocar (azul índigo) */
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); /* Sombra de enfoque */
+}
+
+/* Estilo para el input deshabilitado */
+.date-display-input:disabled {
+    background-color: #e9ecef; /* Fondo gris claro */
+    cursor: not-allowed; /* Cursor de no permitido */
+    opacity: 1; /* Asegura que no se vuelva transparente por defecto */
 }
 
 /* Estilos para el botón de limpiar */
 .clear-button {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
+    position: absolute; /* Posicionamiento absoluto dentro de .date-picker-input-container */
+    right: 8px; /* Espacio desde la derecha */
+    top: 50%; /* Alineado verticalmente */
+    transform: translateY(-50%); /* Ajuste fino para el centrado vertical */
+    background: none; /* Sin fondo */
+    border: none; /* Sin borde */
     cursor: pointer;
-    font-size: 18px;
+    font-size: 18px; /* Tamaño del icono/texto '×' */
     color: #888;
-    padding: 0;
-    line-height: 1;
-    z-index: 2;
+    padding: 0; /* Sin padding */
+    line-height: 1; /* Asegura el tamaño correcto de la línea */
+    z-index: 2; /* Asegura que esté por encima del input */
 }
 
 .clear-button:hover {
-    color: #333;
+    color: #555; /* Color más oscuro al pasar el mouse */
 }
 
 /* Contenedor para el calendario emergente: Posicionamiento y apariencia básica */
 .date-picker-dropdown {
-    position: absolute;
+    position: absolute; /* Posicionamiento absoluto respecto a .date-picker-container */
+    bottom: 100%; /* Alinea la parte inferior del dropdown con la parte superior del contenedor */
+    margin-bottom: 4px; /* Pequeño espacio entre el input y el dropdown */
 
-    bottom: 100%;
-    left: 0;
-    z-index: 100;
-    /* margin-bottom: 4px; */
-    /* Usa margin-bottom si usas bottom: 100% */
-    margin-bottom: 4px;
-    /* Usa margin-top si usas top: 100% */
-    padding: 1rem;
+    left: 0; /* Alineado a la izquierda del contenedor */
+    z-index: 100; /* Asegura que esté por encima de otros elementos */
 
-    width: 100%;
-    max-width: 300px;
-    /* Ajusta si es necesario, esto limita el ancho del popover */
+    padding: 0; /* Eliminar padding aquí, ya que react-calendar tiene su propio padding */
+
+    width: 100%; /* Ocupa el ancho del contenedor principal */
+    max-width: 300px; /* Limita el ancho máximo del calendario emergente */
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
-    overflow: hidden;
-    /* No hay padding aquí, el componente react-calendar tendrá su propio padding interno */
+    overflow: hidden; /* Asegura que el contenido se ajuste a los bordes redondeados */
 }
 
 /* Asegurar que el componente react-calendar dentro del dropdown ocupe el ancho del contenedor */
 .date-picker-dropdown .react-calendar {
-    width: 100%;
-    border: none;
-    /* Asegura que no tenga un borde adicional */
-    box-shadow: none;
-    /* Asegura que no tenga una sombra adicional */
-    /* El resto de la apariencia interna (fuentes, colores de días, navegación)
-         será controlado por 'react-calendar/dist/Calendar.css' */
+    width: 100%; /* Ocupa todo el ancho del dropdown */
+    border: none; /* Elimina el borde por defecto si lo tuviera react-calendar */
+    box-shadow: none; /* Elimina la sombra por defecto si la tuviera react-calendar */
+    font-family: inherit; /* Hereda la fuente de la aplicación */
 }
 
+/* Estilos específicos para elementos internos de react-calendar para ajustar la apariencia */
 .date-picker-dropdown .react-calendar__navigation__label {
     font-weight: bold;
-    font-size: 0.8rem;
-    /* Ajusta el tamaño si es necesario */
-    color: #333;
-    /* Color del texto del título */
+    font-size: 0.9rem; /* Ajusta el tamaño */
+    color: #333; /* Color del texto del título (mes/año) */
+    text-transform: capitalize; /* Capitaliza la primera letra del mes */
 }
+
+.date-picker-dropdown .react-calendar__navigation button:enabled:hover,
+.date-picker-dropdown .react-calendar__navigation button:enabled:focus {
+    background-color: #e6e6e6; /* Fondo gris claro al pasar/enfocar botones de navegación */
+}
+
 
 .date-picker-dropdown .react-calendar__month-view__weekdays__weekday {
     text-align: center;
     text-transform: uppercase;
-    font-weight: normal;
-    font-size: 0.6rem;
-    color: #555;
-    /* Color de los nombres de los días */
+    font-weight: 500; /* Peso de fuente para los días de la semana */
+    font-size: 0.7rem; /* Tamaño de fuente para los días de la semana */
+    color: #555; /* Color de los nombres de los días */
     padding: 0.5em 0.2em;
-    /* Ajusta el espaciado */
 }
 
 .date-picker-dropdown .react-calendar__tile {
     text-align: center;
-    padding: 0.75em 0.5em;
-    /* Espaciado interno de cada número de día */
-    background: none;
+    padding: 0.7em 0.5em; /* Espaciado interno de cada número de día */
+    background: none; /* Sin fondo por defecto */
     border-radius: 4px;
-
+    transition: background-color 0.2s ease; /* Transición para el hover */
 }
 
-.date-picker-dropdown .react-calendar__tile:enabled:hover {
+/* Estilos para los días deshabilitados */
+.date-picker-dropdown .react-calendar__tile:disabled {
+    color: #a0a0a0;
+    cursor: not-allowed;
+}
+
+
+/* Estilos para los días habilitados al pasar el mouse o enfocar */
+.date-picker-dropdown .react-calendar__tile:enabled:hover,
+.date-picker-dropdown .react-calendar__tile:enabled:focus {
     background-color: #e6e6e6;
     color: #333;
+}
+
+/* Estilo para el día seleccionado */
+.date-picker-dropdown .react-calendar__tile--active {
+    background-color: #6366f1;
+    color: white;
+    border-radius: 4px;
+}
+
+.date-picker-dropdown .react-calendar__tile--active:enabled:hover,
+.date-picker-dropdown .react-calendar__tile--active:enabled:focus {
+    background-color: #4f46e5;
+    color: white;
+}
+
+/* Estilo para el día actual (hoy) */
+.date-picker-dropdown .react-calendar__tile--now {
+     background: #7d76ff;
+     border-radius: 4px;
+}
+
+.date-picker-dropdown .react-calendar__tile--now:enabled:hover,
+.date-picker-dropdown .react-calendar__tile--now:enabled:focus {
+     background: #7660d9;
+}
+
+/* Estilos para la vista de mes, año, década, siglo */
+.date-picker-dropdown .react-calendar__year-view .react-calendar__tile,
+.date-picker-dropdown .react-calendar__decade-view .react-calendar__tile,
+.date-picker-dropdown .react-calendar__century-view .react-calendar__tile {
+     padding: 2em 0.5em; /* Ajusta padding en otras vistas */
 }

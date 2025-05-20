@@ -1,22 +1,39 @@
 
-.objetivos-page {
-    min-height: 100vh;
-    background-color: #f9fafb;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
+/* Contenedor principal de la página */
+.objetivosPage { /* Corregido: usar camelCase para consistencia. Este nombre es más descriptivo si se usa en ObjetivosPage.js */
+  min-height: 100vh; /* Asegura que ocupe al menos toda la altura de la ventana */
+  background-color: #f9fafb; /* Color de fondo de la página */
+  padding-top: 2rem; /* Espacio arriba */
+  padding-bottom: 2rem; /* Espacio abajo */
+  padding-left: 1rem; /* Padding lateral por defecto (móviles) */
+  padding-right: 1rem; /* Padding lateral por defecto (móviles) */
+  box-sizing: border-box; /* Incluye padding en el tamaño */
+  /* Considera añadir display: flex; flex-direction: column; align-items: center;
+     para centrar el contenido horizontalmente en la página. */
+}
 
-  .objetivos-container {
-    max-width: 768px;
-    margin-left: auto;
-    margin-right: auto;
+/* Contenedor para limitar el ancho del contenido principal (ej. el formulario) */
+.objetivosContainer { /* Corregido: usar camelCase para consistencia */
+  max-width: 768px; /* Limita el ancho máximo (breakpoint md típico) */
+  margin-left: auto; /* Centra horizontalmente */
+  margin-right: auto; /* Centra horizontalmente */
+  width: 100%; /* Ocupa todo el ancho disponible hasta max-width */
+  padding: 0 0.8rem; /* Añade un pequeño padding lateral dentro del contenedor, útil para pantallas más pequeñas */
+  box-sizing: border-box;
+}
+
+/* Media query para ajustar padding lateral en pantallas más grandes */
+@media (min-width: 640px) { /* sm breakpoint */
+  .objetivosPage {
+      padding-left: 1.5rem; /* Aumenta el padding lateral */
+      padding-right: 1.5rem; /* Aumenta el padding lateral */
   }
-  @media (min-width: 640px) {
-    .objetivos-page {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-  }
+   /* También puedes ajustar el padding de .objetivosContainer aquí si es necesario */
+}
+
+/* Media query para pantallas muy grandes si es necesario */
+/* @media (min-width: 1024px) { */ /* lg breakpoint */
+  /* .objetivosContainer { */
+      /* max-width: 1024px; */ /* Ejemplo: aumentar el ancho máximo */
+  /* } */
+/* } */

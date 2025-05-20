@@ -1,51 +1,72 @@
+/* Estilos para el componente de encabezado de la aplicación */
+
 .header {
     width: 100%;
-    padding: 0.7rem 1.6rem;
-    box-sizing: border-box;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
+    padding: 0.8rem 1.6rem; /* Padding interno uniforme */
+    box-sizing: border-box; /* Asegura que padding y borde se incluyan en el tamaño */
+    background-color: #f8f9fa; /* Color de fondo gris claro */
+    border-bottom: 1px solid #e9ecef; /* Línea inferior separadora */
     color: #343a40;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    margin-bottom: 0;
+    display: flex; /* Usa Flexbox para el layout del contenido */
+    justify-content: space-between; /* Espacia el contenido izquierdo y derecho */
+    align-items: center; /* Alinea los items verticalmente al centro */
+    position: sticky; /* Hace que el encabezado se quede en la parte superior al hacer scroll */
+    top: 0; /* Se pega a la parte superior */
+    z-index: 10; /* Asegura que esté por encima de otros contenidos */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Sombra sutil */
 }
 
+/* Estilo para el link que envuelve el logo y la marca */
+.headerLogoLink {
+    display: flex; /* Usa flexbox para alinear el círculo del logo y el nombre */
+    align-items: center;
+    gap: 0.8rem; /* Espacio entre el círculo y el nombre */
+    text-decoration: none; /* Elimina subrayado por defecto de los links */
+    color: inherit; /* Hereda el color del padre (.header) */
+}
+
+.headerLogoLink:hover {
+     text-decoration: none; /* Asegura que no aparezca subrayado al pasar el mouse */
+}
+
+
+/* Contenedor para el contenido del lado izquierdo (Logo y Marca) */
 .leftContent {
-    display: flex;
+    display: flex; /* Usa flexbox para alinear items internos */
     align-items: center;
-    gap: 0.8rem;
+    gap: 0.8rem; /* Espacio entre el logo y la marca (puede ser redundante si se usa headerLogoLink) */
 }
 
+/* Estilo para el círculo decorativo del logo */
 .headerLogoCircle {
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: 50%;
-    background-color: hsl(245, 79%, 59%);
+    width: 1.8rem; /* Ajustado ligeramente el tamaño */
+    height: 1.8rem; /* Ajustado ligeramente el tamaño */
+    border-radius: 50%; /* Forma de círculo */
+    background-color: hsl(245, 79%, 59%); /* Color de fondo (índigo) */
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: center; /* Centra la letra 'G' dentro del círculo */
     color: white;
     font-weight: bold;
-    font-size: 0.8rem;
+    font-size: 1rem; /* Ajustado el tamaño de la letra */
+    flex-shrink: 0; /* Evita que el círculo se encoja en pantallas pequeñas */
 }
 
+/* Estilo para el nombre de la marca */
 .headerBrand {
-    font-size: 1.25rem;
+    font-size: 1.35rem; /* Ajustado ligeramente el tamaño de fuente */
     font-weight: bold;
-    color: #212529;
+    color: #212529; /* Color de texto oscuro */
 }
 
+/* Contenedor para el contenido del lado derecho (Info usuario y Botón Cerrar Sesión) */
 .rightContent {
-    display: flex;
+    display: flex; /* Usa flexbox para alinear items internos */
     align-items: center;
-    gap: 0.8rem;
+    gap: 1rem; /* Espacio entre el nombre del usuario y el botón */
 }
 
+/* Estilo para el texto "Hola, Usuario!" */
 .userInfo {
     font-size: 1rem;
     color: #333;

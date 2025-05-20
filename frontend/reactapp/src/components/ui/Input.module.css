@@ -1,56 +1,75 @@
+/* Estilos para los componentes Input, Select y Textarea */
+
+/* Estilos base aplicables a input, select y textarea */
 .input,
 .select,
 .textarea {
-    display: block;
+    display: block; /* Ocupa todo el ancho disponible en su contenedor */
     width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    font-size: 1rem;
+    padding: 0.5rem 0.75rem; /* Padding interno */
+    border: 1px solid #d1d5db; /* Borde por defecto */
+    border-radius: 0.375rem; /* Radio de borde */
+    font-size: 1rem; /* Tamaño de fuente */
     line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    transition: all 0.2s ease-in-out;
+    color: #495057; /* Color de texto */
+    background-color: #fff; /* Fondo blanco */
+    background-clip: padding-box; /* Asegura que el fondo se extienda bajo el padding */
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Transición para bordes y sombra */
     box-sizing: border-box;
+     height: calc(1rem * 1.5 + 0.5rem * 2 + 1px * 2); /* line-height * font-size + padding-top + padding-bottom + border-top + border-bottom */
+     min-height: auto; /* Reset min-height para inputs y selects */
 }
 
+/* Estilos específicos para textarea */
 .textarea {
-    min-height: 100px;
-    resize: vertical;
+    min-height: 100px; /* Altura mínima para el textarea */
+    resize: vertical; /* Permite redimensionar solo verticalmente */
+     height: auto; /* Deja que la altura se ajuste al contenido o min-height */
 }
 
+/* Estilos para placeholders */
 .input::placeholder,
-.textarea::placeholder,
+.textarea::placeholder {
+    color: #a0a0a0; /* Color del texto del placeholder */
+    opacity: 1; /* Asegura que la opacidad sea completa */
+}
+
+/* Estilo específico para la opción por defecto de un select (placeholder visual) */
 .select option[value=""]:first-child {
     color: #a0a0a0;
-    opacity: 1;
+    font-style: italic;
 }
 
+/* Estilos al enfocar (focus) */
 .input:focus,
 .select:focus,
 .textarea:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+    outline: none; /* Elimina el outline por defecto del navegador */
+    border-color: #3b82f6; /* Color de borde al enfocar */
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25); /* Sombra de enfoque */
 }
 
+/* Estilos para el estado deshabilitado */
 .input:disabled,
 .select:disabled,
 .textarea:disabled {
     background-color: #e9ecef;
     opacity: 1;
-    cursor: not-allowed;
+    cursor: not-allowed; /* Cursor de no permitido */
+    color: #666;
 }
 
+/* Estilos para el estado de error */
 .input.error,
-textarea.error,
-select.error {
+.textarea.error,
+.select.error {
     border-color: #ef4444;
 }
 
+/* Estilos al enfocar en estado de error */
 .input.error:focus,
-.select.error:focus,
-.textarea.error:focus {
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5);
+.textarea.error:focus,
+.select.error:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25);
 }

@@ -1,5 +1,11 @@
+/* src/components/ui/Button.module.css */
+/* Estilos para el componente Button */
+
+/* Estilo base para todos los botones (aplicado por defecto via Button.js) */
 .button {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   padding: 0.5rem 1rem;
   background-color: #2563eb;
@@ -14,77 +20,136 @@
   margin-top: 1.5rem;
 }
 
-.buttonCreateObjective{
-  display: flex;
-  padding: 0.5rem 1rem;
-  background-color: #2563eb;
+/* Estilo específico para el botón de crear objetivo (usado en Dashboard/ObjetivosPage) */
+/* Este estilo específico puede reemplazar o extender el estilo base .button */
+.buttonCreateObjective {
+  display: inline-flex;
+  background-color: #10b981; /* Color de fondo secundario (verde) */
   color: white;
-  font-weight: 600;
-  font-size: 1.125rem;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  width: auto;
-  justify-content: center;
-  align-items: center;
-  margin-top: 0;
+  font-weight: 700; /* Peso de fuente bold */
+  font-size: 1.125rem; /* Tamaño de fuente ligeramente más grande */
+  /* border: none; */
+  border-radius: 0.5rem; /* Radio de borde ligeramente mayor */
+  /* cursor: pointer; */
+  transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  width: auto; /* Asegura que el ancho se ajuste al contenido */
+  justify-content: center; /* Centra contenido horizontalmente */
+  align-items: center; /* Centra contenido verticalmente */
+  /* margin-top: 0; Eliminar margen por defecto aquí también */
+  gap: 0.4rem; /* Espacio entre items internos */
 }
 
+/* Estilo hover para el estilo base */
 .button:hover {
   background-color: #1d4ed8;
 }
 
+/* Estilo focus para el estilo base */
 .button:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
 }
 
+/* Estilo para el estado deshabilitado */
 .button:disabled {
-  opacity: 0.5;
+  opacity: 0.6; /* Ajusta la opacidad para indicar estado deshabilitado */
   cursor: not-allowed;
 }
 
+/* Estilo hover para buttonCreateObjective */
+.buttonCreateObjective:hover {
+   background-color: #059669;
+}
+/* Estilo focus para buttonCreateObjective (puede ser igual al base o específico) */
+.buttonCreateObjective:focus {
+   outline: none;
+   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.5);
+}
+
+
+/* Estilo para un botón secundario (ej. Cerrar Sesión en AppHeader) */
 .buttonSecondary {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  background-color: #dc3545;
+  display: inline-flex; /* Usar inline-flex */
+  align-items: center; /* Centrar contenido verticalmente */
+  justify-content: center; /* Centrar contenido horizontalmente */
+  gap: 0.5rem; /* Espacio entre items internos */
+
+  padding: 0.5rem 1rem; /* Padding ajustado */
+  background-color: #dc3545; /* Color de fondo secundario (rojo) */
   color: white;
   font-weight: 500;
   font-size: 1rem;
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  text-align: center;
+  transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  text-align: center; /* Redundante con justify-content */
+  /* Eliminar margin-top si existe */
 }
 
 .buttonSecondary:hover {
-  background-color: #c82333;
+  background-color: #c82333; /* Rojo más oscuro */
 }
 
 .buttonSecondary:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.5);
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.5); /* Sombra de enfoque rojo */
 }
 
 .buttonSecondary:disabled {
-  opacity: 0.5;
+  opacity: 0.6; /* Ajusta la opacidad */
   cursor: not-allowed;
 }
 
+
+/* Estilo para un botón de enlace (sin fondo ni borde) */
 .buttonLink {
-  display: inline;
+  display: inline-flex; /* Usar inline-flex */
+  align-items: center; /* Centrar contenido verticalmente */
+  gap: 0.2rem; /* Espacio pequeño entre items internos */
+
   background: none;
   border: none;
   padding: 0;
-  color: #2563eb;
+  color: #2563eb; /* Color azul */
   font-size: 1rem;
   cursor: pointer;
   text-decoration: underline;
-  margin: 0;
+  margin: 0; /* Asegura que no haya margen */
+  transition: text-decoration 0.2s ease-in-out; /* Transición para la decoración del texto */
 }
 
 .buttonLink:hover {
-  text-decoration: none;
+  text-decoration: none; /* Elimina subrayado al pasar el mouse */
+}
+
+/* Estilos para botones outline (usados en ObjetivoCard footer) */
+.buttonOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  background-color: transparent; /* Fondo transparente */
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.buttonOutline:hover {
+  background-color: var(--color-muted);
+  border-color: var(--color-muted-foreground);
+}
+
+.buttonOutline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Estilo para botones pequeños (usados en ObjetivoCard footer) */
+.buttonSmall {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
 }

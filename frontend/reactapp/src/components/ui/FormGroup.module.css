@@ -1,26 +1,30 @@
+/* Estilo para el contenedor principal de cada grupo de formulario */
 .formGroup {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     display: flex;
-    flex-direction: column;
-    gap: 5px;
+    flex-direction: column; /* Apila la etiqueta, el input y el error verticalmente */
+    gap: 0.3rem; /* Pequeño espacio vertical entre la etiqueta, el input y el mensaje de error */
 }
 
+/* Estilo para la etiqueta del formulario */
 .formLabel {
-    display: block;
-    margin-bottom: 0.25rem;
-    font-size: 1.2rem;
-    font-weight: 500;
+    display: block; /* Asegura que la etiqueta ocupe su propia línea */
+    margin-bottom: 0; /* Elimina el margen inferior, el gap del padre lo maneja */
+    font-size: 1rem;
+    font-weight: 600;
     color: #374151;
 }
 
+/* Estilo para el indicador de campo obligatorio (*) */
 .formRequired {
     color: #ef4444;
-    margin-left: 4px;
+    margin-left: 4px; /* Pequeño espacio a la izquierda del asterisco */
 }
 
+/* Estilo para el mensaje de error mostrado en línea debajo del input */
 .formErrorInline {
-    color: #ef4444;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
+    color: #ef4444; /* Color rojo para los mensajes de error */
+    font-size: 0.875rem; /* Tamaño de fuente más pequeño */
+    margin-top: 0.25rem; /* Pequeño espacio encima del mensaje */
     margin-bottom: 0;
 }

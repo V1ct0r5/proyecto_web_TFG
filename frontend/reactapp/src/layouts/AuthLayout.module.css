@@ -1,29 +1,63 @@
+/* Estilos para el layout de las páginas de autenticación (Login, Registro) */
+
+/* Contenedor principal de la página de autenticación */
 .authPage {
-    width: 100vw;
-    height: 100vh;
-    --tw-bg-opacity: 1;
-    display: grid;
-    grid-template-rows: auto 1fr;
+    width: 100vw; /* Ocupa todo el ancho de la ventana */
+    min-height: 100vh; /* Asegura que al menos ocupe toda la altura de la ventana */
+    /* Eliminar height: 100vh; si el contenido puede exceder la altura y necesita scroll */
+    /* --tw-bg-opacity: 1; Eliminar si no usas variables de Tailwind directamente aquí */
+    background-color: #f4f7f6; /* Color de fondo de la página (ejemplo) */
+    display: grid; /* Usa Grid Layout */
+    grid-template-rows: auto 1fr; /* Fila superior para el posible header (si no está sticky), el resto para el contenido principal */
     grid-template-areas:
-        "header"
-        "main-content";
+        "header" /* Área opcional para un header si estuviera dentro de este grid */
+        "main-content"; /* Área para el contenido principal */
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Área de contenido principal (donde se renderiza el formulario de Login/Registro) */
 .mainContentArea {
-    grid-area: main-content;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0 0.8rem;
+    grid-area: main-content; /* Asigna esta div al área "main-content" definida en el grid */
+    display: flex; /* Usa Flexbox para centrar el contenido interno (el formContainer) */
+    justify-content: center; /* Centra el contenido horizontalmente */
+    align-items: center; /* Centra el contenido verticalmente */
+    padding: 1.5rem 0.8rem; /* Padding interno (arriba/abajo y lados) */
     box-sizing: border-box;
-    margin-top: 0;
-    gap: 1.6rem;
+    /* margin-top: 0; No es necesario con grid-template-areas */
+    /* gap: 1.6rem; Este gap solo tendría efecto si mainContentArea tuviera múltiples hijos directos, en este caso solo tiene el formContainer. */
+     flex-direction: column; /* Asegura apilamiento vertical si hubiera más hijos */
+     overflow-y: auto; /* Permite scroll vertical si el contenido excede la altura */
 }
 
+/* Estilo para el título del formulario dentro de esta área */
+/* Nota: Esta clase .formTitle se usa en LoginPage y RegistroPage */
 .formTitle {
     text-align: center;
     margin-bottom: 1.5rem;
     margin-top: 0;
+    color: #333; /* Asegura un color de texto */
+    font-size: 1.8rem; /* Ajusta el tamaño de fuente */
+}
+
+/* Estilo para el párrafo de pie de formulario (ej. "¿No tienes cuenta? Regístrate") */
+/* Nota: Esta clase .formFooter se usa en LoginPage y RegistroPage */
+.formFooter {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #555; /* Color de texto */
+}
+
+/* Estilo para los enlaces dentro del pie de formulario */
+/* Nota: Esta clase .formLink se usa en LoginPage y RegistroPage */
+.formLink {
+    color: #2563eb; /* Color azul */
+    text-decoration: none; /* Sin subrayado por defecto */
+    font-weight: 500;
+    transition: text-decoration 0.2s ease;
+}
+
+.formLink:hover {
+    text-decoration: underline; /* Subrayado al pasar el mouse */
 }

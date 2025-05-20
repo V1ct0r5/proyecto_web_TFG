@@ -1,11 +1,24 @@
 import React from 'react';
 import styles from './ObjetivoCard.module.css';
 
-import { MdFavorite, MdAttachMoney, MdAutoStories, MdPeople, MdWork, MdStar, MdCalendarToday, MdEdit, MdOutlineRemoveRedEye } from 'react-icons/md';
+// Importa los iconos de react-icons/md que se utilizan en el componente
+import {
+    MdFavorite, // Salud
+    MdAttachMoney, // Finanzas
+    MdAutoStories, // Desarrollo personal
+    MdPeople, // Relaciones
+    MdWork, // Carrera profesional
+    MdStar, // Otros o por defecto
+    MdCalendarToday, // Fecha
+    MdEdit, // Editar
+    MdOutlineRemoveRedEye // Detalles
+} from 'react-icons/md';
 
 
+// Componente para mostrar una tarjeta individual de objetivo
 function ObjetivoCard({ objective }) {
-    console.log("Datos del objetivo recibidos:", objective);
+
+    // Función para obtener el icono de Material Design basado en el tipo de objetivo
     const getCategoryIcon = (category) => {
         switch (category) {
             case 'Salud':
@@ -18,31 +31,35 @@ function ObjetivoCard({ objective }) {
                 return <MdPeople />;
             case 'Carrera profesional':
                 return <MdWork />;
-            default:
+            default: // Caso por defecto para 'Otros' o tipos no reconocidos
                 return <MdStar />;
         }
     };
 
-    // <-- Corrección aquí: Usar valor_actual para el valor actual y valor_cuantitativo para la meta -->
-    const currentValue = objective.valor_actual || 0;
+    // Lógica para calcular el progreso y determinar si mostrar la barra
+    // Usa valor_actual y valor_cuantitativo (meta) del objeto objective
+    const currentValue = objective.valor_actual || 0; // Usa 0 si valor_actual es null/undefined
     const targetValue = objective.valor_cuantitativo;
 
     let progressPercentage = 0;
     let showProgressBar = false;
 
+    // Calcula el porcentaje de progreso si los valores cuantitativos son números válidos y la meta es mayor que 0
     if (typeof currentValue === 'number' && typeof targetValue === 'number' && targetValue > 0) {
-        progressPercentage = Math.min((currentValue / targetValue) * 100, 100);
-        showProgressBar = true;
+        progressPercentage = Math.min((currentValue / targetValue) * 100, 100); // Limita el porcentaje a 100
+        showProgressBar = true; // Muestra la barra de progreso
     } else if (objective.estado === 'Completado') {
+        // Si el estado es "Completado", la barra de progreso siempre está al 100%
         progressPercentage = 100;
         showProgressBar = true;
     }
+    // Si no hay valores cuantitativos válidos y el estado no es "Completado", showProgressBar seguirá siendo false (inicial)
 
-
+    // Formatea la fecha de última actualización
     const lastUpdated = objective.updatedAt ? new Date(objective.updatedAt).toLocaleDateString() : 'N/A';
 
-    const statusClassName = `status-${objective.estado.toLowerCase().replace(/\s/g, '')}`;
-
+    // Genera un nombre de clase dinámico para el estado (ej. 'status-pendiente', 'status-enprogreso')
+    const statusClassName = `status-${objective.estado?.toLowerCase().replace(/\s/g, '')}`;
 
     return (
         <div className={styles.objetivoCard}>
@@ -66,9 +83,9 @@ function ObjetivoCard({ objective }) {
                             <span className={styles.progressLabel}>Progreso</span>
                             <span className={styles.progressPercentage}>{Math.round(progressPercentage)}%</span>
                         </div>
-                        <div className={styles.progressBar}>
+                        <div className={styles.progressBar}> {/* Barra visual de progreso */}
                             <div
-                                className={`${styles.progressFill} ${styles.progressFillHigh}`}
+                                className={`${styles.progressFill} ${progressPercentage < 33 ? styles.progressFillLow : progressPercentage < 66 ? styles.progressFillMedium : styles.progressFillHigh}`}
                                 style={{ width: `${progressPercentage}%` }}
                             ></div>
                         </div>
@@ -91,21 +108,15 @@ function ObjetivoCard({ objective }) {
                         </div>
                     </div>
                 )}
-
                 <div className={styles.progressDate}>
                     <MdCalendarToday className={styles.dataIcon} />
                     <span className={styles.dataLabel}>Actualizado:</span>
                     <span className={styles.dataValue}>{lastUpdated}</span>
                 </div>
-
                 <div className={`${styles.cardStatus} ${styles[statusClassName]}`}>
                     {objective.estado}
                 </div>
-
-
             </div>
-
-
             <div className={styles.cardFooter}>
                 <div className={styles.cardActions}>
                     <button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`}>

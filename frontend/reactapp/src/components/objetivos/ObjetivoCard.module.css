@@ -1,136 +1,119 @@
-/* src/components/objetivos/ObjetivoCard.module.css */
-
-/* --- VARIABLES DE COLOR (Mantén o mueve a CSS global) --- */
+/* --- VARIABLES DE COLOR  --- */
+/* Se mantienen aquí por ahora según la estructura proporcionada, pero una buena práctica es tener variables globales centralizadas. */
 :root {
-    --color-primary: #4F46E5;
-    /* Azul índigo */
+    --color-primary: #4F46E5; /* Azul índigo */
     --color-primary-hover: #4338CA;
-    --color-secondary: #10B981;
-    /* Verde esmeralda */
+    --color-secondary: #10B981; /* Verde esmeralda */
     --color-secondary-hover: #059669;
-    --color-warning: #F59E0B;
-    /* Amarillo ámbar */
-    --color-destructive: #EF4444;
-    /* Rojo */
-    --color-muted: #F3F4F6;
-    /* Gris claro */
-    --color-muted-foreground: #6B7280;
-    --color-background: #FFFFFF;
-    --color-foreground: #1F2937;
-    /* Texto oscuro principal */
-    --color-card: #FFFFFF;
-    /* Fondo de la tarjeta */
-    --color-card-foreground: #1F2937;
-    /* Texto principal de la tarjeta */
-    --color-border: #E5E7EB;
-    /* Bordes */
-    --font-sans: 'Inter', sans-serif;
-    /* Asegúrate de importar fuentes globalmente */
-    --font-heading: 'Montserrat', sans-serif;
-    /* Asegúrate de importar fuentes globalmente */
-    --radius: 0.4rem;
-    /* Radio de bordes */
+    --color-warning: #F59E0B; /* Amarillo ámbar */
+    --color-destructive: #EF4444; /* Rojo */
+    --color-muted: #F3F4F6; /* Gris claro */
+    --color-muted-foreground: #6B7280; /* Texto gris */
+    --color-background: #FFFFFF; /* Fondo de la página */
+    --color-foreground: #1F2937; /* Texto oscuro principal */
+    --color-card: #FFFFFF; /* Fondo de la tarjeta */
+    --color-card-foreground: #1F2937; /* Texto principal de la tarjeta */
+    --color-border: #E5E7EB; /* Bordes */
+    --radius: 0.4rem; /* Radio de bordes general */
 }
 
 /* --- ESTILOS BASE DE LA TARJETA --- */
-.objetivo-card {
+.objetivoCard {
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     background-color: var(--color-card);
-    overflow: hidden;
-    transition: all 0.3s ease;
+    overflow: hidden; /* Asegura que el contenido redondeado se corte */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 00;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background-color: var(--color-card);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    margin-bottom: 1.5rem; /* Espacio entre tarjetas. Corregido de '00' */
+    display: flex; /* Usa flexbox para el layout interno (header, content, footer) */
+    flex-direction: column; /* Apila los hijos verticalmente */
+    transition: all 0.3s ease; /* Transición suave para el hover */
+    
 }
 
-.objetivo-card:hover {
-    transform: translateY(-20px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-
+.objetivoCard:hover { /* Corregido: usar camelCase */
+    transform: translateY(-5px); /* Efecto sutil al pasar el mouse */
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15); /* Sombra pronunciada al pasar el mouse */
 }
 
 /* --- CONTENIDO PRINCIPAL CON PADDING --- */
 .cardContent {
-    padding: 0.8rem 1.2rem;
+    padding: 1.2rem;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 1rem;
+    flex-grow: 1; /* Permite que el contenido ocupe el espacio disponible, empujando el footer hacia abajo */
 }
 
 /* --- CABECERA (Contiene Título y Badge Categoría) --- */
 .cardHeaderContent {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    justify-content: space-between; /* Espacia el título y el badge */
+    align-items: center; /* Alinea verticalmente el título y el badge */
+    flex-wrap: wrap; /* Permite que los items envuelvan en pantallas pequeñas */
+    gap: 0.8rem; /* Espacio horizontal entre el título y el badge si envuelven */
 }
 
 /* Título */
 .cardTitle {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 700; /* Fuente más audaz para el título */
     color: var(--color-card-foreground);
-    margin: 0;
-    line-height: 1.3;
+    margin: 0; /* Asegura que no haya márgenes por defecto del h3 */
+    line-height: 1.4;
+    flex-grow: 1; /* Permite que el título ocupe el espacio restante */
+    min-width: 0; /* Evita desbordamiento del título si es muy largo */
 }
 
-/* Badge de Categoría (Adaptado de .badge) */
+/* Badge de Categoría */
 .categoryBadge {
     display: inline-flex;
     align-items: center;
-    gap: 0.2rem;
-    padding: 0.2rem 0.6rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    gap: 0.3rem; /* Espacio entre el icono y el nombre */
+    padding: 0.3rem 0.7rem; /* Padding interno del badge */
+    border-radius: 9999px; /* Borde redondeado (píldora) */
+    font-size: 0.8rem; /* Tamaño de fuente del badge */
+    font-weight: 600;
     line-height: 1;
     white-space: nowrap;
-    background-color: transparent;
-    border: 1px solid var(--color-border);
-    color: var(--color-foreground);
+    background-color: var(--color-muted); /* Fondo del badge */
+    border: 1px solid var(--color-border); /* Borde sutil */
+    color: var(--color-foreground); /* Color del texto/icono */
+    flex-shrink: 0; /* Evita que el badge se encoja */
 }
 
 .categoryBadgeIcon {
-    font-size: 1em;
+    font-size: 1em; /* El tamaño del icono se ajusta al tamaño de fuente del padre (.categoryBadge) */
+    display: flex; /* Centra el icono si es necesario */
+    align-items: center;
 }
 
 /* --- DESCRIPCIÓN --- */
 .cardDescription {
-    font-size: 0.875rem;
+    font-size: 0.9rem; /* Tamaño de fuente para la descripción */
     color: var(--color-muted-foreground);
-    margin-top: 0;
-    /* Espacio manejado por el gap del cardContent */
-    line-height: 1.5;
+    margin: 0; /* Espacio manejado por el gap del cardContent */
+    line-height: 1.6;
 }
 
 .cardDescription p {
-    margin: 0;
+    margin: 0; /* Asegura que los párrafos dentro de la descripción no tengan margen extra */
 }
 
 
 /* --- SECCIÓN DE PROGRESO --- */
 .progressContainer {
-    /* Contenedor de "Progreso 70%" y la barra */
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 0.4rem; /* Espacio entre el header de progreso y la barra */
 }
 
 .progressHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.8rem;
-    font-weight: 500;
+    font-size: 0.875rem; /* Tamaño de fuente del texto "Progreso 70%" */
+    font-weight: 600;
     color: var(--color-foreground);
 }
 
@@ -139,9 +122,9 @@
     background-color: var(--color-muted);
     border-radius: 9999px;
     overflow: hidden;
-    height: 0.4rem;
+    height: 0.5rem; /* Altura de la barra de progreso */
     width: 100%;
-    margin-bottom: 0.5rem;
+    /* margin-bottom: 0.5rem; Eliminar si el gap del contenedor padre es suficiente */
 }
 
 .progressFill {
@@ -150,25 +133,24 @@
     border-radius: 9999px;
 }
 
+/* Clases para el color de la barra de progreso según el porcentaje */
 .progressFillLow {
-    background-color: var(--color-destructive);
+    background-color: var(--color-destructive); /* Rojo */
 }
 
-/* Rojo */
 .progressFillMedium {
-    background-color: var(--color-warning);
+    background-color: var(--color-warning); /* Amarillo */
 }
 
-/* Amarillo */
 .progressFillHigh {
-    background-color: var(--color-secondary);
+    background-color: var(--color-secondary); /* Verde */
 }
 
 .progressValues {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.8rem;
-    margin-top: px;
+    grid-template-columns: 1fr 1fr; /* Dos columnas de igual ancho */
+    gap: 1rem; /* Espacio entre las columnas */
+    margin-top: 0.5rem; /* Espacio encima de los valores */
 }
 
 .progressValueBox {
@@ -177,83 +159,111 @@
 }
 
 .progressValueLabel {
-    font-size: 0.7rem;
+    font-size: 0.75rem; /* Tamaño de fuente para las etiquetas (Actual, Meta) */
     color: var(--color-muted-foreground);
     font-weight: 500;
-    margin-bottom: 2px;
+    margin-bottom: 0.2rem; /* Pequeño espacio debajo de la etiqueta */
 }
 
 .progressValueNumber {
-    font-size: 0.875rem;
+    font-size: 0.9rem; /* Tamaño de fuente para los números de valor */
     font-weight: 700;
     color: var(--color-card-foreground);
 }
 
 
-/* --- FECHA DE ÚLTIMA ACTUALIZACIÓN --- */
-.progressDate {
+/* --- SECCIÓN DE DATOS ADICIONALES (Fecha, etc.) --- */
+.progressDate { /* Renombrado a dataInfo o similar para ser más general */
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     color: var(--color-muted-foreground);
-    margin-top: 4px;
+    margin-top: 0.5rem;
 }
 
+.dataIcon { /* Clase para los iconos en secciones de datos */
+    font-size: 1em;
+}
 
 .dataLabel {
-    font-weight: 500;
+    font-weight: 600; /* Fuente un poco más audaz para las etiquetas de datos */
+}
+
+.dataValue {
+    font-weight: 400; /* Fuente normal para los valores de datos */
 }
 
 
 /* --- PIE DE PÁGINA Y BOTONES --- */
 .cardFooter {
-    padding: 0.8rem 0 0.2rem 0.1rem;
+    padding: 0.8rem 1.2rem; /* Padding en el pie de página. */
     border-top: 1px solid var(--color-border);
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
     align-items: center;
+    margin-top: auto;
 }
 
 .cardActions {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.6rem; /* Espacio entre los botones de acción */
 }
 
+/* Estilo base para los botones dentro de la tarjeta */
 .button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.2rem;
-    padding: 0.4rem 0.8rem;
-    /* Padding general de botón (ajusta para small si quieres) */
+    gap: 0.3rem; /* Espacio entre icono y texto del botón */
+    padding: 0.3rem 0.8rem; /* Padding ajustado para botones más pequeños */
     border-radius: var(--radius);
-    font-size: 0.7rem;
+    font-size: 0.8rem; /* Tamaño de fuente para botones pequeños */
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
     background-color: transparent;
+    /* Heredar color o definir aquí si es necesario */
+    color: inherit; /* Para que el color del texto/icono se herede si no es outline */
 }
 
 .buttonOutline {
     border: 1px solid var(--color-border);
-    color: var(--color-foreground);
+    color: var(--color-foreground); /* Color de texto para botón outline */
+    background-color: transparent; /* Asegura fondo transparente */
 }
 
 .buttonOutline:hover {
     background-color: var(--color-muted);
+    border-color: var(--color-muted-foreground); /* Oscurece el borde al pasar el mouse */
 }
 
+/* Estilo específico para botones pequeños */
 .buttonSmall {
-    padding: 0.22rem 0.75rem;
-    font-size: 0.75rem;
-    border-radius: var(--radius);
-    /* Bordes también pequeños */
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
 }
 
-/* Estilos específicos para botones Editar y Detalles (si necesitas colores en texto/icono) */
-/* En el ejemplo, el texto de Editar es oscuro y el de Detalles es oscuro, */
-/* lo cual ya cubre buttonOutline. Si quisieras iconos de color, podrías hacer: */
-/* .btnEdit .buttonIcon { color: var(--color-warning); } */
-/* .btnDetails .buttonIcon { color: var(--color-primary); } */
+.buttonIcon { /* Estilo para los iconos dentro de los botones */
+    font-size: 1rem;
+}
+
+/* --- ESTILOS DE ESTADO (Necesitan ser definidos) --- */
+.status-pendiente {
+    color: var(--color-warning); /* Ejemplo: Amarillo para pendiente */
+    font-weight: 600;
+}
+
+.status-enprogreso {
+    color: var(--color-primary); /* Ejemplo: Azul para en progreso */
+    font-weight: 600;
+}
+
+.status-completado {
+    color: var(--color-secondary); /* Ejemplo: Verde para completado */
+    font-weight: 600;
+}
+
+/* Añadir otros estados si existen */
+/* .status-cancelado { ... } */
