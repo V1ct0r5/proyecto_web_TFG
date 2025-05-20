@@ -50,7 +50,7 @@ a:hover {
     border-radius: 0.6rem;
     padding: 1.2rem;
     width: 100%; /* Asegura que ocupe el 100% del espacio disponible en su contenedor */
-    min-width: 20rem;
+    min-width: 30rem;
     margin-bottom: 2rem;
 }
 
