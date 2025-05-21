@@ -9,30 +9,34 @@ exports.obtenerUsuarios = async (req, res) => {
 
     try {
         const usuarios = await userService.obtenerUsuarios(transaction);
-
         res.status(200).json(usuarios);
     } catch (error) {
-        console.error('Error al obtener los usuarios:', error);
-        res.status(500).json({ error: 'Error al obtener los usuarios', message: error.message });
+        console.error('Error en userController.obtenerUsuarios:', error);
+        res.status(500).json({ message: 'Error interno del servidor al obtener los usuarios.' });
     }
 };
 
 
 exports.crearUsuario = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     const usuarioData = req.body;
     try {
         const nuevoUsuario = await userService.crearUsuario(usuarioData);
         const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON();
         res.status(201).json(usuarioSinContrasena);
     } catch (error) {
+        console.error('Error en userController.crearUsuario:', error);
         if (error.name === 'SequelizeUniqueConstraintError') {
             return res.status(409).json({ error: error.errors[0].message || 'El correo electrónico ya está en uso' });
         }
         if (error.name === 'SequelizeValidationError') {
-            return res.status(400).json({ error: error.errors[0].message || 'Error de validación' });
+            return res.status(400).json({ error: error.errors[0].message || 'Error de validación en los datos del usuario' });
         }
-        console.error('Error al crear el usuario:', error);
-        res.status(500).json({ error: error.message || 'Error interno al crear el usuario' });
+        res.status(500).json({ message: 'Error interno del servidor al crear el usuario.' });
     }
 }
 
@@ -48,21 +52,27 @@ exports.obtenerUsuarioPorId = async (req, res) => {
         const usuario = await userService.obtenerUsuarioPorId(userIdParam, transaction);
 
         if (!usuario) {
-            console.log('Controller: obtenerUsuarioPorId - Usuario no encontrado (404)');
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
 
+        if (userIdAuth !== parseInt(userIdParam)) { // Asumiendo que userIdAuth es un número
+            return res.status(403).json({ message: 'Acceso denegado.' });
+        }
 
         res.status(200).json(usuario);
-
     } catch (error) {
-        console.error('Error al obtener el usuario por ID:', error);
-        res.status(500).json({ error: 'Error al obtener el usuario' });
+        console.error('Error en userController.obtenerUsuarioPorId:', error);
+        res.status(500).json({ message: 'Error interno del servidor al obtener el usuario.' });
     }
 }
 
 
 exports.actualizarUsuario = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     const userIdAuth = req.user;
     const userIdToUpdate = req.params.id;
     const usuarioData = req.body;
@@ -74,22 +84,19 @@ exports.actualizarUsuario = async (req, res) => {
         const usuarioActualizado = await userService.actualizarUsuario(userIdToUpdate, usuarioData, transaction);
 
         if (!usuarioActualizado) {
-            console.log('Controller: actualizarUsuario - Usuario no encontrado (404)');
             return res.status(404).json({ error: 'Usuario no encontrado o no pudo ser actualizado' });
         }
 
-
         res.status(200).json(usuarioActualizado);
-
     } catch (error) {
-        console.error('Error al actualizar el usuario:', error);
+        console.error('Error en userController.actualizarUsuario:', error);
         if (error.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).json({ error: error.errors[0].message || 'El correo electrónico ya está en uso' });
+            return res.status(409).json({ message: error.errors[0].message || 'El correo electrónico ya está en uso.' });
         }
         if (error.name === 'SequelizeValidationError') {
-            return res.status(400).json({ error: error.errors[0].message || 'Error de validación' });
+            return res.status(400).json({ message: error.errors[0].message || 'Error de validación en los datos de actualización.' });
         }
-        res.status(500).json({ error: 'Error al actualizar el usuario', message: error.message });
+        res.status(500).json({ message: 'Error interno del servidor al actualizar el usuario.' });
     }
 }
 
@@ -105,53 +112,52 @@ exports.eliminarUsuario = async (req, res) => {
 
 
         if (deletedCount === 0) {
-            console.log('Controller: eliminarUsuario - Usuario no encontrado (404)');
-            return res.status(404).json({ error: 'Usuario no encontrado o no pudo ser eliminado' });
+            return res.status(404).json({ message: 'Usuario no encontrado o no pudo ser eliminado.' });
+        }
+
+        if (userIdAuth !== parseInt(userIdToDelete)) {
+            return res.status(403).json({ message: 'No tiene permiso para eliminar este usuario.' });
         }
 
         res.status(204).send();
-
     } catch (error) {
-        console.error('Error al eliminar el usuario:', error);
-        res.status(500).json({ error: 'Error al eliminar el usuario', message: error.message });
+        console.error('Error en userController.eliminarUsuario:', error);
+        res.status(500).json({ message: 'Error interno del servidor al eliminar el usuario.' });
     }
 }
 
 
 exports.registrarUsuario = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    
     const usuarioData = req.body;
-
-
     try {
         const nuevoUsuario = await userService.crearUsuario(usuarioData);
-
-
         const token = userService.generarAutenticacionToken(nuevoUsuario);
-
-
-        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON();
-
-
+        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON(); // Excluir contraseña
         res.status(201).json({ ...usuarioSinContrasena, token });
-
     } catch (error) {
-        console.error('Error al registrar el usuario:', error);
-
-
+        console.error('Error en userController.registrarUsuario:', error);
         if (error.name === 'SequelizeUniqueConstraintError' || (error.errors && error.errors[0].path === 'correo_electronico')) {
-            return res.status(409).json({ error: error.message || 'El correo electrónico ya está en uso' });
+            return res.status(409).json({ message: error.message || 'El correo electrónico ya está en uso.' });
         }
         if (error.name === 'SequelizeValidationError' || (error.errors && error.errors.length > 0)) {
-            return res.status(400).json({ error: error.message || 'Error de validación en los datos proporcionados' });
+            return res.status(400).json({ message: error.message || 'Error de validación en los datos proporcionados.' });
         }
-        res.status(500).json({ message: 'Error interno al registrar el usuario' });
+        res.status(500).json({ message: 'Error interno del servidor al registrar el usuario.' });
     }
 }
 
 exports.iniciarSesionUsuario = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     const { correo_electronico, contrasena } = req.body;
-
-
     try {
         const usuario = await userService.loginUsuario(correo_electronico, contrasena);
         const token = userService.generarAutenticacionToken(usuario);
@@ -160,31 +166,28 @@ exports.iniciarSesionUsuario = async (req, res) => {
 
         const objectivesCount = await Objetivo.count({
             where: {
-                id_usuario: userId // Filtrar por el ID del usuario logueado
+                id_usuario: userId
             }
         });
 
         const hasObjectives = objectivesCount > 0;
 
         res.status(200).json({ usuario: usuarioSinContrasena, token, hasObjectives });
-
     } catch (error) {
-        console.error('Error al iniciar sesión:', error);
+        console.error('Error en userController.iniciarSesionUsuario:', error);
         if (error.message === 'Correo electrónico o contraseña incorrectos') {
             res.status(401).json({ message: error.message });
         } else {
-            console.error('Controller: iniciarSesionUsuario - Error inesperado durante login:', error);
-            res.status(500).json({ message: 'Error interno al iniciar sesión' });
+            res.status(500).json({ message: 'Error interno del servidor al iniciar sesión.' });
         }
     }
 };
 
 exports.cerrarSesionUsuario = async (req, res) => {
     try {
-        res.status(200).json({ message: 'Sesión cerrada exitosamente (en el frontend)' });
-
+        res.status(200).json({ message: 'Sesión cerrada exitosamente.' });
     } catch (error) {
-        console.error('Error en controlador logout:', error);
-        res.status(500).json({ error: 'Error al intentar cerrar sesión en el servidor' });
+        console.error('Error en userController.cerrarSesionUsuario:', error);
+        res.status(500).json({ message: 'Error interno del servidor al cerrar sesión.' });
     }
 };
