@@ -6,7 +6,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   padding: 0.5rem 1rem;
   background-color: #2563eb;
   color: white;
@@ -37,6 +36,7 @@
   align-items: center; /* Centra contenido verticalmente */
   /* margin-top: 0; Eliminar margen por defecto aquí también */
   gap: 0.4rem; /* Espacio entre items internos */
+  margin-top: 0;
 }
 
 /* Estilo hover para el estilo base */
