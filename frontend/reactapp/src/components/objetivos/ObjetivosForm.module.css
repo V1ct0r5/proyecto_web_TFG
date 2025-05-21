@@ -52,3 +52,60 @@
         gap: 1.5rem; /* Aumenta el espacio entre columnas en pantallas grandes */
     }
 }
+
+/* Estilos para el checkbox */
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-foreground);
+    font-size: 0.9rem;
+}
+
+.checkboxLabel input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--color-primary); /* Colorea el checkbox */
+}
+
+/* Contenedores de botones (nuevo) */
+.buttonContainer {
+    display: flex;
+    justify-content: space-between; /* Por defecto, el botón de crear/guardar a la derecha */
+    gap: 1rem; /* Espacio entre botones */
+    padding-top: 1rem; /* Espacio superior para separar de los campos */
+    border-top: 1px solid var(--color-border); /* Línea divisoria, opcional */
+    margin-top: 1rem; /* Margen superior para separar del último FormGroup */
+}
+
+.firstObjectiveButtons {
+    /* Cuando es el primer objetivo, el botón "Crear Objetivo" se mantiene a la derecha. */
+    /* No se añade botón de cancelar, así que flex-end es suficiente. */
+    justify-content: flex-end;
+}
+
+.otherObjectiveButtons {
+    /* Cuando NO es el primer objetivo, y es creación, los botones se distribuyen */
+    justify-content: space-between;
+}
+
+.editModeButtons {
+    /* En modo edición, los botones "Guardar Cambios" y "Cancelar" están fuera del form,
+       en EditGoalPage.module.css. Aquí, si este estilo se aplica,
+       significa que se ha pasado `isEditMode={true}` a ObjetivosForm,
+       lo cual debería hacer que el botón de cancelar dentro de ObjetivosForm no se renderice.
+       Por lo tanto, este contenedor solo tendrá el botón de guardar. */
+    justify-content: flex-end; /* El botón de guardar se alinea a la derecha */
+}
+
+.cancelButton {
+    background-color: var(--color-muted); /* Color para el botón de cancelar en el formulario */
+    color: var(--color-muted-foreground);
+    border: 1px solid var(--color-border);
+
+    /* Estilos al pasar el ratón */
+    &:hover {
+        background-color: var(--color-accent);
+        color: var(--color-accent-foreground);
+    }
+}
