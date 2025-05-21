@@ -1,0 +1,54 @@
+/* frontend/reactapp/src/pages/EditGoalPage.module.css */
+
+.editGoalContainer {
+    /* Mantén estos estilos para el contenedor principal de la página de edición */
+    padding: 0 1.5rem 1.5rem 1.5rem; /* Padding horizontal y padding-bottom, sin padding-top */
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    /* Reducimos el gap si es posible para minimizar la altura */
+    gap: 1rem; /* Espacio entre el header y el formulario */
+    
+    flex-grow: 1; /* Permite que este contenedor se estire dentro de su padre (.mainContentArea) */
+    min-height: 0; /* Permite que el flex item se encoja */
+}
+
+.header {
+    display: flex;
+    justify-content: center; /* Aunque solo haya un título, es una buena práctica */
+    align-items: center;
+    margin-bottom: 0.5rem; /* Espacio entre el header del título y el formulario */
+    padding-top: 1rem; /* Añade un poco de padding superior para el título si no lo maneja AuthLayout */
+    /* Si el AuthLayout ya maneja el padding-top por el header global, este podría no ser necesario */
+}
+
+.pageTitle {
+    font-size: 2rem;
+    color: var(--color-foreground);
+    margin: 0; /* Asegura que no tenga márgenes que sumen altura */
+}
+
+/* *** ELIMINAR ESTOS ESTILOS si los tenías del botón de cancelar anterior *** */
+/*
+.editButtons { ... }
+.cancelButton { ... }
+*/
+
+.loadingState,
+.errorState,
+.noObjectiveFound {
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--color-muted-foreground);
+    padding: 2rem;
+    background-color: var(--color-muted);
+    border-radius: var(--radius);
+    margin-top: 2rem;
+}
+
+.errorState {
+    color: var(--color-destructive);
+    background-color: #fcebeb;
+    border: 1px solid var(--color-destructive);
+}
