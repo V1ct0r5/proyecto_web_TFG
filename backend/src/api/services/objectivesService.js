@@ -1,134 +1,143 @@
-const db = require('../../config/database');
-
-exports.crearObjetivo = async (objectiveData, transaction = null) => {
-    try {
-        const nuevoObjetivo = await db.Objective.create(objectiveData, { transaction });
-        console.log("Objetivo creado en servicio:", nuevoObjetivo.toJSON());
-        return nuevoObjetivo;
-    } catch (error) {
-        console.error('Error al crear objetivo:', error);
-        throw new Error('Error al crear el objetivo: ' + error.message);
-    }
-};
-
-exports.obtenerObjetivos = async (userId, transaction = null) => {
-    try {
-        const objetivos = await db.Objective.findAll({
-            where: { id_usuario: userId },
-        }, { transaction });
-        console.log("Objetivos obtenidos de Sequelize (Servicio, antes de parsear):", objetivos);
-
-        // <-- Añadir lógica de parsing manual aquí -->
-        const objetivosParseados = objetivos.map(objetivo => {
-            const objetivoPlain = objetivo.toJSON(); // Obtener un objeto JavaScript plano
-            
-            // Parsear valor_actual si no es null
-            if (objetivoPlain.valor_actual !== null && typeof objetivoPlain.valor_actual === 'string') {
-                const parsed = parseFloat(objetivoPlain.valor_actual);
-                objetivoPlain.valor_actual = !isNaN(parsed) ? parsed : null; // Usar null si el parsing falla
-            } else if (objetivoPlain.valor_actual === undefined) {
-                objetivoPlain.valor_actual = null; // Asegurar que undefined se convierta a null
-            }
+const objectiveRepository = require('../repositories/objectivesRepository'); // Importa el repositorio
+const { Op } = require('sequelize'); // Todavía necesario para operadores de Sequelize
 
 
-            // Parsear valor_cuantitativo si no es null
-            if (objetivoPlain.valor_cuantitativo !== null && typeof objetivoPlain.valor_cuantitativo === 'string') {
-                const parsed = parseFloat(objetivoPlain.valor_cuantitativo);
-                objetivoPlain.valor_cuantitativo = !isNaN(parsed) ? parsed : null; // Usar null si el parsing falla
-            } else if (objetivoPlain.valor_cuantitativo === undefined) {
-                objetivoPlain.valor_cuantitativo = null; // Asegurar que undefined se convierta a null
-            }
-
-
-            return objetivoPlain;
-        });
-
-        console.log("Objetivos obtenidos de Servicio (después de parsear):", objetivosParseados);
-        return objetivosParseados; // Devolver los objetos parseados
-    } catch (error) {
-        console.error('Error al obtener objetivos:', error);
-        throw new Error('Error al obtener los objetivos: ' + error.message);
-    }
-};
-
-exports.obtenerObjetivoPorId = async (id_objetivo, userId, transaction = null) => {
-    try {
-        const objetivo = await db.Objective.findOne({
-            where: {
-                id_objetivo: id_objetivo,
-                id_usuario: userId,
-            },
-        }, { transaction });
-        console.log("Objetivo obtenido por ID de Sequelize (Servicio, antes de parsear):", objetivo);
-
-        if (!objetivo) {
-            return null; // Objetivo no encontrado
-        }
-
-        // <-- Añadir lógica de parsing manual aquí para un solo objetivo -->
-        const objetivoParseado = objetivo.toJSON();
-
-        if (objetivoParseado.valor_actual !== null && typeof objetivoParseado.valor_actual === 'string') {
-            const parsed = parseFloat(objetivoParseado.valor_actual);
-            objetivoParseado.valor_actual = !isNaN(parsed) ? parsed : null;
-        } else if (objetivoParseado.valor_actual === undefined) {
-            objetivoParseado.valor_actual = null;
+/**
+ * Función auxiliar privada para normalizar y validar valores numéricos y de fecha.
+ * Esto ayuda a evitar la duplicación de código en crearObjetivo y actualizarObjetivo.
+ * @param {object} data El objeto de datos del objetivo.
+ * @returns {object} Los datos del objetivo normalizados.
+ * @throws {Error} Si algún valor numérico no es válido.
+ */
+function _normalizeObjectiveValues(data) {
+    // Normalizar valor_cuantitativo
+    if (data.valor_cuantitativo === '') {
+        data.valor_cuantitativo = null;
+    } else if (data.valor_cuantitativo !== undefined && typeof data.valor_cuantitativo === 'string') {
+        const parsedValue = parseFloat(data.valor_cuantitativo);
+        if (isNaN(parsedValue)) {
+            throw new Error('El valor cuantitativo proporcionado no es un número válido.');
         }
+        data.valor_cuantitativo = parsedValue;
+    }
 
-
-        if (objetivoParseado.valor_cuantitativo !== null && typeof objetivoParseado.valor_cuantitativo === 'string') {
-            const parsed = parseFloat(objetivoParseado.valor_cuantitativo);
-            objetivoParseado.valor_cuantitativo = !isNaN(parsed) ? parsed : null;
-        } else if (objetivoParseado.valor_cuantitativo === undefined) {
-            objetivoParseado.valor_cuantitativo = null;
+    // Normalizar valor_actual
+    if (data.valor_actual === '') {
+        data.valor_actual = null;
+    } else if (data.valor_actual !== undefined && typeof data.valor_actual === 'string') {
+        const parsedValue = parseFloat(data.valor_actual);
+        if (isNaN(parsedValue)) {
+            throw new Error('El valor actual proporcionado no es un número válido.');
         }
+        data.valor_actual = parsedValue;
+    }
 
-        console.log("Objetivo obtenido por ID de Servicio (después de parsear):", objetivoParseado);
-        return objetivoParseado; // Devolver el objeto parseado
+    // Las validaciones de fechas (fecha_inicio, fecha_fin) como "mayor que hoy" o "fin > inicio"
+    // deberían manejarse primordialmente en el middleware de validación (objectivesValidation.js)
+    // para que no lleguen aquí valores no válidos.
+    // Aquí solo nos aseguramos de que sean objetos Date si es necesario para el ORM.
+    if (data.fecha_inicio && typeof data.fecha_inicio === 'string') {
+        data.fecha_inicio = new Date(data.fecha_inicio);
+    }
+    if (data.fecha_fin && typeof data.fecha_fin === 'string') {
+        data.fecha_fin = new Date(data.fecha_fin);
+    }
 
-    } catch (error) {
-        console.error('Error al obtener objetivo por ID:', error);
-        throw new Error('Error al obtener el objetivo por ID: ' + error.message);
-    }
-};
+    return data;
+}
 
 
-// Puedes añadir otras funciones de servicio aquí (actualizar, eliminar, etc.)
-exports.actualizarObjetivo = async (id_objetivo, userId, updateData, transaction = null) => {
+// Función para obtener todos los objetivos de un usuario
+exports.obtenerObjetivos = async (userId) => {
     try {
-        // Opcional: Parsear valor_actual y valor_cuantitativo en updateData si llegan como strings al servicio
-        // Aunque si se envían desde el frontend con valueAsNumber en react-hook-form, ya deberían ser números aquí.
-
-        const [affectedCount, affectedRows] = await db.Objective.update(updateData, {
-            where: { id_objetivo: id_objetivo, id_usuario: userId },
-            returning: true, // Para PostgreSQL/MSSQL, devuelve los objetos actualizados
-            // model: db.Objective // Para MySQL, puede ser necesario
-        }, { transaction });
-
-         // Para MySQL, retrieving: true no funciona. Debemos obtener el objeto actualizado por separado si es necesario.
-        if (affectedCount > 0) {
-             const objetivoActualizado = await exports.obtenerObjetivoPorId(id_objetivo, userId, transaction); // Reutilizamos la función de obtener por ID que ya parsea
-             return objetivoActualizado; // Devolver el objeto actualizado (ya parseado)
-        }
-
-
-        return null; // No se encontró o actualizó el objetivo
-
+        return await objectiveRepository.findAll(userId); // Usa el repositorio
     } catch (error) {
-        console.error('Error al actualizar objetivo:', error);
-        throw new Error('Error al actualizar el objetivo: ' + error.message);
+        console.error(`[ObjectivesService] Error al obtener objetivos para el usuario ${userId}:`, error);
+        throw error;
     }
 };
 
-exports.eliminarObjetivo = async (id_objetivo, userId, transaction = null) => {
+// Función para crear un nuevo objetivo
+exports.crearObjetivo = async (objetivoData) => {
     try {
-        const affectedCount = await db.Objective.destroy({
-            where: { id_objetivo: id_objetivo, id_usuario: userId },
-        }, { transaction });
-
-        return affectedCount > 0; // Devuelve true si se eliminó al menos un objetivo
+        const normalizedData = _normalizeObjectiveValues(objetivoData);
+        const nuevoObjetivo = await objectiveRepository.create(normalizedData);
+        return nuevoObjetivo;
     } catch (error) {
-        console.error('Error al eliminar objetivo:', error);
-        throw new Error('Error al eliminar el objetivo: ' + error.message);
+        console.error('[ObjectivesService] Error al crear objetivo:', error);
+        throw error; // Propagar el error para que el controlador lo maneje
+    }
+};
+
+// Función para obtener un objetivo por ID
+exports.obtenerObjetivoPorId = async (objectiveId, userId) => {
+    try {
+        return await objectiveRepository.findById(objectiveId, userId); // Usa el repositorio
+    } catch (error) {
+        console.error(`[ObjectivesService] Error al obtener objetivo ${objectiveId} para el usuario ${userId}:`, error);
+        throw error;
+    }
+};
+
+// Función para actualizar un objetivo
+exports.actualizarObjetivo = async (objectiveId, userId, updatedData) => {
+    try {
+        // Lógica de validación de fechas duplicada en el servicio y middleware
+        // Considera si esta validación ya se maneja en el middleware de validación.
+        // Si no, asegúrate de que esté aquí.
+        if (updatedData.fecha_inicio) {
+            const startDate = new Date(updatedData.fecha_inicio);
+            const currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0); // Normalizar a medianoche para comparación
+            startDate.setHours(0, 0, 0, 0);
+            if (startDate < currentDate) {
+                throw new Error('La fecha de inicio no puede ser anterior a la fecha actual.');
+            }
+        }
+
+        if (updatedData.fecha_fin) {
+            const endDate = new Date(updatedData.fecha_fin);
+            const currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0); // Normalizar a medianoche
+            endDate.setHours(0, 0, 0, 0);
+            if (endDate < currentDate) {
+                throw new Error('La fecha de fin no puede ser anterior a la fecha actual.');
+            }
+        }
+
+        // Parseo de valores cuantitativos y actuales
+        if (updatedData.valor_cuantitativo === '') {
+            updatedData.valor_cuantitativo = null;
+        } else if (typeof updatedData.valor_cuantitativo === 'string') {
+            updatedData.valor_cuantitativo = parseFloat(updatedData.valor_cuantitativo);
+            if (isNaN(updatedData.valor_cuantitativo)) {
+                throw new Error('Valor cuantitativo no es un número válido.');
+            }
+        }
+
+        if (updatedData.valor_actual === '') {
+            updatedData.valor_actual = null;
+        } else if (typeof updatedData.valor_actual === 'string') {
+            updatedData.valor_actual = parseFloat(updatedData.valor_actual);
+            if (isNaN(updatedData.valor_actual)) {
+                throw new Error('Valor actual no es un número válido.');
+            }
+        }
+
+        return await objectiveRepository.update(objectiveId, userId, updatedData); // Usa el repositorio
+
+    } catch (error) {
+        console.error(`[ObjectivesService] Error al actualizar objetivo ${objectiveId}:`, error);
+        throw error;
+    }
+};
+
+// Función para eliminar un objetivo
+exports.eliminarObjetivo = async (objectiveId, userId) => {
+    try {
+        return await objectiveRepository.delete(objectiveId, userId); // Usa el repositorio
+    } catch (error) {
+        console.error(`[ObjectivesService] Error al eliminar objetivo ${objectiveId}:`, error);
+        throw error;
     }
 };
