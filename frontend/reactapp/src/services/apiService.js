@@ -14,16 +14,19 @@ const apiService = axios.create({
 apiService.interceptors.request.use(
     (config) => {
         console.log("API Interceptor: Intercepting request to:", config.url); // Log the URL
-        const token = localStorage.getItem("token");
-        console.log("API Interceptor: Token found in localStorage:", token ? "Exists" : "Does NOT exist"); // Log if token exists
+        const token = localStorage.getItem("token");
+        console.log("API Interceptor: Token found in localStorage:", token ? "Exists" : "Does NOT exist"); // Log if token exists
 
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-            console.log("API Interceptor: Authorization header added."); // Log if header is added
-        } else {
-             console.log("API Interceptor: No token found, Authorization header NOT added."); // Log if header is NOT added
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+            console.log("API Interceptor: Authorization header added."); // Log if header is added
+        } else {
+            console.log("API Interceptor: No token found, Authorization header NOT added."); // Log if header is NOT added
         }
-        return config;
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
 );
 
@@ -33,10 +36,13 @@ apiService.interceptors.response.use(
     error => {
         // Si la respuesta es un error
         console.error('API Response Error:', error.response || error.message);
-        if(error.response && (error.response.status === 401 || error.response.status === 403)) {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             // Si el error es de autorización, redirigir al usuario a la página de login
             console.warn('Authentication/Authorization error. Redirecting to login...');
             localStorage.removeItem("token");
+            // Nota: Aquí podrías necesitar una forma de redirigir al usuario.
+            // Para una aplicación de React, a menudo se hace a través de un contexto o un hook que maneja la navegación.
+            // Por ahora, solo se elimina el token, la redirección se manejará en ProtectedRoute o AuthLayout si es necesario.
         }
 
         return Promise.reject(error);
@@ -71,6 +77,11 @@ const api = {
 
     // Rutas de objetivos
     getObjectives: () => apiService.get('/objectives'),
+    // Obtener un solo objetivo por ID
+    getObjectiveById: async (objectiveId) => {
+        const response = await apiService.get(`/objectives/${objectiveId}`);
+        return response.data; // Retorna los datos del objetivo
+    },
     createObjective: (objectiveData) => apiService.post('/objectives', objectiveData),
     updateObjective: (objectiveId, objectiveData) => apiService.put(`/objectives/${objectiveId}`, objectiveData),
     deleteObjective: (objectiveId) => apiService.delete(`/objectives/${objectiveId}`)
