@@ -1,0 +1,108 @@
+/* frontend\reactapp\src\pages\DashboardPage.module.css */
+
+.dashboardContainer {
+    padding: 1.5rem; /* MODIFICACIÓN: p-6 (1.5rem o 24px) en todos los lados */
+    max-width: 1200px; /* Ancho máximo para el contenido principal */
+    margin: 0 auto; /* Centrar el contenido */
+    display: flex;
+    flex-direction: column;
+    /* MODIFICACIÓN: space-y-6 (1.5rem o 24px) de margen vertical entre elementos hijos directos */
+    gap: 1.5rem; /* Usamos gap para simular space-y- entre los elementos principales del flex container */
+}
+
+.pageTitle {
+    font-size: 2.2rem; /* Mantengo el tamaño del título para legibilidad */
+    color: #333;
+    text-align: center;
+    margin-bottom: 0; /* El gap del contenedor principal ya maneja el espaciado */
+}
+
+.loadingState,
+.errorState,
+.noGoalsMessage {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #555;
+    padding: 2rem;
+    background-color: #f8f8f8;
+    border-radius: 0.5rem;
+    /* ORIGINAL: margin-top: 2rem; */
+    margin-top: 0; /* El gap del contenedor principal ya maneja el espaciado */
+}
+
+.errorState {
+    color: #d9534f; /* Rojo para errores */
+    background-color: #fcebeb;
+    border: 1px solid #d9534f;
+}
+
+/* Contenedor de los controles (búsqueda, filtro, orden) */
+.controlsContainer {
+    display: grid;
+    grid-template-columns: 1fr; /* Una columna en móvil */
+    gap: 1rem; /* MODIFICACIÓN: gap-4 (1rem o 16px) entre cada filtro */
+    padding: 1rem;
+    background-color: #f0f4f8;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* Ya no necesita margin-top explícito si el padre tiene gap */
+}
+
+/* Media queries para los controles */
+@media (min-width: 768px) { /* Tablets y pantallas medianas */
+    .controlsContainer {
+        grid-template-columns: repeat(2, 1fr); /* Dos columnas */
+    }
+}
+
+@media (min-width: 1024px) { /* Pantallas grandes */
+    .controlsContainer {
+        grid-template-columns: repeat(3, 1fr); /* Tres columnas */
+    }
+}
+
+/* Encabezado de la sección de objetivos (Título y botón de añadir) */
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* ORIGINAL: margin-bottom: 1.5rem; */
+    margin-bottom: 0; /* El gap de .dashboardContainer ya maneja este espaciado */
+    padding-top: 0; /* Asegura que no haya padding extra si ya lo controla el gap */
+    gap: 1rem; /* MODIFICACIÓN: gap-4 (1rem o 16px) de espacio entre el título y el botón */
+    flex-wrap: wrap; /* Para que el botón se envuelva en móvil */
+}
+
+.sectionTitle {
+    font-size: 1.8rem; /* Mantengo el tamaño del título de sección */
+    color: #444;
+    margin: 0; /* Asegura que no tenga margen extra */
+}
+
+/* Cuadrícula de Objetivos */
+.goalsGrid {
+    display: grid;
+    grid-template-columns: 1fr; /* Por defecto, 1 columna en móviles */
+    gap: 1.5rem; /* MODIFICACIÓN: gap-6 (1.5rem o 24px) entre cada tarjeta */
+    /* Ya no necesita margin-top explícito si el padre tiene gap */
+}
+
+/* Media query para tablets (2 columnas) */
+@media (min-width: 768px) { /* md breakpoint */
+    .goalsGrid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columnas de igual ancho */
+    }
+}
+
+/* Media query para pantallas grandes (3 columnas) */
+@media (min-width: 1024px) { /* lg breakpoint */
+    .goalsGrid {
+        grid-template-columns: repeat(3, 1fr); /* 3 columnas de igual ancho */
+    }
+}
+
+/* Estilos para el botón de añadir objetivo si es necesario que sobresalga
+    del buttonStyles. Si no, puedes omitirlo o usar buttonStyles.buttonPrimary */
+/* .buttonCreateObjective {
+    min-width: 200px;
+} */
