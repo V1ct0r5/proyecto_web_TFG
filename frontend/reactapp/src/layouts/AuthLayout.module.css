@@ -3,7 +3,6 @@
 /* Contenedor principal de la página de autenticación */
 .authPage {
     width: 100vw; /* Ocupa todo el ancho de la ventana */
-    min-height: 100vh; /* Asegura que al menos ocupe toda la altura de la ventana */
     /* Eliminar height: 100vh; si el contenido puede exceder la altura y necesita scroll */
     /* --tw-bg-opacity: 1; Eliminar si no usas variables de Tailwind directamente aquí */
     background-color: #f4f7f6; /* Color de fondo de la página (ejemplo) */
