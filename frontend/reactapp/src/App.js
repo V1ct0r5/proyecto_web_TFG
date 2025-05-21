@@ -1,10 +1,11 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate  } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegistroPage';
-import ObjetivosPage from './pages/ObjetivosPage';
+import CreateGoalPage from './pages/CreateGoalPage';
 import DashboardPage from './pages/DashboardPage';
+import EditGoalPage from './pages/EditGoalPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import './index.css';
 import './styles/App.css';
@@ -30,8 +31,9 @@ function App() {
                             <Route path="/register" element={<RegisterPage />} />
                             <Route element={<AuthLayout />}>
                                 <Route element={<ProtectedRoute />}>
-                                <Route path="/dashboard" element={<DashboardPage />} />
-                                <Route path="/objectives" element={<ObjetivosPage />} />
+                                    <Route path="/dashboard" element={<DashboardPage />} />
+                                    <Route path="/objectives" element={<CreateGoalPage />} />
+                                    <Route path="/objectives/edit/:id" element={<EditGoalPage />} />
                                 </Route>
                             </Route>
                         </Routes>
