@@ -7,12 +7,12 @@
   align-items: center;
   justify-content: center;
   padding: 0.5rem 1rem;
-  background-color: #2563eb;
-  color: white;
+  background-color: var(--primary); /* Usar primary */
+  color: var(--primary-foreground); /* Usar primary-foreground (blanco) */
   font-weight: 600;
   font-size: 1.125rem;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--radius); /* Usar la variable de radio */
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
   text-align: center;
@@ -20,110 +20,99 @@
 }
 
 /* Estilo específico para el botón de crear objetivo (usado en Dashboard/ObjetivosPage) */
-/* Este estilo específico puede reemplazar o extender el estilo base .button */
 .buttonCreateObjective {
   display: inline-flex;
-  background-color: #10b981; /* Color de fondo secundario (verde) */
-  color: white;
-  font-weight: 700; /* Peso de fuente bold */
-  font-size: 1.125rem; /* Tamaño de fuente ligeramente más grande */
-  /* border: none; */
-  border-radius: 0.5rem; /* Radio de borde ligeramente mayor */
-  /* cursor: pointer; */
+  background-color: var(--primary); /* Adaptado a primary para paleta solo azul */
+  color: var(--primary-foreground);
+  font-weight: 700;
+  font-size: 1.125rem;
+  border-radius: var(--radius);
   transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
-  width: auto; /* Asegura que el ancho se ajuste al contenido */
-  justify-content: center; /* Centra contenido horizontalmente */
-  align-items: center; /* Centra contenido verticalmente */
-  /* margin-top: 0; Eliminar margen por defecto aquí también */
-  gap: 0.4rem; /* Espacio entre items internos */
+  width: auto;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
   margin-top: 0;
 }
 
 /* Estilo hover para el estilo base */
 .button:hover {
-  background-color: #1d4ed8;
+  background-color: var(--primary-hover); /* Usar primary-hover */
 }
 
 /* Estilo focus para el estilo base */
 .button:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 50%, transparent); /* Sombra de enfoque con el color primario */
 }
 
 /* Estilo para el estado deshabilitado */
 .button:disabled {
-  opacity: 0.6; /* Ajusta la opacidad para indicar estado deshabilitado */
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Estilo hover para buttonCreateObjective */
+/* Estilo hover para buttonCreateObjective (igual que el base) */
 .buttonCreateObjective:hover {
-   background-color: #059669;
+  background-color: var(--primary-hover);
 }
-/* Estilo focus para buttonCreateObjective (puede ser igual al base o específico) */
+/* Estilo focus para buttonCreateObjective (igual que el base) */
 .buttonCreateObjective:focus {
-   outline: none;
-   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.5);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 50%, transparent);
 }
-
 
 /* Estilo para un botón secundario (ej. Cerrar Sesión en AppHeader) */
 .buttonSecondary {
-  display: inline-flex; /* Usar inline-flex */
-  align-items: center; /* Centrar contenido verticalmente */
-  justify-content: center; /* Centrar contenido horizontalmente */
-  gap: 0.5rem; /* Espacio entre items internos */
-
-  padding: 0.5rem 1rem; /* Padding ajustado */
-  background-color: #dc3545; /* Color de fondo secundario (rojo) */
-  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--destructive); /* Rojo, para acciones destructivas */
+  color: var(--destructive-foreground); /* Blanco */
   font-weight: 500;
   font-size: 1rem;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
-  text-align: center; /* Redundante con justify-content */
-  /* Eliminar margin-top si existe */
+  text-align: center;
 }
 
 .buttonSecondary:hover {
-  background-color: #c82333; /* Rojo más oscuro */
+  background-color: color-mix(in srgb, var(--destructive) 80%, black); /* Un rojo más oscuro */
 }
 
 .buttonSecondary:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.5); /* Sombra de enfoque rojo */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 50%, transparent); /* Sombra de enfoque rojo */
 }
 
 .buttonSecondary:disabled {
-  opacity: 0.6; /* Ajusta la opacidad */
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-
 /* Estilo para un botón de enlace (sin fondo ni borde) */
 .buttonLink {
-  display: inline-flex; /* Usar inline-flex */
-  align-items: center; /* Centrar contenido verticalmente */
-  gap: 0.2rem; /* Espacio pequeño entre items internos */
-
   background: none;
   border: none;
   padding: 0;
-  color: #2563eb; /* Color azul */
+  color: var(--primary); /* Color azul */
   font-size: 1rem;
   cursor: pointer;
   text-decoration: underline;
-  margin: 0; /* Asegura que no haya margen */
-  transition: text-decoration 0.2s ease-in-out; /* Transición para la decoración del texto */
+  margin: 0;
+  transition: text-decoration 0.2s ease-in-out;
 }
 
 .buttonLink:hover {
-  text-decoration: none; /* Elimina subrayado al pasar el mouse */
+  text-decoration: none;
+  color: var(--primary-hover);
 }
 
-/* Estilos para botones outline (usados en ObjetivoCard footer) */
+/* Estilos para botones outline (usados en ObjetivoCard footer y GoalDetailPage) */
 .buttonOutline {
   display: inline-flex;
   align-items: center;
@@ -131,16 +120,17 @@
   gap: 0.3rem;
   padding: 0.4rem 0.8rem;
   background-color: transparent; /* Fondo transparente */
-  border: 1px solid var(--color-border);
-  color: var(--color-foreground);
+  border: 1px solid var(--border); /* Usar border */
+  color: var(--primary); /* Color del texto para botón outline */
   border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .buttonOutline:hover {
-  background-color: var(--color-muted);
-  border-color: var(--color-muted-foreground);
+  background-color: var(--muted);
+  border-color: var(--primary-hover);
+  color: var(--primary-hover);
 }
 
 .buttonOutline:disabled {
