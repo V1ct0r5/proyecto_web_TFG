@@ -16,12 +16,24 @@ function ObjetivosPage() {
     // Determina si el usuario ya tiene objetivos.
     const hasObjectives = objetivos.length > 0;
 
-    const handleObjectiveCreated = (nuevoObjetivo, errorMessage = null) => {
-        if (nuevoObjetivo) {
+    const handleObjectiveSubmission = async (objectiveData) => {
+        try {
+            let response;
+            if (objectiveData.id_objetivo) {
+                // Si el objetivo tiene un ID, es una actualización
+                response = await api.updateObjective(objectiveData.id_objetivo, objectiveData);
+            } else {
+                // Si no tiene ID, es una creación de un nuevo objetivo
+                response = await api.createObjective(objectiveData);
+            }
             toast.success('Objetivo guardado con éxito.');
-            navigate('/dashboard'); // Redirige al dashboard
-        } else if (errorMessage) {
-            toast.error(errorMessage);
+            navigate('/dashboard'); // Redirige al dashboard después de guardar
+            return response.data; // O el objeto creado/actualizado si lo necesitas
+        } catch (err) {
+            console.error("Error al guardar el objetivo:", err.response ? err.response.data : err.message);
+            const errorMessage = err.response && err.response.data.message ? err.response.data.message : "Error desconocido al guardar el objetivo.";
+            toast.error("Error: " + errorMessage);
+            throw new Error(errorMessage); // Lanza el error para que sea capturado por el onSubmitInternal del formulario
         }
     };
 
@@ -82,7 +94,7 @@ function ObjetivosPage() {
                     {hasObjectives ? "Crea un nuevo objetivo" : "Crea tu primer objetivo"}
                 </h2>
                 <ObjetivosForm
-                    onObjectiveCreated={handleObjectiveCreated}
+                    onSubmit={handleObjectiveSubmission}
                     isFirstObjective={!hasObjectives}
                     onCancel={handleCancelCreation}
                 />
