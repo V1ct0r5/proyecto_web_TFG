@@ -106,7 +106,7 @@ async function initializeDatabase() {
         // y solo si forceSync es true (si has borrado la base de datos)
         if (forceSync) {            const existingUser = await db.User.findOne({ where: { correo_electronico: 'test@example.com' } });
             if (!existingUser) {
-                const hashedPassword = await bcrypt.hash('V194d2012@', 10);
+                const hashedPassword = await bcrypt.hash(env.DB_PASSWORD, 10);
                 await db.User.create({
                     nombre_usuario: 'usuario_prueba',
                     correo_electronico: 'test@example.com',
