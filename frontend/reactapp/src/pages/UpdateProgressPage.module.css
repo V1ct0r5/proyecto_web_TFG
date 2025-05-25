@@ -1,0 +1,254 @@
+/* Contenedor principal de la página de actualización */
+.updateProgressPage {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Alinea arriba */
+    min-height: calc(100vh - var(--header-height, 60px) - 2rem); /* Ajusta altura según tu layout */
+    padding: 2rem;
+    background-color: var(--background); /* Color de fondo de la página */
+}
+
+/* Estilo para la tarjeta principal del formulario */
+.updateProgressCard {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    width: 100%;
+    max-width: 500px; /* Ancho máximo similar a la imagen */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Espacio entre secciones principales */
+}
+
+/* Sección de encabezado (título y descripción del objetivo) */
+.updateProgressHeader {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.goalTitle {
+    font-size: 1.8rem;
+    color: var(--foreground);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.goalDescription {
+    font-size: 0.95rem;
+    color: var(--muted-foreground);
+    margin-bottom: 1rem;
+}
+
+/* Sección de progreso (barra, valores, última actualización) */
+.progressSection {
+    background-color: var(--background); /* Un fondo ligeramente diferente para la sección de progreso */
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra los elementos de progreso */
+    gap: 0.5rem;
+}
+
+.sectionHeading { /* Renombrado de sectionTitle para evitar conflicto si se usa en otros lugares */
+    font-size: 1.1rem;
+    color: var(--foreground);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    width: 100%;
+}
+
+/* Estilos de la barra de progreso - ADAPTADOS Y RENOMBRADOS */
+.progressBarContainer {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.progressBarHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.progressBarLabel {
+    font-size: 0.9rem;
+    color: var(--muted-foreground);
+    font-weight: 500;
+}
+
+.progressBarPercentage { /* Usado en lugar de progressPercentageText */
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.progressBar {
+    width: 100%;
+    height: 8px; /* Altura de la barra */
+    background-color: var(--muted); /* Color de fondo de la barra */
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progressBarFill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease-in-out;
+}
+
+/* Colores de la barra de progreso según el porcentaje */
+.progressFillLow {
+    background-color: var(--destructive); /* Rojo para bajo progreso */
+}
+
+.progressFillMedium {
+    background-color: var(--warning); /* Amarillo/Naranja para progreso medio */
+}
+
+.progressFillHigh {
+    background-color: var(--success); /* Verde para progreso alto */
+}
+/* FIN DE ESTILOS DE LA BARRA DE PROGRESO */
+
+
+.progressDetails {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 1rem;
+    gap: 1rem;
+    background-color: var(--border);
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.detailItem {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+    flex: 1;
+}
+
+.detailLabel {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    margin-bottom: 0.2rem;
+}
+
+.detailValue {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.lastUpdateInfo { /* Renombrado para claridad */
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    margin-top: 1rem;
+}
+
+.lastUpdateDate {
+    font-weight: 500;
+    color: var(--foreground);
+}
+
+/* Estilos para el formulario de actualización */
+.updateForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem; /* Espacio entre grupos de formulario */
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formLabel {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.formInput,
+.formTextarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    color: var(--foreground);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.formInput::placeholder,
+.formTextarea::placeholder {
+    color: var(--muted-foreground);
+}
+
+.formInput:focus,
+.formTextarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.formTextarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Sección de acciones (botones) */
+.formActions {
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+/* Estilos para el mensaje de error/loading (fuera de la tarjeta principal si es de página completa) */
+.updateProgressPageError,
+.updateProgressPageLoading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--destructive);
+    font-weight: 500;
+}
+
+/* Mensaje para objetivos no cuantitativos */
+.nonQuantitativeMessage {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    color: var(--foreground);
+}
+
+.nonQuantitativeMessageTitle {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.nonQuantitativeMessageText {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.nonQuantitativeMessageActions {
+    display: flex;
+    justify-content: center; /* Centrar botones en este mensaje */
+    gap: 0.8rem;
+}
