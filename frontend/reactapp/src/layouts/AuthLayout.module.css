@@ -2,10 +2,6 @@
 
 /* Contenedor principal de la página de autenticación */
 .authPage {
-    width: 100vw; /* Ocupa todo el ancho de la ventana */
-    /* Eliminar height: 100vh; si el contenido puede exceder la altura y necesita scroll */
-    /* --tw-bg-opacity: 1; Eliminar si no usas variables de Tailwind directamente aquí */
-    background-color: #f4f7f6; /* Color de fondo de la página (ejemplo) */
     display: grid; /* Usa Grid Layout */
     grid-template-rows: auto 1fr; /* Fila superior para el posible header (si no está sticky), el resto para el contenido principal */
     grid-template-areas:
@@ -13,21 +9,60 @@
         "main-content"; /* Área para el contenido principal */
     padding: 0;
     box-sizing: border-box;
+
 }
 
 /* Área de contenido principal (donde se renderiza el formulario de Login/Registro) */
 .mainContentArea {
-    grid-area: main-content; /* Asigna esta div al área "main-content" definida en el grid */
-    display: flex; /* Usa Flexbox para centrar el contenido interno (el formContainer) */
-    justify-content: center; /* Centra el contenido horizontalmente */
-    align-items: center; /* Centra el contenido verticalmente */
-    padding: 1.5rem 0.8rem; /* Padding interno (arriba/abajo y lados) */
+    grid-area: main-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem 0.8rem;
     box-sizing: border-box;
-    /* margin-top: 0; No es necesario con grid-template-areas */
-    /* gap: 1.6rem; Este gap solo tendría efecto si mainContentArea tuviera múltiples hijos directos, en este caso solo tiene el formContainer. */
-     flex-direction: column; /* Asegura apilamiento vertical si hubiera más hijos */
-     overflow-y: auto; /* Permite scroll vertical si el contenido excede la altura */
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
 }
+
+/* Estilos para el título del formulario dentro de esta área */
+.formTitle {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+    color: #333;
+    font-size: 1.8rem;
+    /* Si el botón va a estar arriba a la derecha, considera el margen superior del título */
+    /* para evitar que se solape con el botón si el contenido es muy corto. */
+}
+
+/* ... (formFooter, formLink, etc. - sin cambios) ... */
+
+/* Estilos para el botón de cancelar (general para este layout) */
+.cancelButton {
+    position: absolute;
+    top: 1rem; /* Ajusta la distancia desde la parte superior */
+    right: 1rem; /* Ajusta la distancia desde la parte derecha */
+    background-color: var(--color-danger); /* O un color secundario/neutro */
+    color: var(--color-light);
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: var(--font-size-md);
+    transition: background-color 0.3s ease;
+    z-index: 10; /* Asegura que esté por encima de otros elementos */
+}
+
+.cancelButton:hover {
+    background-color: var(--color-danger-dark); /* Un tono más oscuro al pasar el ratón */
+}
+
+.cancelButton:disabled {
+    background-color: var(--color-gray-light);
+    cursor: not-allowed;
+}
+
 
 /* Estilo para el título del formulario dentro de esta área */
 /* Nota: Esta clase .formTitle se usa en LoginPage y RegistroPage */
