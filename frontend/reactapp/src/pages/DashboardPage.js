@@ -1,3 +1,4 @@
+// frontend/reactapp/src/pages/DashboardPage.js
 import React, { useEffect, useState, useMemo } from "react";
 import api from "../services/apiService";
 import { toast } from "react-toastify";
@@ -8,7 +9,7 @@ import Input from "../components/ui/Input";
 import FormGroup from "../components/ui/FormGroup";
 import { useNavigate } from "react-router-dom";
 import dashboardStyles from "./DashboardPage.module.css";
-import buttonStyles from "../components/ui/Button.module.css";
+import buttonStyles from "../components/ui/Button.module.css"; // Mantener este import para buttonCreateObjective
 
 function DashboardPage() {
     const [objetivos, setObjetivos] = useState([]);
@@ -17,6 +18,9 @@ function DashboardPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterCategory, setFilterCategory] = useState("Todas");
     const [sortBy, setSortBy] = useState("recientes");
+
+    const [showAllObjectives, setShowAllObjectives] = useState(false);
+    const initialDisplayLimit = 6;
 
     const { token, isAuthenticated, loading: authLoading } = useAuth();
     const navigate = useNavigate();
@@ -83,8 +87,6 @@ function DashboardPage() {
                     const dateB = new Date(b.fecha_creacion || b.fecha_inicio);
                     return dateB.getTime() - dateA.getTime();
                 case "progreso":
-                    // --- INICIO DE CAMBIO IMPORTANTE ---
-                    // Calcular progreso de forma segura para a
                     const aCurrent = parseFloat(a.valor_actual);
                     const aTarget = parseFloat(a.valor_cuantitativo);
                     let progresoA = 0;
@@ -92,10 +94,9 @@ function DashboardPage() {
                         progresoA = (a.es_menor_mejor ? (aTarget / aCurrent) : (aCurrent / aTarget)) * 100;
                         progresoA = Math.min(progresoA, 100);
                     } else if (a.estado === 'Completado') {
-                         progresoA = 100; // Si está completado y no tiene valores cuantitativos, asume 100%
+                        progresoA = 100;
                     }
 
-                    // Calcular progreso de forma segura para b
                     const bCurrent = parseFloat(b.valor_actual);
                     const bTarget = parseFloat(b.valor_cuantitativo);
                     let progresoB = 0;
@@ -103,11 +104,10 @@ function DashboardPage() {
                         progresoB = (b.es_menor_mejor ? (bTarget / bCurrent) : (bCurrent / bTarget)) * 100;
                         progresoB = Math.min(progresoB, 100);
                     } else if (b.estado === 'Completado') {
-                        progresoB = 100; // Si está completado y no tiene valores cuantitativos, asume 100%
+                        progresoB = 100;
                     }
 
-                    return progresoB - progresoA; // Mayor progreso primero
-                // --- FIN DE CAMBIO IMPORTANTE ---
+                    return progresoB - progresoA;
                 case "alfabetico":
                     return a.nombre.localeCompare(b.nombre);
                 default:
@@ -117,6 +117,15 @@ function DashboardPage() {
 
         return currentObjetivos;
     }, [objetivos, searchTerm, filterCategory, sortBy]);
+
+    const objectivesToRender = useMemo(() => {
+        if (showAllObjectives) {
+            return filteredAndSortedObjetivos;
+        }
+        return filteredAndSortedObjetivos.slice(0, initialDisplayLimit);
+    }, [filteredAndSortedObjetivos, showAllObjectives, initialDisplayLimit]);
+
+    const hasMoreThanInitialLimit = filteredAndSortedObjetivos.length > initialDisplayLimit;
 
     const handleNavigateToCreateObjective = () => {
         navigate("/objectives");
@@ -184,8 +193,9 @@ function DashboardPage() {
 
             <div className={dashboardStyles.sectionHeader}>
                 <h2 className={dashboardStyles.sectionTitle}>Tus Objetivos</h2>
+                {/* AÑADE LA CLASE btn-shine AQUÍ */}
                 <Button
-                    className={buttonStyles.buttonCreateObjective}
+                    className={`${buttonStyles.buttonCreateObjective} btn-shine`}
                     onClick={handleNavigateToCreateObjective}
                 >
                     + Añadir Nuevo Objetivo
@@ -199,14 +209,25 @@ function DashboardPage() {
                         : "No se encontraron objetivos que coincidan con tus filtros."}
                 </p>
             ) : (
-                <div className={dashboardStyles.goalsGrid}>
-                    {filteredAndSortedObjetivos.map((objetivo) => (
-                        <ObjetivoCard
-                            key={objetivo.id_objetivo || objetivo.id}
-                            objective={objetivo} // Asegúrate de que el prop se llama 'objective'
-                        />
-                    ))}
-                </div>
+                <>
+                    <div className={`${dashboardStyles.goalsGrid} ${showAllObjectives ? dashboardStyles.expanded : ''}`}>
+                        {objectivesToRender.map((objetivo) => (
+                            <ObjetivoCard
+                                key={objetivo.id_objetivo || objetivo.id}
+                                objective={objetivo}
+                            />
+                        ))}
+                    </div>
+
+                    {hasMoreThanInitialLimit && (
+                        <Button
+                            className={dashboardStyles.toggleButton}
+                            onClick={() => setShowAllObjectives(!showAllObjectives)}
+                        >
+                            {showAllObjectives ? "Ver menos objetivos" : `Ver ${filteredAndSortedObjetivos.length - initialDisplayLimit} objetivos más`}
+                        </Button>
+                    )}
+                </>
             )}
         </div>
     );
