@@ -1,3 +1,4 @@
+// backend/src/config/database.js
 const { Sequelize, DataTypes } = require('sequelize');
 const path = require('path');
 const dotenv = require('dotenv');
@@ -57,19 +58,23 @@ const sequelizeInstance = new Sequelize(
     }
 );
 
+// --- Importar todos los modelos ---
+// Asegúrate que los nombres de archivo aquí ('user', 'objetivo', 'progress')
+// coincidan con los nombres reales de tus archivos de modelos.
 db.User = require('../api/models/user')(sequelizeInstance);
-db.Objective = require('../api/models/objectives')(sequelizeInstance);
+db.Objective = require('../api/models/objectives')(sequelizeInstance); // Asegúrate que el archivo se llama 'objetivo.js'
 db.Progress = require('../api/models/progress')(sequelizeInstance);
 
 db.sequelize = sequelizeInstance;
 db.Sequelize = Sequelize;
 db.DataTypes = DataTypes;
 
+// --- Ejecutar asociaciones ---
 Object.keys(db).forEach(modelName => {
     // Asegurarse de que el modelo tiene una función associate y no es una propiedad de Sequelize
     if (db[modelName] && typeof db[modelName].associate === 'function') {
         db[modelName].associate(db);
-        console.log(`[DB] Asociaciones para el modelo ${modelName} inicializadas.`); // Añade un log para verificar
+        console.log(`[DB] Asociaciones para el modelo ${modelName} inicializadas.`);
     }
 });
 
@@ -85,26 +90,29 @@ async function initializeDatabase() {
         await db.sequelize.authenticate();
         console.log(`[DB] Conexión a la base de datos '${dbName}' establecida con éxito.`);
 
-        const forceSync = false;
-        console.log(`[DB Sync] Sincronizando con force: ${forceSync} para entorno ${env}.`);
-        await db.sequelize.sync({ force: forceSync });
+        // --- Sincronización de modelos ---
+        const forceSync = false; // MANTENER EN FALSE EN PRODUCCIÓN (borra toda la base de datos)
+        const alterSync = true;  // Usar alter: true para añadir/modificar columnas sin perder datos
 
-        if (forceSync) {
-            console.log('Modelos sincronizados con la base de datos (FORZADO).');
-            // Crear usuario de prueba solo si las tablas fueron forzadas a sincronizarse
-            const existingUser = await db.User.findOne({ where: { correo_electronico: 'test@example.com' } });
+        if (alterSync) {
+            await db.sequelize.sync({ alter: true });
+        } else if (forceSync) {
+            await db.sequelize.sync({ force: forceSync });
+        } else {
+             await db.sequelize.sync(); // O solo await db.sequelize.authenticate() si no quieres ningún sync
+        }
+        
+        // La lógica del usuario de prueba debe ir *después* de que se sincronicen los modelos
+        // y solo si forceSync es true (si has borrado la base de datos)
+        if (forceSync) {            const existingUser = await db.User.findOne({ where: { correo_electronico: 'test@example.com' } });
             if (!existingUser) {
-                // Hashea la contraseña antes de crear el usuario
-                const hashedPassword = await bcrypt.hash('V194d2012@', 10); // 10 es el costo del salt
+                const hashedPassword = await bcrypt.hash('V194d2012@', 10);
                 await db.User.create({
                     nombre_usuario: 'usuario_prueba',
                     correo_electronico: 'test@example.com',
                     contrasena: hashedPassword
                 });
-                console.log('Usuario de prueba "test@example.com" creado con éxito.');
             }
-        } else {
-            console.log('Modelos sincronizados con la base de datos.');
         }
 
         isInitialized = true;
