@@ -1,0 +1,129 @@
+/* frontend/src/components/Sidebar/Sidebar.module.css */
+
+.sidebar {
+    width: 250px;
+    min-width: 250px;
+    background-color: var(--sidebar-background);
+    color: var(--sidebar-foreground);
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+    z-index: 20;
+    flex-shrink: 0;
+}
+
+.logoContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    padding-left: 0.5rem;
+}
+
+.appLogoCircle {
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--primary-foreground);
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.appName {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--sidebar-foreground);
+}
+
+.createButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.8rem 1rem;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    font-weight: 600;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    text-align: center;
+    text-decoration: none; /* Asegura que no haya subrayado por defecto */
+    margin-bottom: 2.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.createButton:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    text-decoration: none; /* Asegura que no aparezca el subrayado en hover */
+}
+
+.createButton:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 50%, transparent);
+}
+
+.activeCreateButton {
+    background-color: var(--primary-hover);
+    text-decoration: none; /* Asegura que no haya subrayado en estado activo */
+}
+
+
+.navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--sidebar-foreground);
+    font-size: 1.05rem;
+    font-weight: 500;
+    text-decoration: none; /* Asegura que los navItems no tengan subrayado */
+    border-radius: var(--radius);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.navItem:hover {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
+    text-decoration: none; /* Asegura que los navItems no tengan subrayado en hover */
+}
+
+.navItem:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.icon {
+    font-size: 1.3rem;
+    color: var(--sidebar-foreground);
+}
+
+.activeNavItem {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-primary);
+    font-weight: 600;
+    text-decoration: none; /* Asegura que los navItems no tengan subrayado en estado activo */
+}
+
+.activeNavItem .icon {
+    color: var(--sidebar-primary);
+}
