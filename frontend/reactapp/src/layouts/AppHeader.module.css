@@ -1,74 +1,59 @@
-/* Estilos para el componente de encabezado de la aplicación */
+/* frontend/reactapp/src/layouts/AppHeader.module.css */
 
 .header {
-    width: 100%;
-    padding: 0.8rem 1.6rem; /* Padding interno uniforme */
-    box-sizing: border-box; /* Asegura que padding y borde se incluyan en el tamaño */
-    background-color: #f8f9fa; /* Color de fondo gris claro */
-    border-bottom: 1px solid #e9ecef; /* Línea inferior separadora */
-    color: #343a40;
-    display: flex; /* Usa Flexbox para el layout del contenido */
-    justify-content: space-between; /* Espacia el contenido izquierdo y derecho */
-    align-items: center; /* Alinea los items verticalmente al centro */
-    position: sticky; /* Hace que el encabezado se quede en la parte superior al hacer scroll */
-    top: 0; /* Se pega a la parte superior */
-    z-index: 10; /* Asegura que esté por encima de otros contenidos */
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Sombra sutil */
-}
-
-/* Estilo para el link que envuelve el logo y la marca */
-.headerLogoLink {
-    display: flex; /* Usa flexbox para alinear el círculo del logo y el nombre */
+    height: var(--app-header-height); /* Usa la variable definida en App.css */
+    background-color: var(--card); /* Un fondo claro para el header */
+    border-bottom: 1px solid var(--border); /* Un borde inferior sutil */
+    display: flex;
+    justify-content: space-between; /* Espacia el contenido de la izquierda y la derecha */
     align-items: center;
-    gap: 0.8rem; /* Espacio entre el círculo y el nombre */
-    text-decoration: none; /* Elimina subrayado por defecto de los links */
-    color: inherit; /* Hereda el color del padre (.header) */
+    padding: 0 1.5rem; /* Padding horizontal */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+    width: 100%; /* Asegura que ocupe todo el ancho disponible en .main-layout-content */
+    z-index: 10; /* Asegura que esté por encima del contenido de main-content-area */
+    flex-shrink: 0; /* Evita que el header se encoja */
 }
 
-.headerLogoLink:hover {
-     text-decoration: none; /* Asegura que no aparezca subrayado al pasar el mouse */
-}
-
-
-/* Contenedor para el contenido del lado izquierdo (Logo y Marca) */
 .leftContent {
-    display: flex; /* Usa flexbox para alinear items internos */
-    align-items: center;
-    gap: 0.8rem; /* Espacio entre el logo y la marca (puede ser redundante si se usa headerLogoLink) */
-}
-
-/* Estilo para el círculo decorativo del logo */
-.headerLogoCircle {
-    width: 1.8rem; /* Ajustado ligeramente el tamaño */
-    height: 1.8rem; /* Ajustado ligeramente el tamaño */
-    border-radius: 50%; /* Forma de círculo */
-    background-color: hsl(245, 79%, 59%); /* Color de fondo (índigo) */
     display: flex;
     align-items: center;
-    justify-content: center; /* Centra la letra 'G' dentro del círculo */
-    color: white;
-    font-weight: bold;
-    font-size: 1rem; /* Ajustado el tamaño de la letra */
-    flex-shrink: 0; /* Evita que el círculo se encoja en pantallas pequeñas */
+    gap: 0.75rem;
 }
 
-/* Estilo para el nombre de la marca */
-.headerBrand {
-    font-size: 1.35rem; /* Ajustado ligeramente el tamaño de fuente */
-    font-weight: bold;
-    color: #212529; /* Color de texto oscuro */
-}
-
-/* Contenedor para el contenido del lado derecho (Info usuario y Botón Cerrar Sesión) */
-.rightContent {
-    display: flex; /* Usa flexbox para alinear items internos */
+.headerLogoLink {
+    display: flex;
     align-items: center;
-    gap: 1rem; /* Espacio entre el nombre del usuario y el botón */
+    text-decoration: none;
+    color: inherit;
 }
 
-/* Estilo para el texto "Hola, Usuario!" */
+.headerLogoCircle {
+    width: 32px;
+    height: 32px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--primary-foreground);
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+}
+
+.headerBrand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--foreground);
+}
+
+.rightContent {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .userInfo {
-    font-size: 1rem;
-    color: #333;
-    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--muted-foreground);
 }
