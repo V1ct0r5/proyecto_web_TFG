@@ -23,6 +23,10 @@ module.exports = (sequelize) => {
             type: DataTypes.ENUM('Salud', 'Finanzas', 'Desarrollo personal', 'Relaciones', 'Carrera profesional', 'Otros'),
             allowNull: false,
         },
+        valor_inicial_numerico: {
+            type: DataTypes.DECIMAL,
+            allowNull: true,
+        },
         valor_actual: {
             type: DataTypes.DECIMAL,
             allowNull: true,
@@ -47,7 +51,7 @@ module.exports = (sequelize) => {
             type: DataTypes.DATEONLY,
         },
         estado: {
-            type: DataTypes.ENUM('Pendiente', 'En progreso', 'Completado'),
+            type: DataTypes.ENUM('Pendiente', 'En progreso', 'Completado', 'Archivado', 'Fallido'),
             defaultValue: 'Pendiente',
             allowNull: false,
         },
