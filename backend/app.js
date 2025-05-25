@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 
 const usuariosRoutes = require('./src/api/routes/userRoutes');
 const objetivosRoutes = require('./src/api/routes/objectivesRoutes');
@@ -10,6 +11,7 @@ const errorHandler = require('./src/middlewares/errorHandler');
 
 
 const app = express();
+app.use(helmet());
 app.use(express.json());
 
 const cors = require('cors');
