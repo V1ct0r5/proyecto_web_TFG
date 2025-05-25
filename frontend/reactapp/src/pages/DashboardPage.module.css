@@ -12,7 +12,7 @@
 
 .pageTitle {
     font-size: 2.2rem; /* Mantengo el tamaño del título para legibilidad */
-    color: #333;
+    color: var(--foreground); /* Usar variable para el color del título */
     text-align: center;
     margin-bottom: 0; /* El gap del contenedor principal ya maneja el espaciado */
 }
@@ -22,18 +22,17 @@
 .noGoalsMessage {
     text-align: center;
     font-size: 1.1rem;
-    color: #555;
+    color: var(--muted-foreground); /* Usar variable para texto suave */
     padding: 2rem;
-    background-color: #f8f8f8;
-    border-radius: 0.5rem;
-    /* ORIGINAL: margin-top: 2rem; */
+    background-color: var(--muted); /* Usar variable para fondo suave */
+    border-radius: var(--radius);
     margin-top: 0; /* El gap del contenedor principal ya maneja el espaciado */
 }
 
 .errorState {
-    color: #d9534f; /* Rojo para errores */
-    background-color: #fcebeb;
-    border: 1px solid #d9534f;
+    color: var(--destructive); /* Rojo para errores */
+    background-color: color-mix(in srgb, var(--destructive) 10%, transparent); /* Un rojo muy suave */
+    border: 1px solid var(--destructive);
 }
 
 /* Contenedor de los controles (búsqueda, filtro, orden) */
@@ -42,10 +41,9 @@
     grid-template-columns: 1fr; /* Una columna en móvil */
     gap: 1rem; /* MODIFICACIÓN: gap-4 (1rem o 16px) entre cada filtro */
     padding: 1rem;
-    background-color: #f0f4f8;
-    border-radius: 0.5rem;
+    background-color: var(--muted); /* Fondo suave para los controles */
+    border-radius: var(--radius);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    /* Ya no necesita margin-top explícito si el padre tiene gap */
 }
 
 /* Media queries para los controles */
@@ -66,7 +64,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* ORIGINAL: margin-bottom: 1.5rem; */
     margin-bottom: 0; /* El gap de .dashboardContainer ya maneja este espaciado */
     padding-top: 0; /* Asegura que no haya padding extra si ya lo controla el gap */
     gap: 1rem; /* MODIFICACIÓN: gap-4 (1rem o 16px) de espacio entre el título y el botón */
@@ -75,7 +72,7 @@
 
 .sectionTitle {
     font-size: 1.8rem; /* Mantengo el tamaño del título de sección */
-    color: #444;
+    color: var(--foreground); /* Usar variable para el color del título de sección */
     margin: 0; /* Asegura que no tenga margen extra */
 }
 
@@ -83,26 +80,19 @@
 .goalsGrid {
     display: grid;
     grid-template-columns: 1fr; /* Por defecto, 1 columna en móviles */
-    gap: 1.5rem; /* MODIFICACIÓN: gap-6 (1.5rem o 24px) entre cada tarjeta */
-    /* Ya no necesita margin-top explícito si el padre tiene gap */
+    gap: 2rem; /* AUMENTO: Más espacio entre cada tarjeta (antes 1.5rem) */
 }
 
 /* Media query para tablets (2 columnas) */
 @media (min-width: 768px) { /* md breakpoint */
     .goalsGrid {
-        grid-template-columns: repeat(2, 1fr); /* 2 columnas de igual ancho */
+        grid-template-columns: repeat(2, 1fr); /* Ahora 2 columnas de igual ancho */
     }
 }
 
 /* Media query para pantallas grandes (3 columnas) */
 @media (min-width: 1024px) { /* lg breakpoint */
     .goalsGrid {
-        grid-template-columns: repeat(3, 1fr); /* 3 columnas de igual ancho */
+        grid-template-columns: repeat(3, 1fr); /* Ahora 3 columnas de igual ancho */
     }
-}
-
-/* Estilos para el botón de añadir objetivo si es necesario que sobresalga
-    del buttonStyles. Si no, puedes omitirlo o usar buttonStyles.buttonPrimary */
-/* .buttonCreateObjective {
-    min-width: 200px;
-} */
+}   
