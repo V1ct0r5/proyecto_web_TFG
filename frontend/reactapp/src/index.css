@@ -1,33 +1,307 @@
+/* frontend/reactapp/src/styles/App.css */
+
+/* Variables CSS */
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(222.2 84% 4.9%);
+
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222.2 84% 4.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222.2 84% 4.9%);
+
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-foreground: hsl(210 40% 98%);
+
+  --secondary: #10B981;
+  --secondary-hover: #059669;
+  --secondary-foreground: hsl(210 40% 98%);
+
+  --success: #10B981;
+  --success-foreground: hsl(210 40% 98%);
+
+  --warning: #F59E0B;
+  --warning-foreground: hsl(210 40% 98%);
+
+  --destructive: #EF4444;
+  --destructive-foreground: hsl(210 40% 98%);
+
+  --muted: hsl(210 40% 96.1%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+  --accent: hsl(210 40% 96.1%);
+  --accent-foreground: hsl(222.2 47.4% 11.2%);
+
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: #4F46E5;
+
+  --radius: 0.4rem;
+
+  --sidebar-background: hsl(0 0% 98%);
+  --sidebar-foreground: hsl(222.2 84% 4.9%);
+  --sidebar-primary: #4F46E5;
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 4.8% 95.9%);
+  --sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-ring: #4F46E5;
+
+  /* **Importante:** Ajusta esta altura a la altura real de tu AppHeader */
+  --app-header-height: 59px;
+}
+
+/* Base styles and resets */
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+}
+
 html,
-body {
+body,
+#root {
   margin: 0;
   padding: 0;
-  height: 100%;
-
-  font-family: sans-serif;
+  height: 100%; /* Muy importante para que el <body> y #root tomen el 100% de la altura de la ventana */
+  font-family: "Inter", sans-serif; /* Asumo una fuente, cámbiala si usas otra */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden; /* Controla el overflow a nivel de la raíz, evitando scroll en todo el documento */
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
-#root {
-  height: 100%;
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--foreground);
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+}
+
+h1 { font-size: 2.2rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.5rem; }
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  text-decoration: none;
+  color: var(--primary-hover);
+}
+
+/* --- LAYOUT CLASSES --- */
+
+/* Contenedor principal de la aplicación (Sidebar + Contenido Principal) */
 .App {
   display: flex;
-  flex-direction: column;
-  height: 100%;
+  flex-direction: row; /* Sidebar y main-layout-content se colocan en fila */
+  height: 100vh; /* Ocupa el 100% de la altura del viewport */
+  width: 100vw; /* Ocupa el 100% del ancho del viewport */
+  overflow: hidden; /* Evita scroll indeseado en el contenedor general */
 }
 
-main {
+/* Contenedor para el AppHeader y el Main (todo lo que va a la derecha del Sidebar) */
+.main-layout-content {
+  flex-grow: 1; /* Este contenedor ocupa el espacio restante horizontalmente */
+  display: flex;
+  flex-direction: column; /* AppHeader y main-content-area se apilan verticalmente */
+  height: 100vh; /* Ocupa el 100% de la altura del viewport */
+  overflow: hidden; /* El scroll se gestiona en .main-content-area */
+  background-color: var(--background);
+}
+
+/* Área de contenido principal de las páginas (donde se cargan las rutas) */
+.main-content-area {
+  flex-grow: 1; /* Ocupa todo el espacio vertical restante debajo del AppHeader */
+  box-sizing: border-box;
+  overflow-y: auto; /* Habilita el desplazamiento vertical para el contenido de las páginas */
+  padding: 1.5rem; /* Padding general para el contenido de las páginas */
+  background-color: var(--background);
+}
+
+/* Estilos para centrar el contenido en rutas de autenticación (login, registro) */
+.main-centered-auth {
   flex-grow: 1;
-    overflow: hidden;
-    padding: 0 20px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-    flex-wrap: wrap;
-    align-content: center;
+  display: flex;
+  flex-direction: column; /* Para centrar verticalmente, se necesita flex-direction */
+  justify-content: center; /* Centrado vertical */
+  align-items: center; /* Centrado horizontal */
+  background-color: var(--background);
+  padding: 1.5rem; /* Padding general */
+  overflow-y: auto; /* Si el formulario es muy largo, permite scroll */
+}
+
+/* Clase para el título de la página dentro del main-content-area */
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 1.5rem; /* Espacio debajo del título de la página */
+  margin-top: 0; /* Asegura que no tenga margen superior adicional */
+}
+
+/* Estas reglas de 'main' deben ser eliminadas o comentadas si estaban para cuando 'main' era el contenedor principal de rutas sin un header encima */
+/* main {
+  flex-grow: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--background);
+  overflow: visible;
+} */
+
+
+/* --- COMPONENT STYLES (tus estilos existentes) --- */
+
+.container {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1280px;
+}
+
+@media (min-width: 768px) {
+  .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+  }
+}
+
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: skewX(-15deg);
+  transition: all 700ms ease;
+}
+
+.btn-shine:hover::after {
+  left: 100%;
+}
+
+.card-hover {
+  transition: all 300ms ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-hover:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+}
+
+.progress-indicator {
+  position: relative;
+  height: 0.5rem;
+  background-color: var(--muted);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: var(--secondary);
+  border-radius: 9999px;
+  transition: all 500ms ease;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring), 0 0 0 4px var(--background);
+}
+
+/* .app-header-height { Esta clase no es necesaria si usas la variable directamente en AppHeader.module.css } */
+
+.formContainer {
+  background-color: var(--card);
+  box-shadow: 4px 4px 6px 6px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  width: 100%;
+  max-width: 30rem; /* Limita el ancho del formulario */
+  margin-bottom: 2rem;
+}
+
+.formContainer:last-of-type {
+  margin-bottom: 0;
+}
+
+.error-message {
+  color: var(--destructive);
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+}
+
+.success-message {
+  color: var(--success);
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  font-size: 1.5rem;
+  color: var(--foreground);
+}
+
+.add-objective-button-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.objetivos-page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
