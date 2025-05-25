@@ -73,9 +73,7 @@
     display: flex;
     justify-content: space-between; /* Por defecto, el botón de crear/guardar a la derecha */
     gap: 1rem; /* Espacio entre botones */
-    padding-top: 1rem; /* Espacio superior para separar de los campos */
     border-top: 1px solid var(--color-border); /* Línea divisoria, opcional */
-    margin-top: 1rem; /* Margen superior para separar del último FormGroup */
 }
 
 .firstObjectiveButtons {
