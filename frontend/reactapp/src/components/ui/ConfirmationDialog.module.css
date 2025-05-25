@@ -1,0 +1,61 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo semi-transparente oscuro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Asegura que esté por encima de otros elementos */
+    padding: 1rem; /* Espacio para que el diálogo no se pegue a los bordes */
+}
+
+.dialog {
+    background-color: var(--card); /* Color de fondo de la tarjeta */
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 450px; /* Ancho máximo del diálogo */
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Espacio entre los elementos del diálogo */
+    animation: fadeIn 0.2s ease-out; /* Pequeña animación de entrada */
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--foreground);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.message {
+    font-size: 1rem;
+    color: var(--muted-foreground);
+    text-align: center;
+    line-height: 1.5;
+}
+
+.actions {
+    display: flex;
+    justify-content: center; /* Centra los botones */
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+/* Animación de entrada */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
