@@ -1,0 +1,35 @@
+/* src/components/charts/ProgressLineChart.module.css */
+
+/*
+   Este archivo CSS es para los estilos específicos del contenedor del gráfico.
+   Si ya estás usando Tailwind CSS o estilos globales en tu aplicación,
+   podrías aplicar estos estilos directamente en el JSX o usar clases de Tailwind.
+
+   Si lo usas, asegúrate de que tus variables CSS (como --background, --foreground, etc.)
+   estén definidas en un archivo CSS global de tu proyecto (ej. globals.css o App.css).
+*/
+
+.chartContainer {
+    position: relative;
+    height: 300px; /* Altura fija para el contenedor del gráfico */
+    width: 100%; /* Ancho completo */
+    padding: 1rem;
+    background-color: var(--background, #ffffff); /* Fondo para el gráfico, con fallback */
+    border-radius: var(--radius, 0.5rem); /* Radio de borde, con fallback */
+    border: 1px solid var(--border, #e2e8f0); /* Borde, con fallback */
+    box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05)); /* Sombra ligera, con fallback */
+    display: flex; /* Para centrar el contenido si es un mensaje de noData */
+    justify-content: center;
+    align-items: center;
+}
+
+.noDataMessage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--muted-foreground, #6b7280);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 1rem;
+}
