@@ -1,0 +1,8 @@
+.spinnerContainer {
+    display: flex;
+    justify-content: center; /* Centrar horizontalmente */
+    align-items: center;     /* Centrar verticalmente */
+    min-height: 150px;       /* Ajusta la altura mínima para que el spinner no quede pegado al texto */
+    width: 100%;
+    margin: 20px 0;          /* Espacio alrededor del spinner */
+}
