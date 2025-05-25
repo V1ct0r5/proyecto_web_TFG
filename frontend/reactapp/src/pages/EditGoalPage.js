@@ -58,17 +58,15 @@ function EditGoalPage() {
 
     return (
         <div className={editGoalStyles.editGoalContainer}>
-            {/* *** RESTAURADO: el div.header con el título de la página *** */}
             <div className={editGoalStyles.header}>
                 <h1 className={editGoalStyles.pageTitle}>Editar Objetivo</h1>
-                {/* NOTA: El botón de "Cancelar" YA NO VA AQUÍ. Lo manejará ObjetivosForm */}
             </div>
             <ObjetivosForm
                 initialData={objective}
                 onSubmit={handleEditObjective}
                 buttonText="Guardar Cambios"
                 isEditMode={true}
-                onCancel={handleCancelEdit} // ¡CLAVE! Pasar la función de cancelar al formulario
+                onCancel={handleCancelEdit}
             />
         </div>
     );
