@@ -1,0 +1,6 @@
+.chartContainer {
+    position: relative; /* Necesario para posicionar el texto central */
+    width: 200px; /* Ancho fijo para la dona */
+    height: 200px; /* Alto fijo para la dona */
+    margin: 0 auto 20px auto; /* Centrar y añadir espacio */
+}
