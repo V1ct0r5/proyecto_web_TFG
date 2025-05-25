@@ -1,153 +1,127 @@
-/* --- VARIABLES DE COLOR  --- */
-/* Se mantienen aquí por ahora según la estructura proporcionada, pero una buena práctica es tener variables globales centralizadas. */
-:root {
-    --color-primary: #4F46E5; /* Azul índigo */
-    --color-primary-hover: #4338CA;
-    --color-secondary: #10B981; /* Verde esmeralda */
-    --color-secondary-hover: #059669;
-    --color-warning: #F59E0B; /* Amarillo ámbar */
-    --color-destructive: #EF4444; /* Rojo */
-    --color-muted: #F3F4F6; /* Gris claro */
-    --color-muted-foreground: #6B7280; /* Texto gris */
-    --color-background: #FFFFFF; /* Fondo de la página */
-    --color-foreground: #1F2937; /* Texto oscuro principal */
-    --color-card: #FFFFFF; /* Fondo de la tarjeta */
-    --color-card-foreground: #1F2937; /* Texto principal de la tarjeta */
-    --color-border: #E5E7EB; /* Bordes */
-    --radius: 0.4rem; /* Radio de bordes general */
-}
-
 /* --- ESTILOS BASE DE LA TARJETA --- */
 .objetivoCard {
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
-    background-color: var(--color-card);
-    overflow: hidden; /* Asegura que el contenido redondeado se corte */
+    background-color: var(--card);
+    overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    /* ORIGINAL: margin-bottom: 1.5rem; */ /* Espacio entre tarjetas. Corregido de '00' */
-    /* MODIFICACIÓN: Se elimina margin-bottom aquí para que el espacio lo gestione el 'gap' del grid en DashboardPage.module.css */
-    display: flex; /* Usa flexbox para el layout interno (header, content, footer) */
-    flex-direction: column; /* Apila los hijos verticalmente */
-    transition: all 0.3s ease; /* Transición suave para el hover */
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    /* AUMENTO: Ancho máximo de la tarjeta para permitir un tamaño más grande */
+    max-width: 400px; /* Puedes ajustar este valor, por ejemplo, 350px, 450px */
+    width: 100%; /* Asegura que ocupe el ancho disponible hasta el max-width */
 }
 
-.objetivoCard:hover { /* Corregido: usar camelCase */
-    /* MODIFICACIÓN: Reducido el efecto de elevación en hover para un diseño más compacto */
-    transform: translateY(-3px); /* Reducido de -5px */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12); /* Sombra reducida de 0 5px 10px rgba(0, 0, 0, 0.15) */
+.objetivoCard:hover {
+    transform: translateY(-4px); /* Ligeramente más pronunciado para el hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra más notoria */
 }
 
 /* --- CONTENIDO PRINCIPAL CON PADDING --- */
 .cardContent {
-    padding: 1rem; /* MODIFICACIÓN: Reducido de 1.2rem para hacer la tarjeta más compacta */
+    padding: 1.5rem; /* AUMENTO: Más padding interno (antes 1rem) */
     display: flex;
     flex-direction: column;
-    gap: 0.8rem; /* MODIFICACIÓN: Reducido de 1rem para reducir el espacio entre elementos internos */
-    flex-grow: 1; /* Permite que el contenido ocupe el espacio disponible, empujando el footer hacia abajo */
+    gap: 1.2rem; /* AUMENTO: Más espacio entre elementos internos (antes 0.8rem) */
+    flex-grow: 1;
 }
 
 /* --- CABECERA (Contiene Título y Badge Categoría) --- */
 .cardHeaderContent {
     display: flex;
-    /* ORIGINAL: justify-content: space-between; */
-    /* ORIGINAL: align-items: center; */
-    /* ORIGINAL: flex-wrap: wrap; */
-    /* ORIGINAL: gap: 0.6rem; */
-
-    /* MODIFICACIÓN: Se cambia a `position: relative;` para que el badge se posicione absolutamente dentro de él */
-    position: relative;
-    /* MODIFICACIÓN: Usamos `align-items: flex-start;` para que el título comience arriba si se estira */
+    justify-content: space-between;
     align-items: flex-start;
-    /* MODIFICACIÓN: Se elimina `justify-content` y `gap` aquí, el badge tendrá `position: absolute` */
-    flex-wrap: wrap; /* Mantenemos wrap para que el título pueda saltar de línea */
+    gap: 1rem; /* AUMENTO: Más espacio entre título y badge */
+    flex-wrap: wrap;
 }
 
 /* Título */
 .cardTitle {
-    font-size: 0.95rem; /* MODIFICACIÓN: Ligeramente reducido de 1rem para un tamaño de tarjeta más pequeño */
-    font-weight: 700; /* Fuente más audaz para el título */
-    color: var(--color-card-foreground);
-    margin: 0; /* Asegura que no haya márgenes por defecto del h3 */
-    line-height: 1.3; /* MODIFICACIÓN: Ajustado para mayor compacidad */
-    flex-grow: 1; /* Permite que el título ocupe el espacio restante */
-    min-width: 0; /* Evita desbordamiento del título si es muy largo */
-    /* MODIFICACIÓN: Añadido margen derecho para dejar espacio al badge posicionado absolutamente */
-    margin-right: 5rem; /* El ancho del badge + un poco de espacio (ej. 0.6rem + 0.5rem = 1.1rem; Ajustar si el badge es más ancho/pequeño) */
-    /* Si el título es muy largo, el texto fluirá debajo del badge, y el margin-right evitará que lo solape */
+    font-size: 1.25rem; /* AUMENTO: Título más grande (antes 0.95rem) */
+    font-weight: 700;
+    color: var(--card-foreground);
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.02em; /* Ligeramente más compacto para el texto grande */
+    flex-grow: 1;
+    min-width: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Badge de Categoría */
 .categoryBadge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem; /* MODIFICACIÓN: Reducido de 0.3rem */
-    padding: 0.25rem 0.6rem; /* MODIFICACIÓN: Reducido de 0.3rem 0.7rem */
-    border-radius: 9999px; /* Borde redondeado (píldora) */
-    font-size: 0.75rem; /* MODIFICACIÓN: Reducido de 0.8rem */
+    justify-content: center;
+    gap: 0.3rem; /* Ajuste el espacio entre icono y texto */
+    padding: 0.4rem 1rem; /* AUMENTO: Más padding para el badge */
+    border-radius: 9999px;
+    font-size: 0.85rem; /* AUMENTO: Texto del badge más grande */
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
-    background-color: var(--color-muted); /* Fondo del badge */
-    border: 1px solid var(--color-border); /* Borde sutil */
-    color: var(--color-foreground); /* Color del texto/icono */
-    flex-shrink: 0; /* Evita que el badge se encoja */
-
-    /* MODIFICACIÓN CLAVE: Posicionamiento absoluto para que se quede en su lugar */
-    position: absolute;
-    top: 0; /* Alineado arriba */
-    right: 0; /* Alineado a la derecha */
+    background-color: var(--muted);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .categoryBadgeIcon {
-    font-size: 0.9em; /* MODIFICACIÓN: Ajustado ligeramente */
-    display: flex; /* Centra el icono si es necesario */
+    font-size: 1em; /* Ajusta el tamaño del icono del badge si es necesario */
+    display: flex;
     align-items: center;
+    color: var(--muted-foreground);
 }
 
 /* --- DESCRIPCIÓN --- */
 .cardDescription {
-    font-size: 0.85rem; /* MODIFICACIÓN: Reducido de 0.9rem */
-    color: var(--color-muted-foreground);
-    margin: 0; /* Espacio manejado por el gap del cardContent */
-    line-height: 1.5; /* MODIFICACIÓN: Ajustado para mayor compacidad */
-    /* MODIFICACIÓN: Añadido para limitar la descripción a un máximo de 3 líneas y truncar si es más larga */
-    max-height: 3.5em; /* Aproximadamente 3 líneas de texto (1.5rem * 3 = 4.5rem, ajustado por altura de línea) */
+    font-size: 0.95rem; /* AUMENTO: Descripción más grande (antes 0.85rem) */
+    color: var(--muted-foreground);
+    margin: 0;
+    line-height: 1.6; /* AUMENTO: Mayor interlineado para mejor legibilidad */
+    max-height: 4.8em; /* AUMENTO: Permitir más líneas de descripción (aproximadamente 4-5 líneas) */
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Limita el texto a 3 líneas antes de añadir puntos suspensivos */
+    -webkit-line-clamp: 3; /* Se mantiene en 3 líneas visuales para un buen resumen */
     -webkit-box-orient: vertical;
 }
 
 .cardDescription p {
-    margin: 0; /* Asegura que los párrafos dentro de la descripción no tengan margen extra */
+    margin: 0;
 }
-
 
 /* --- SECCIÓN DE PROGRESO --- */
 .progressContainer {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem; /* MODIFICACIÓN: Reducido de 0.4rem */
+    gap: 0.5rem; /* AUMENTO: Más espacio en el contenedor de progreso */
 }
 
 .progressHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.8rem; /* MODIFICACIÓN: Reducido de 0.875rem */
+    font-size: 0.9rem; /* AUMENTO: Texto de "Progreso" más grande */
     font-weight: 600;
-    color: var(--color-foreground);
+    color: var(--foreground);
 }
 
 /* Barra de progreso visual */
 .progressBar {
-    background-color: var(--color-muted);
+    background-color: var(--muted);
     border-radius: 9999px;
     overflow: hidden;
-    height: 0.4rem; /* MODIFICACIÓN: Reducido de 0.5rem para una barra más delgada */
+    height: 0.6rem; /* AUMENTO: Barra de progreso más gruesa (antes 0.4rem) */
     width: 100%;
-    /* margin-bottom: 0.5rem; Eliminar si el gap del contenedor padre es suficiente */
 }
 
 .progressFill {
@@ -158,22 +132,22 @@
 
 /* Clases para el color de la barra de progreso según el porcentaje */
 .progressFillLow {
-    background-color: var(--color-destructive); /* Rojo */
+    background-color: var(--destructive);
 }
 
 .progressFillMedium {
-    background-color: var(--color-warning); /* Amarillo */
+    background-color: var(--warning);
 }
 
 .progressFillHigh {
-    background-color: var(--color-secondary); /* Verde */
+    background-color: var(--secondary);
 }
 
 .progressValues {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Dos columnas de igual ancho */
-    gap: 0.8rem; /* MODIFICACIÓN: Reducido de 1rem */
-    margin-top: 0.4rem; /* MODIFICACIÓN: Reducido de 0.5rem */
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem; /* AUMENTO: Más espacio entre los valores de progreso */
+    margin-top: 0.4rem;
 }
 
 .progressValueBox {
@@ -182,55 +156,53 @@
 }
 
 .progressValueLabel {
-    font-size: 0.7rem; /* MODIFICACIÓN: Reducido de 0.75rem */
-    color: var(--color-muted-foreground);
+    font-size: 0.8rem; /* AUMENTO: Texto de la etiqueta de valor más grande */
+    color: var(--muted-foreground);
     font-weight: 500;
-    margin-bottom: 0.15rem; /* MODIFICACIÓN: Reducido de 0.2rem */
+    margin-bottom: 0.15rem;
 }
 
 .progressValueNumber {
-    font-size: 0.85rem; /* MODIFICACIÓN: Reducido de 0.9rem */
+    font-size: 1rem; /* AUMENTO: Número de valor más grande */
     font-weight: 700;
-    color: var(--color-card-foreground);
+    color: var(--card-foreground);
 }
-
 
 /* --- SECCIÓN DE DATOS ADICIONALES (Fecha, etc.) --- */
-.progressDate { /* Renombrado a dataInfo o similar para ser más general */
+.progressDate {
     display: flex;
     align-items: center;
-    gap: 0.3rem; /* MODIFICACIÓN: Reducido de 0.4rem */
-    font-size: 0.75rem; /* MODIFICACIÓN: Reducido de 0.8rem */
-    color: var(--color-muted-foreground);
-    margin-top: 0.4rem; /* MODIFICACIÓN: Reducido de 0.5rem */
+    gap: 0.4rem; /* Aumento del espacio entre icono y texto */
+    font-size: 0.85rem; /* AUMENTO: Texto de fecha más grande */
+    color: var(--muted-foreground);
+    margin-top: 0.4rem;
 }
 
-.dataIcon { /* Clase para los iconos en secciones de datos */
-    font-size: 0.9em; /* MODIFICACIÓN: Ajustado ligeramente */
+.dataIcon {
+    font-size: 1.1em; /* AUMENTO: Icono de fecha más grande */
 }
 
 .dataLabel {
-    font-weight: 600; /* Fuente un poco más audaz para las etiquetas de datos */
+    font-weight: 600;
 }
 
 .dataValue {
-    font-weight: 400; /* Fuente normal para los valores de datos */
+    font-weight: 400;
 }
-
 
 /* --- PIE DE PÁGINA Y BOTONES --- */
 .cardFooter {
-    padding: 0.6rem 1rem; /* MODIFICACIÓN: Reducido de 0.8rem 1.2rem */
-    border-top: 1px solid var(--color-border);
+    padding: 1rem 1.5rem; /* AUMENTO: Más padding en el footer */
+    border-top: 1px solid var(--border);
     display: flex;
-    justify-content: flex-end; /* Alinea los botones a la derecha */
+    justify-content: flex-end;
     align-items: center;
     margin-top: auto;
 }
 
 .cardActions {
     display: flex;
-    gap: 0.5rem; /* MODIFICACIÓN: Reducido de 0.6rem */
+    gap: 0.8rem; /* AUMENTO: Más espacio entre los botones */
 }
 
 /* Estilo base para los botones dentro de la tarjeta */
@@ -238,55 +210,63 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem; /* MODIFICACIÓN: Reducido de 0.3rem */
-    padding: 0.25rem 0.7rem; /* MODIFICACIÓN: Reducido de 0.3rem 0.8rem */
+    gap: 0.35rem; /* Ajuste del espacio entre icono y texto */
+    padding: 0.4rem 1rem; /* AUMENTO: Botones con más padding */
     border-radius: var(--radius);
-    font-size: 0.75rem; /* MODIFICACIÓN: Reducido de 0.8rem */
+    font-size: 0.85rem; /* AUMENTO: Texto de botón más grande */
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
     background-color: transparent;
-    /* Heredar color o definir aquí si es necesario */
-    color: inherit; /* Para que el color del texto/icono se herede si no es outline */
+    color: inherit;
 }
 
 .buttonOutline {
-    border: 1px solid var(--color-border);
-    color: var(--color-foreground); /* Color de texto para botón outline */
-    background-color: transparent; /* Asegura fondo transparente */
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    background-color: transparent;
 }
 
 .buttonOutline:hover {
-    background-color: var(--color-muted);
-    border-color: var(--color-muted-foreground); /* Oscurece el borde al pasar el mouse */
+    background-color: var(--muted);
+    border-color: var(--muted-foreground);
 }
 
 /* Estilo específico para botones pequeños */
 .buttonSmall {
-    padding: 0.25rem 0.7rem; /* MODIFICACIÓN: Ajustado para consistencia con los cambios anteriores */
-    font-size: 0.75rem; /* MODIFICACIÓN: Ajustado para consistencia con los cambios anteriores */
+    /* Los estilos generales de .button ya lo hacen más grande,
+       pero si necesitas un tamaño más específico para "small" aquí, ajústalo. */
 }
 
-.buttonIcon { /* Estilo para los iconos dentro de los botones */
-    font-size: 0.9rem; /* MODIFICACIÓN: Ajustado ligeramente */
+.buttonIcon {
+    font-size: 1.1rem; /* AUMENTO: Iconos de botón más grandes */
 }
 
-/* --- ESTILOS DE ESTADO (Necesitan ser definidos) --- */
+/* --- ESTILOS DE ESTADO --- */
 .status-pendiente {
-    color: var(--color-warning); /* Ejemplo: Amarillo para pendiente */
+    color: var(--warning);
     font-weight: 600;
+    background-color: color-mix(in srgb, var(--warning) 15%, transparent);
+    padding: 0.3em 0.8em; /* Ajuste ligero del padding para que se vea proporcionado */
+    border-radius: 4px;
+    font-size: 0.9rem; /* Ligeramente más grande el texto de estado */
 }
 
 .status-enprogreso {
-    color: var(--color-primary); /* Ejemplo: Azul para en progreso */
+    color: var(--primary);
     font-weight: 600;
+    background-color: color-mix(in srgb, var(--primary) 15%, transparent);
+    padding: 0.3em 0.8em; /* Ajuste ligero del padding para que se vea proporcionado */
+    border-radius: 4px;
+    font-size: 0.9rem; /* Ligeramente más grande el texto de estado */
 }
 
 .status-completado {
-    color: var(--color-secondary); /* Ejemplo: Verde para completado */
+    color: var(--secondary);
     font-weight: 600;
+    background-color: color-mix(in srgb, var(--secondary) 15%, transparent);
+    padding: 0.3em 0.8em; /* Ajuste ligero del padding para que se vea proporcionado */
+    border-radius: 4px;
+    font-size: 0.9rem; /* Ligeramente más grande el texto de estado */
 }
-
-/* Añadir otros estados si existen */
-/* .status-cancelado { ... } */
