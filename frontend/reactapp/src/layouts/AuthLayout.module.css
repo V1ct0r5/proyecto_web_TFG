@@ -1,97 +1,30 @@
-/* Estilos para el layout de las páginas de autenticación (Login, Registro) */
+/* frontend/reactapp/src/layouts/AuthLayout.module.css */
 
-/* Contenedor principal de la página de autenticación */
-.authPage {
-    display: grid; /* Usa Grid Layout */
-    grid-template-rows: auto 1fr; /* Fila superior para el posible header (si no está sticky), el resto para el contenido principal */
-    grid-template-areas:
-        "header" /* Área opcional para un header si estuviera dentro de este grid */
-        "main-content"; /* Área para el contenido principal */
-    padding: 0;
-    box-sizing: border-box;
-
-}
-
-/* Área de contenido principal (donde se renderiza el formulario de Login/Registro) */
-.mainContentArea {
-    grid-area: main-content;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 1.5rem 0.8rem;
-    box-sizing: border-box;
-    flex-direction: column;
-    overflow-y: auto;
-    position: relative;
-}
-
-/* Estilos para el título del formulario dentro de esta área */
+/* Estilo para el título del formulario dentro de esta área */
 .formTitle {
     text-align: center;
     margin-bottom: 1.5rem;
     margin-top: 0;
     color: #333;
     font-size: 1.8rem;
-    /* Si el botón va a estar arriba a la derecha, considera el margen superior del título */
-    /* para evitar que se solape con el botón si el contenido es muy corto. */
-}
-
-/* ... (formFooter, formLink, etc. - sin cambios) ... */
-
-/* Estilos para el botón de cancelar (general para este layout) */
-.cancelButton {
-    position: absolute;
-    top: 1rem; /* Ajusta la distancia desde la parte superior */
-    right: 1rem; /* Ajusta la distancia desde la parte derecha */
-    background-color: var(--color-danger); /* O un color secundario/neutro */
-    color: var(--color-light);
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    font-size: var(--font-size-md);
-    transition: background-color 0.3s ease;
-    z-index: 10; /* Asegura que esté por encima de otros elementos */
-}
-
-.cancelButton:hover {
-    background-color: var(--color-danger-dark); /* Un tono más oscuro al pasar el ratón */
-}
-
-.cancelButton:disabled {
-    background-color: var(--color-gray-light);
-    cursor: not-allowed;
-}
-
-
-/* Estilo para el título del formulario dentro de esta área */
-/* Nota: Esta clase .formTitle se usa en LoginPage y RegistroPage */
-.formTitle {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    margin-top: 0;
-    color: #333; /* Asegura un color de texto */
-    font-size: 1.8rem; /* Ajusta el tamaño de fuente */
-}
-
-/* Estilo para el párrafo de pie de formulario (ej. "¿No tienes cuenta? Regístrate") */
-/* Nota: Esta clase .formFooter se usa en LoginPage y RegistroPage */
-.formFooter {
+  }
+  
+  /* Estilo para el párrafo de pie de formulario */
+  .formFooter {
     text-align: center;
     margin-top: 1rem;
     font-size: 0.9rem;
-    color: #555; /* Color de texto */
-}
-
-/* Estilo para los enlaces dentro del pie de formulario */
-/* Nota: Esta clase .formLink se usa en LoginPage y RegistroPage */
-.formLink {
-    color: #2563eb; /* Color azul */
-    text-decoration: none; /* Sin subrayado por defecto */
+    color: #555;
+  }
+  
+  /* Estilo para los enlaces dentro del pie de formulario */
+  .formLink {
+    color: #2563eb;
+    text-decoration: none;
     font-weight: 500;
     transition: text-decoration 0.2s ease;
-}
-
-.formLink:hover {
-    text-decoration: underline; /* Subrayado al pasar el mouse */
-}
+  }
+  
+  .formLink:hover {
+    text-decoration: underline;
+  }
