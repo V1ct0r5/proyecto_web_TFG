@@ -1,26 +1,35 @@
 import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import LoadingSpinner from "../ui/LoadingSpinner"; // Asegúrate que la ruta a tu spinner es correcta
 
-// Componente de ruta protegida
-// Verifica si el usuario está autenticado. Si no, redirige a la página de login.
-// Si está autenticado, renderiza las rutas hijas (Outlet).
 const ProtectedRoute = () => {
-    // Obtiene el estado de autenticación y carga del contexto
     const { isAuthenticated, loading } = useAuth();
+    const location = useLocation(); // Hook para obtener la ubicación actual
 
-    // Si el estado de carga del contexto es verdadero, muestra un indicador de carga
+    // Muestra un indicador de carga mientras se verifica el estado de autenticación inicial.
     if (loading) {
-        return <div>Cargando autenticación...</div>;
+        return (
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                // Ajustar altura, asumiendo una variable CSS --app-header-height para la altura del header, o un valor fijo.
+                height: 'calc(100vh - var(--app-header-height, 60px))' 
+            }}>
+                <LoadingSpinner size="large" /> {/* Usar un tamaño apropiado para la carga de página */}
+            </div>
+        );
     }
 
-    // Si el usuario no está autenticado, redirige a la página de login
-    // 'replace' asegura que la página de login reemplace la entrada actual en el historial de navegación
+    // Si el usuario no está autenticado (y la carga ha terminado), redirige a la página de login.
+    // Se pasa 'state={{ from: location }}' para que, tras un login exitoso,
+    // se pueda redirigir al usuario de vuelta a la página que intentaba acceder.
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // Si el usuario está autenticado, renderiza las rutas hijas definidas en el router
+    // Si el usuario está autenticado, renderiza el contenido de la ruta anidada.
     return <Outlet />;
 };
 
