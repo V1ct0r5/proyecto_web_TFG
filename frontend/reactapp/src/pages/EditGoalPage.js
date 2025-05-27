@@ -1,10 +1,8 @@
-// frontend/reactapp/src/pages/EditGoalPage.js
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ObjetivosForm from '../components/objetivos/ObjetivosForm';
 import apiService from '../services/apiService';
-import editGoalStyles from './EditGoalPage.module.css'; // Importa los estilos para esta página
-// No necesitamos importar Button aquí si el botón de cancelar se va al formulario
+import editGoalStyles from './EditGoalPage.module.css';
 
 function EditGoalPage() {
     const { id } = useParams();
@@ -20,7 +18,8 @@ function EditGoalPage() {
                 setObjective(data);
             } catch (err) {
                 setError('Error al cargar el objetivo para edición.');
-                console.error('Error fetching objective for edit:', err);
+                // Considerar si la navegación en error de carga es la mejor UX,
+                // podría ser preferible mostrar un mensaje en la página.
                 navigate('/dashboard'); 
             } finally {
                 setLoading(false);
@@ -33,15 +32,16 @@ function EditGoalPage() {
     const handleEditObjective = async (formData) => {
         try {
             await apiService.updateObjective(id, formData);
-            navigate('/dashboard');
+            navigate('/mis-objetivos');
         } catch (err) {
+            // El error de apiService ya debería estar estructurado.
+            // Considerar usar err.message o err.data.message para un mensaje más específico.
             setError('Error al actualizar el objetivo.');
-            console.error('Error updating objective:', err);
         }
     };
 
     const handleCancelEdit = () => {
-        navigate('/dashboard');
+        navigate('/mis-objetivos');
     };
 
     if (loading) {
@@ -49,10 +49,12 @@ function EditGoalPage() {
     }
 
     if (error) {
+        // Podría ser útil ofrecer al usuario una forma de reintentar o volver.
         return <div className={editGoalStyles.errorState}>{error}</div>;
     }
 
     if (!objective) {
+        // Este caso podría ser manejado por el estado de error si fetchObjective falla.
         return <div className={editGoalStyles.noObjectiveFound}>Objetivo no encontrado.</div>;
     }
 
