@@ -1,61 +1,64 @@
+/* frontend/reactapp/src/components/ui/ConfirmationDialog.module.css */
 .overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6); /* Fondo semi-transparente oscuro */
+    background-color: rgba(0, 0, 0, 0.6); 
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* Asegura que esté por encima de otros elementos */
-    padding: 1rem; /* Espacio para que el diálogo no se pegue a los bordes */
-}
-
-.dialog {
-    background-color: var(--card); /* Color de fondo de la tarjeta */
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1050; /* Asegura que esté por encima de la mayoría de los elementos */
+    padding: 1rem;
+    backdrop-filter: blur(2px); /* Efecto de desenfoque para el fondo */
+  }
+  
+  .dialog {
+    background-color: var(--card-background, #ffffff);
+    color: var(--card-foreground, #333);
+    border-radius: var(--radius-lg, 8px); 
+    padding: 1.75rem; 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); 
     width: 100%;
-    max-width: 450px; /* Ancho máximo del diálogo */
+    max-width: 450px; 
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* Espacio entre los elementos del diálogo */
-    animation: fadeIn 0.2s ease-out; /* Pequeña animación de entrada */
-}
-
-.title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--foreground);
-    text-align: center;
-    margin-bottom: 0.5rem;
-}
-
-.message {
-    font-size: 1rem;
-    color: var(--muted-foreground);
-    text-align: center;
-    line-height: 1.5;
-}
-
-.actions {
-    display: flex;
-    justify-content: center; /* Centra los botones */
-    gap: 0.8rem;
-    margin-top: 1rem;
-}
-
-/* Animación de entrada */
-@keyframes fadeIn {
+    gap: 1.25rem; 
+    animation: scaleIn 0.2s ease-out;
+    border: 1px solid var(--border-color, #e0e0e0); 
+  }
+  
+  @keyframes scaleIn {
     from {
-        opacity: 0;
-        transform: translateY(-20px);
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
     }
     to {
-        opacity: 1;
-        transform: translateY(0);
+      opacity: 1;
+      transform: scale(1) translateY(0);
     }
-}
+  }
+  
+  .title {
+    font-size: 1.35rem; 
+    font-weight: 600; 
+    color: var(--heading-color, inherit); 
+    text-align: center;
+    margin: 0; /* El gap del .dialog maneja el espaciado inferior */
+  }
+  
+  .message {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-muted-color, #555); 
+    margin: 0; /* El gap del .dialog maneja el espaciado */
+    text-align: center;
+  }
+  
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem; 
+    margin-top: 0.5rem; /* Espacio adicional sobre los botones si es necesario además del gap del dialog */
+  }
