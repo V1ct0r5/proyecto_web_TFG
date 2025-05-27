@@ -71,4 +71,5 @@ class ObjectiveRepository {
     }
 }
 
+
 module.exports = new ObjectiveRepository(); // Exporta una instancia singleton del repositorio
