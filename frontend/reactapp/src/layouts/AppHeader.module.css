@@ -1,33 +1,41 @@
 /* frontend/reactapp/src/layouts/AppHeader.module.css */
 
 .header {
-    height: var(--app-header-height); /* Usa la variable definida en App.css */
-    background-color: var(--card); /* Un fondo claro para el header */
-    border-bottom: 1px solid var(--border); /* Un borde inferior sutil */
+    height: var(--app-header-height); /* Variable definida en App.css o similar */
+    background-color: var(--card);
+    border-bottom: 1px solid var(--border);
     display: flex;
-    justify-content: space-between; /* Espacia el contenido de la izquierda y la derecha */
+    justify-content: space-between;
     align-items: center;
     padding: 0 1.5rem; /* Padding horizontal */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra sutil */
-    width: 100%; /* Asegura que ocupe todo el ancho disponible en .main-layout-content */
-    z-index: 10; /* Asegura que esté por encima del contenido de main-content-area */
-    flex-shrink: 0; /* Evita que el header se encoja */
-}
-
-.leftContent {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    z-index: 10; /* Asegura que esté por encima de otros elementos de contenido */
+    flex-shrink: 0; /* Evita que el header se encoja si el contenido de la página es muy grande */
+  }
+  
+  .headerPageTitle {
+    text-align: center;
+    margin-block: 0; /* Equivalente a margin-top: 0; margin-bottom: 0; */
+    color: #333;
+    font-size: 1.8rem;
+  }
+  
+  .leftContent {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-}
-
-.headerLogoLink {
+    font-size: 1.4rem; /* Tamaño base para iconos o texto en esta sección */
+  }
+  
+  .headerLogoLink {
     display: flex;
     align-items: center;
     text-decoration: none;
-    color: inherit;
-}
-
-.headerLogoCircle {
+    color: inherit; /* Hereda el color del texto del padre */
+  }
+  
+  .headerLogoCircle {
     width: 32px;
     height: 32px;
     background-color: var(--primary);
@@ -39,21 +47,21 @@
     font-weight: bold;
     font-size: 1.2rem;
     margin-right: 0.5rem;
-}
-
-.headerBrand {
+  }
+  
+  .headerBrand {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--foreground);
-}
-
-.rightContent {
+  }
+  
+  .rightContent {
     display: flex;
     align-items: center;
     gap: 1rem;
-}
-
-.userInfo {
+  }
+  
+  .userInfo {
     font-size: 0.95rem;
     color: var(--muted-foreground);
-}
+  }
