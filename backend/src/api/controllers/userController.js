@@ -1,157 +1,131 @@
 // backend/src/api/controllers/userController.js
 const userService = require('../services/userService');
+const objectivesService = require('../services/objectivesService'); // Para verificar si el usuario tiene objetivos
 const { validationResult } = require('express-validator');
-const db = require('../../config/database');
-const Objetivo = db.Objective;
+const AppError = require('../../utils/AppError'); // Para un manejo de errores consistente
 
-exports.obtenerUsuarios = async (req, res) => {
-    const transaction = req.transaction;
-
+exports.obtenerUsuarios = async (req, res, next) => {
     try {
-        const usuarios = await userService.obtenerUsuarios(transaction);
-        res.status(200).json(usuarios);
+        const usuarios = await userService.obtenerUsuarios();
+        // Asegurar que las contraseñas no se envíen en la lista
+        const usuariosSinContrasena = usuarios.map(u => {
+            const { contrasena, ...resto } = u.toJSON ? u.toJSON() : { ...u };
+            return resto;
+        });
+        res.status(200).json(usuariosSinContrasena);
     } catch (error) {
-        console.error('Error en userController.obtenerUsuarios:', error);
-        res.status(500).json({ message: 'Error interno del servidor al obtener los usuarios.' });
+        next(error); // Delegar al errorHandler global
     }
 };
 
-
-exports.crearUsuario = async (req, res) => {
+// Registra un nuevo usuario y devuelve el usuario y un token.
+exports.registrarUsuario = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    const usuarioData = req.body;
-    try {
-        const nuevoUsuario = await userService.crearUsuario(usuarioData);
-        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON();
-        res.status(201).json(usuarioSinContrasena);
-    } catch (error) {
-        console.error('Error en userController.crearUsuario:', error);
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).json({ error: error.errors[0].message || 'El correo electrónico ya está en uso' });
-        }
-        if (error.name === 'SequelizeValidationError') {
-            return res.status(400).json({ error: error.errors[0].message || 'Error de validación en los datos del usuario' });
-        }
-        res.status(500).json({ message: 'Error interno del servidor al crear el usuario.' });
-    }
-}
-
-
-exports.obtenerUsuarioPorId = async (req, res) => {
-    const userIdAuth = req.user;
-    const userIdParam = req.params.id;
-
-
-    const transaction = req.transaction;
-
-    try {
-        const usuario = await userService.obtenerUsuarioPorId(userIdParam, transaction);
-
-        if (!usuario) {
-            return res.status(404).json({ error: 'Usuario no encontrado' });
-        }
-
-        if (userIdAuth !== parseInt(userIdParam)) { // Asumiendo que userIdAuth es un número
-            return res.status(403).json({ message: 'Acceso denegado.' });
-        }
-
-        res.status(200).json(usuario);
-    } catch (error) {
-        console.error('Error en userController.obtenerUsuarioPorId:', error);
-        res.status(500).json({ message: 'Error interno del servidor al obtener el usuario.' });
-    }
-}
-
-
-exports.actualizarUsuario = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    const userIdAuth = req.user;
-    const userIdToUpdate = req.params.id;
-    const usuarioData = req.body;
-
-
-    const transaction = req.transaction;
-
-    try {
-        const usuarioActualizado = await userService.actualizarUsuario(userIdToUpdate, usuarioData, transaction);
-
-        if (!usuarioActualizado) {
-            return res.status(404).json({ error: 'Usuario no encontrado o no pudo ser actualizado' });
-        }
-
-        res.status(200).json(usuarioActualizado);
-    } catch (error) {
-        console.error('Error en userController.actualizarUsuario:', error);
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).json({ message: error.errors[0].message || 'El correo electrónico ya está en uso.' });
-        }
-        if (error.name === 'SequelizeValidationError') {
-            return res.status(400).json({ message: error.errors[0].message || 'Error de validación en los datos de actualización.' });
-        }
-        res.status(500).json({ message: 'Error interno del servidor al actualizar el usuario.' });
-    }
-}
-
-exports.eliminarUsuario = async (req, res) => {
-    const userIdAuth = req.user;
-    const userIdToDelete = req.params.id;
-
-
-    const transaction = req.transaction;
-
-    try {
-        const deletedCount = await userService.eliminarUsuario(userIdToDelete, transaction);
-
-
-        if (deletedCount === 0) {
-            return res.status(404).json({ message: 'Usuario no encontrado o no pudo ser eliminado.' });
-        }
-
-        if (userIdAuth !== parseInt(userIdToDelete)) {
-            return res.status(403).json({ message: 'No tiene permiso para eliminar este usuario.' });
-        }
-
-        res.status(204).send();
-    } catch (error) {
-        console.error('Error en userController.eliminarUsuario:', error);
-        res.status(500).json({ message: 'Error interno del servidor al eliminar el usuario.' });
-    }
-}
-
-
-exports.registrarUsuario = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
+        // Considerar usar next(new AppError('Errores de validación', 400, errors.array())) para consistencia
         return res.status(400).json({ errors: errors.array() });
     }
     
     const usuarioData = req.body;
     try {
         const nuevoUsuario = await userService.crearUsuario(usuarioData);
-        const token = userService.generarAutenticacionToken(nuevoUsuario);
-        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON(); // Excluir contraseña
-        res.status(201).json({ ...usuarioSinContrasena, token });
+        const token = userService.generarTokenAutenticacion(nuevoUsuario);
+        
+        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON ? nuevoUsuario.toJSON() : { ...nuevoUsuario };
+        res.status(201).json({ 
+            message: "Usuario registrado con éxito.",
+            usuario: usuarioSinContrasena, 
+            token 
+        });
     } catch (error) {
-        console.error('Error en userController.registrarUsuario:', error);
-        if (error.name === 'SequelizeUniqueConstraintError' || (error.errors && error.errors[0].path === 'correo_electronico')) {
-            return res.status(409).json({ message: error.message || 'El correo electrónico ya está en uso.' });
-        }
-        if (error.name === 'SequelizeValidationError' || (error.errors && error.errors.length > 0)) {
-            return res.status(400).json({ message: error.message || 'Error de validación en los datos proporcionados.' });
-        }
-        res.status(500).json({ message: 'Error interno del servidor al registrar el usuario.' });
+        next(error); // Errores (ej. 409 por duplicado) son manejados por el servicio y pasados al errorHandler
     }
-}
+};
 
-exports.iniciarSesionUsuario = async (req, res) => {
+// Crea un usuario (potencialmente por un admin, no devuelve token como registrarUsuario).
+// NOTA: El nombre 'crearUsuario' está duplicado. Esto funcionará si se usan en diferentes rutas
+// o si el router importa específicamente una u otra con un alias.
+// Por claridad, sería mejor nombres de exportación únicos si las funcionalidades difieren.
+exports.crearUsuario = async (req, res, next) => { // Función duplicada, ver nota
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const usuarioData = req.body;
+    try {
+        const nuevoUsuario = await userService.crearUsuario(usuarioData);
+        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON ? nuevoUsuario.toJSON() : { ...nuevoUsuario };
+        res.status(201).json(usuarioSinContrasena);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Obtiene un usuario por ID (protegido para que solo el propio usuario pueda acceder).
+exports.obtenerUsuarioPorId = async (req, res, next) => {
+    const userIdAuth = req.user.id; 
+    const userIdParam = req.params.id;
+
+    try {
+        if (String(userIdAuth) !== String(userIdParam)) {
+            return next(new AppError('Acceso denegado. No puedes obtener información de otros usuarios.', 403));
+        }
+        const usuario = await userService.obtenerUsuarioPorId(userIdParam);
+        // El servicio ya lanza AppError 404 si no se encuentra
+        const { contrasena, ...usuarioSinContrasena } = usuario.toJSON ? usuario.toJSON() : { ...usuario };
+        res.status(200).json(usuarioSinContrasena);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Actualiza un usuario (protegido para que solo el propio usuario pueda actualizarse).
+exports.actualizarUsuario = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const userIdAuth = req.user.id;
+    const userIdToUpdate = req.params.id;
+    const usuarioData = req.body;
+
+    try {
+        if (String(userIdAuth) !== String(userIdToUpdate)) {
+            return next(new AppError('Acceso denegado. No puedes actualizar la información de otros usuarios.', 403));
+        }
+        const usuarioActualizado = await userService.actualizarUsuario(userIdToUpdate, usuarioData);
+        // El servicio maneja errores 404 y 409.
+        const { contrasena, ...usuarioSinContrasena } = usuarioActualizado.toJSON ? usuarioActualizado.toJSON() : { ...usuarioActualizado };
+        res.status(200).json({
+            message: "Usuario actualizado con éxito.",
+            usuario: usuarioSinContrasena
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Elimina un usuario (protegido para que solo el propio usuario pueda eliminarse).
+exports.eliminarUsuario = async (req, res, next) => {
+    const userIdAuth = req.user.id;
+    const userIdToDelete = req.params.id;
+
+    try {
+        if (String(userIdAuth) !== String(userIdToDelete)) {
+            return next(new AppError('Acceso denegado. No puedes eliminar a otros usuarios.', 403));
+        }
+        await userService.eliminarUsuario(userIdToDelete);
+        // El servicio maneja el error 404.
+        res.status(204).send(); // No Content
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Inicia sesión de un usuario.
+exports.iniciarSesionUsuario = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -159,35 +133,29 @@ exports.iniciarSesionUsuario = async (req, res) => {
 
     const { correo_electronico, contrasena } = req.body;
     try {
-        const usuario = await userService.loginUsuario(correo_electronico, contrasena);
-        const token = userService.generarAutenticacionToken(usuario);
-        const userId = usuario.id;
-        const { contrasena: _, ...usuarioSinContrasena } = usuario.toJSON();
+        const { token, usuario } = await userService.loginUsuario(correo_electronico, contrasena);
+        // userService.loginUsuario lanza AppError 401 si las credenciales son incorrectas.
+        
+        const tieneObjetivos = await objectivesService.usuarioTieneObjetivos(usuario.id);
+        const { contrasena: _, ...usuarioSinContrasena } = usuario.toJSON ? usuario.toJSON() : { ...usuario };
 
-        const objectivesCount = await Objetivo.count({
-            where: {
-                id_usuario: userId
-            }
+        res.status(200).json({
+            message: "Inicio de sesión exitoso",
+            usuario: usuarioSinContrasena,
+            token,
+            hasObjectives: tieneObjetivos
         });
-
-        const hasObjectives = objectivesCount > 0;
-
-        res.status(200).json({ usuario: usuarioSinContrasena, token, hasObjectives });
     } catch (error) {
-        console.error('Error en userController.iniciarSesionUsuario:', error);
-        if (error.message === 'Correo electrónico o contraseña incorrectos') {
-            res.status(401).json({ message: error.message });
-        } else {
-            res.status(500).json({ message: 'Error interno del servidor al iniciar sesión.' });
-        }
+        next(error); // El servicio o errorHandler global manejan los detalles.
     }
 };
 
-exports.cerrarSesionUsuario = async (req, res) => {
+// Cierra la sesión de un usuario (principalmente una operación del lado del cliente para JWT).
+exports.cerrarSesionUsuario = async (req, res, next) => {
     try {
+        // Lógica de invalidación de token en servidor (blacklist) podría ir aquí si se implementa.
         res.status(200).json({ message: 'Sesión cerrada exitosamente.' });
     } catch (error) {
-        console.error('Error en userController.cerrarSesionUsuario:', error);
-        res.status(500).json({ message: 'Error interno del servidor al cerrar sesión.' });
+        next(error);
     }
 };
