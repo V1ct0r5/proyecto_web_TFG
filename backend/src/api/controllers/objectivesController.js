@@ -1,115 +1,93 @@
-// backend\src\api\controllers\objectivesController.js
+// backend/src/api/controllers/objectivesController.js
 const objectivesService = require('../services/objectivesService');
 const { validationResult } = require('express-validator');
-const db = require('../../config/database');
+// const db = require('../../config/database'); // No se usa directamente, se elimina
+const AppError = require('../../utils/AppError'); // Para manejo de errores de validación, si se opta por ello
 
-// Controlador para obtener todos los objetivos del usuario autenticado
-exports.obtenerObjetivos = async (req, res) => {
-    const userId = req.user;
+exports.obtenerObjetivos = async (req, res, next) => {
+    const userId = req.user.id; // Se asume que req.user.id es poblado por authMiddleware
 
     try {
-        const objetivos = await objectivesService.obtenerObjetivos(userId);
+        // Llamada a la función renombrada en el servicio
+        const objetivos = await objectivesService.obtenerTodosLosObjetivos(userId); 
         res.status(200).json(objetivos);
     } catch (error) {
-        console.error('Error en objectivesController.obtenerObjetivos:', error); // Log más específico
-        // Para errores 500, un mensaje más genérico al cliente.
-        // Detalles específicos de SequelizeValidationErrors se manejan en el servicio o validación.
-        res.status(500).json({ message: 'Error interno del servidor al obtener los objetivos.' });
+        next(error); // Delegar todos los errores al errorHandler global
     }
 };
 
-// Controlador para crear un nuevo objetivo para el usuario autenticado
-exports.crearObjetivo = async (req, res) => {
+exports.crearObjetivo = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        // Devolver errores de express-validator directamente
         return res.status(400).json({ errors: errors.array() });
+        // Alternativa: return next(new AppError('Errores de validación.', 400, errors.array()));
     }
 
-    const userId = req.user;
-    console.log("Crear Objetivo: userId desde token:", userId); // <-- AGREGAR ESTO
-    console.log("Crear Objetivo: Datos recibidos (req.body):", req.body); // <-- AGREGAR ESTO
-
-    const objetivoData = { ...req.body, id_usuario: userId };
-    console.log("Crear Objetivo: Datos finales para el servicio (objetivoData):", objetivoData); // <-- AGREGAR ESTO
+    const userId = req.user.id;
+    const objectiveData = req.body;
 
     try {
-        const objetivo = await objectivesService.crearObjetivo(objetivoData);
-        res.status(201).json(objetivo);
+        const nuevoObjetivo = await objectivesService.crearObjetivo(objectiveData, userId);
+        // El servicio ya debería lanzar AppError si hay problemas (ej. validación de BD, conflicto)
+        res.status(201).json(nuevoObjetivo);
     } catch (error) {
-        console.error('Error en objectivesController.crearObjetivo:', error); // Log más específico
-        // Si el error es de validación de Sequelize, significa que el servicio ya ha relanzado un error específico.
-        // Idealmente, la mayoría de las validaciones de entrada deberían ser capturadas por express-validator.
-        if (error.name === 'SequelizeValidationError' && error.errors && error.errors.length > 0) {
-            return res.status(400).json({ message: error.errors[0].message });
-        }
-        // Para otros errores, un mensaje genérico.
-        res.status(500).json({ message: 'Error interno del servidor al crear el objetivo.' });
+        next(error); // Delegar al errorHandler
     }
 };
 
-// Controlador para obtener un objetivo específico por ID para el usuario autenticado
-exports.obtenerObjetivoPorId = async (req, res) => {
-    const userId = req.user;
-    const objectiveId = req.params.id;
+exports.obtenerObjetivoPorId = async (req, res, next) => {
+    const userId = req.user.id;
+    const { id: objectiveId } = req.params; // Usar desestructuración para claridad
 
     try {
         const objetivo = await objectivesService.obtenerObjetivoPorId(objectiveId, userId);
-
-        if (objetivo) {
-            res.status(200).json(objetivo);
-        } else {
-            // Mensaje de 404 claro.
-            res.status(404).json({ message: 'Objetivo no encontrado o no pertenece al usuario.' });
-        }
+        // El servicio objectivesService.obtenerObjetivoPorId ya lanza AppError con 404 si no se encuentra.
+        res.status(200).json(objetivo);
     } catch (error) {
-        console.error('Error en objectivesController.obtenerObjetivoPorId:', error); // Log más específico
-        res.status(500).json({ message: 'Error interno del servidor al obtener el objetivo.' });
+        next(error);
     }
 };
 
-// Controlador para actualizar un objetivo específico por ID para el usuario autenticado
-exports.actualizarObjetivo = async (req, res) => {
+exports.actualizarObjetivo = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
+        // Alternativa: return next(new AppError('Errores de validación.', 400, errors.array()));
     }
 
-    const userId = req.user;
-    const objectiveId = req.params.id;
-    const updatedData = req.body;
+    const userId = req.user.id;
+    const { id: objectiveId } = req.params;
+    // Separar datos del objetivo de los datos de progreso
+    const { progressValorActual, comentarios_progreso, ...objectiveDataRest } = req.body;
+    
+    const progressData = (progressValorActual !== undefined && progressValorActual !== null) 
+        ? { valor_actual: progressValorActual, comentarios: comentarios_progreso } 
+        : undefined;
 
     try {
-        const objetivoActualizado = await objectivesService.actualizarObjetivo(objectiveId, userId, updatedData);
-
-        if (objetivoActualizado) {
-            res.status(200).json(objetivoActualizado);
-        } else {
-            res.status(404).json({ message: 'Objetivo no encontrado o no pertenece al usuario.' });
-        }
+        const objetivoActualizado = await objectivesService.actualizarObjetivo(
+            objectiveId, 
+            userId, 
+            objectiveDataRest, 
+            progressData
+        );
+        // El servicio objectivesService.actualizarObjetivo ya maneja errores 404 y de validación/conflicto.
+        res.status(200).json(objetivoActualizado);
     } catch (error) {
-        console.error('Error en objectivesController.actualizarObjetivo:', error);
-        if (error.name === 'SequelizeValidationError' && error.errors && error.errors.length > 0) {
-            return res.status(400).json({ message: error.errors[0].message });
-        }
-        res.status(500).json({ message: 'Error interno del servidor al actualizar el objetivo.' });
+        next(error);
     }
 };
 
-// Controlador para eliminar un objetivo específico por ID para el usuario autenticado
-exports.eliminarObjetivo = async (req, res) => {
-    const userId = req.user;
-    const objectiveId = req.params.id;
+exports.eliminarObjetivo = async (req, res, next) => {
+    const userId = req.user.id;
+    const { id: objectiveId } = req.params;
 
     try {
-        const deletedCount = await objectivesService.eliminarObjetivo(objectiveId, userId);
-
-        if (deletedCount) {
-            res.status(204).send();
-        } else {
-            res.status(404).json({ message: 'Objetivo no encontrado o no pertenece al usuario.' });
-        }
+        await objectivesService.eliminarObjetivo(objectiveId, userId);
+        // El servicio objectivesService.eliminarObjetivo ya lanza AppError con 404 si no se encuentra.
+        res.status(204).send(); // No Content
     } catch (error) {
-        console.error('Error en objectivesController.eliminarObjetivo:', error); // Log más específico
-        res.status(500).json({ message: 'Error interno del servidor al eliminar el objetivo.' });
+        next(error);
     }
 };
