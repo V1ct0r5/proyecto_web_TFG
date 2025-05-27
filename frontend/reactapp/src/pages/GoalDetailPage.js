@@ -219,7 +219,7 @@ function GoalDetailPage() {
                 setLoading(true);
                 await apiService.deleteObjective(id);
                 toast.success("Objetivo eliminado con éxito.");
-                navigate('/');
+                navigate('/mis-objetivos');
             } catch (err) {
                 console.error("Error al eliminar el objetivo:", err);
                 toast.error(`Error al eliminar el objetivo: ${err.response?.data?.message || err.message}`);
@@ -261,13 +261,9 @@ function GoalDetailPage() {
                         date: initialDateString,
                         value: initialValueParsed
                     });
-                    // console.log("2. Gráfico: Primer punto (Valor Inicial) añadido:", chartProgressData[0]);
                 } else {
-                    // console.warn("2. Gráfico: valor_inicial_numerico no es un número válido (NaN o null/undefined):", data.valor_inicial_numerico);
                 }
             } else {
-                // console.log("2. Gráfico: No se añadió el punto inicial (createdAt inválida o faltante).");
-                // console.log("DEBUG: createdAt:", data.createdAt, "isInitialDateValid:", isInitialDateValid);
             }
 
             // 3. Añadir todos los registros de historial de progreso que vienen del backend
@@ -285,8 +281,6 @@ function GoalDetailPage() {
                         });
                         // console.log("3. Gráfico: Entrada de progreso VÁLIDA añadida:", {date: entry.date, value: valueParsed});
                     } else {
-                        // console.warn("3. Gráfico: Entrada de progreso inválida (fecha o valor faltante/NaN):", entry);
-                        // console.log("DEBUG: entry.date:", entry.date, "isValid(parseISO(entryDateString)):", entryDateString && isValid(parseISO(entryDateString)), "valueParsed:", valueParsed, "isNaN(valueParsed):", isNaN(valueParsed));
                     }
                 });
                 // console.log("3. Gráfico: Puntos de historial REALES del backend añadidos. Total hasta ahora:", chartProgressData.length);
@@ -658,8 +652,8 @@ function GoalDetailPage() {
                     </div>
                 </div>
 
-                <Button onClick={() => navigate('/dashboard')} className={styles.backButton}>
-                    Volver al Dashboard
+                <Button onClick={() => navigate('/mis-objetivos')} className={styles.backButton}>
+                    Volver a mis objetivos
                 </Button>
             </div>
         </div>
