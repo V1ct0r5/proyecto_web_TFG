@@ -1,168 +1,128 @@
-// backend\src\middlewares\objectivesValidation.js
 const { body, validationResult } = require('express-validator');
+const AppError = require('../utils/AppError'); // Para el manejo de errores centralizado
 
-// Función auxiliar para validaciones de cadena comunes (no vacío, trim, escape, pero sin escape por ahora si no es requerido)
-// Para 'nombre' y 'descripcion' que quizás no necesiten escape si no contienen HTML
-const validateString = (fieldName, message, minLength = 0, maxLength = 255) =>
-    body(fieldName)
-        .notEmpty().withMessage(`${message} es obligatorio.`)
-        .isString().withMessage(`${message} debe ser una cadena de texto.`)
+// Valida campos de texto, permitiendo opcionalidad y configuración de longitud.
+const validateStringField = (fieldName, message, { min = 1, max = 255, optional = false } = {}) => {
+    let validator = body(fieldName);
+    if (optional) {
+        validator = validator.optional({ checkFalsy: true }); // Acepta null, '', undefined como válidos si es opcional
+    } else {
+        validator = validator.notEmpty().withMessage(`${message} no puede estar vacío.`);
+    }
+    return validator
         .trim()
-        .isLength({ min: minLength, max: maxLength }).withMessage(`${message} debe tener entre ${minLength} y ${maxLength} caracteres.`);
+        .isString().withMessage(`${message} debe ser una cadena.`)
+        .isLength({ min, max }).withMessage(`${message} debe tener entre ${min} y ${max} caracteres (si se proporciona).`);
+};
 
-// Función auxiliar para validaciones de número (opcionalmente vacío, es numérico, trim)
-const validateNumericOptional = (fieldName, message) =>
-    body(fieldName)
-        .optional({ checkFalsy: true }) // Permite que sea opcional, pero si existe, valídalo
-        .trim()
-        .isDecimal().withMessage(`${message} debe ser un número decimal.`); // isDecimal como en tu original
-
-// Validación de la fecha de inicio
-const validateStartDate = (fieldName) =>
+// Valida campos numéricos decimales que son opcionales.
+const validateDecimalOptional = (fieldName, message) =>
     body(fieldName)
         .optional({ checkFalsy: true })
-        .isDate().withMessage('La fecha de inicio no es válida')
-        .custom((value) => {
-            if(!value) return true; // Si es opcional y no se proporciona, pasa
+        .trim() // Aunque es numérico, trim puede limpiar espacios que invalidarían isDecimal
+        .isDecimal().withMessage(`${message} debe ser un número decimal válido (si se proporciona).`);
 
-            const currentDate = new Date();
-            currentDate.setHours(0, 0, 0, 0);
-            const startDate = new Date(value);
-            startDate.setHours(0, 0, 0, 0);
-            return startDate >= currentDate;
-        })
-        .withMessage('La fecha de inicio debe ser mayor o igual a la fecha actual');
+// Valida campos booleanos que son opcionales.
+const validateBooleanOptional = (fieldName, message) =>
+    body(fieldName)
+        .optional() // isBoolean maneja bien true, false, "true", "false"
+        .isBoolean().withMessage(`${message} debe ser un valor booleano (true/false) (si se proporciona).`);
 
-// Validación de la fecha de fin
-const validateEndDate = (fieldName) =>
+// Valida campos de fecha opcionales en formato YYYY-MM-DD.
+const validateDateOptional = (fieldName, message) =>
     body(fieldName)
         .optional({ checkFalsy: true })
-        .isDate()
-        .withMessage('La fecha de fin no es válida')
+        .isISO8601({ strict: true, strictSeparator: true }).withMessage(`${message} debe ser una fecha válida en formato YYYY-MM-DD (si se proporciona).`)
+        .toDate(); // Convierte a objeto Date para validaciones custom o uso posterior
+
+// Middleware para manejar errores de validación y centralizarlos con AppError.
+const handleValidationErrors = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return next(new AppError('Errores de validación.', 400, errors.array()));
+    }
+    next();
+};
+
+const tiposDeObjetivoPermitidos = ['Salud', 'Finanzas', 'Desarrollo personal', 'Relaciones', 'Carrera profesional', 'Otros'];
+const estadosDeObjetivoPermitidos = ['Pendiente', 'En progreso', 'Completado', 'Archivado', 'Fallido'];
+
+// Validaciones para la creación de un nuevo objetivo
+const validarCrearObjetivo = [
+    validateStringField('nombre', 'El nombre del objetivo', { min: 3, max: 100 }), // Nombre es obligatorio
+    validateStringField('descripcion', 'La descripción', { max: 1000, optional: true }),
+    body('tipo_objetivo')
+        .notEmpty().withMessage('El tipo de objetivo es obligatorio.')
+        .isIn(tiposDeObjetivoPermitidos)
+        .withMessage('Tipo de objetivo no válido.'),
+    validateDecimalOptional('valor_inicial_numerico', 'El valor inicial numérico'),
+    // 'valor_actual' usualmente se inicializa igual a 'valor_inicial_numerico' en el servicio/controlador durante la creación.
+    validateDecimalOptional('valor_cuantitativo', 'El valor cuantitativo meta'),
+    body('es_menor_mejor') // Si no se envía, se asume false o el default de la DB
+        .optional()
+        .isBoolean().withMessage('El campo "es_menor_mejor" debe ser booleano.'),
+    validateStringField('unidad_medida', 'La unidad de medida', { max: 50, optional: true }),
+    validateDateOptional('fecha_inicio', 'La fecha de inicio'),
+    validateDateOptional('fecha_fin', 'La fecha de fin')
         .custom((value, { req }) => {
-            if (!value) {
-                return true; // Si es opcional y no se proporciona, pasa
+            if (value && req.body.fecha_inicio) { // Validar solo si ambas fechas están presentes
+                if (new Date(value) <= new Date(req.body.fecha_inicio)) {
+                    throw new Error('La fecha de fin debe ser posterior a la fecha de inicio.');
+                }
             }
-
-            const fechaFin = new Date(value);
-            fechaFin.setHours(0, 0, 0, 0);
-            const currentDate = new Date();
-            currentDate.setHours(0, 0, 0, 0);
-
-            if (fechaFin < currentDate) {
-                throw new Error('La fecha de fin no puede ser anterior a la fecha actual');
-            }
-
-            if (req.body.fecha_inicio) {
-                const fechaInicio = new Date(req.body.fecha_inicio);
-                fechaInicio.setHours(0, 0, 0, 0);
-                if (fechaFin <= fechaInicio) {
-                    throw new Error('La fecha de fin debe ser posterior a la fecha de inicio');
+            // En creación, la fecha de fin no puede ser estrictamente pasada
+            if (value) {
+                const fechaFinObj = new Date(value);
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0); // Normalizar para comparar solo la parte de la fecha
+                if (fechaFinObj < hoy) {
+                     throw new Error('La fecha de fin no puede ser una fecha pasada.');
                 }
             }
             return true;
-        })
-        .withMessage('La fecha de fin debe ser hoy o una fecha futura y posterior a la fecha de inicio');
-
-
-// Validaciones para la creación de objetivos (POST)
-const validarCrearObjetivo = [
-    validateString('nombre', 'El nombre', 3), // Tu original usaba 'nombre' y mínimo 3 caracteres
-    body('tipo_objetivo')
-        .notEmpty()
-        .withMessage('El tipo de objetivo es obligatorio')
-        .isIn(['Salud', 'Finanzas', 'Desarrollo personal', 'Relaciones', 'Carrera profesional', 'Otros']) // Tus tipos originales
-        .withMessage('El tipo de objetivo no es válido'),
-
-    validateNumericOptional('valor_cuantitativo', 'El valor cuantitativo'),
-    body('unidad_medida') // Tu original lo tenía sin validateString
-        .optional()
-        .isLength({ max: 50 })
-        .withMessage('La unidad de medida debe tener como máximo 50 caracteres'),
-
-    validateStartDate('fecha_inicio'),
-    validateEndDate('fecha_fin'),
-
-    // Middleware para manejar los resultados de la validación
-    (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-        next();
-    }
+        }),
+    // El 'estado' usualmente se establece por defecto a 'Pendiente' en el backend al crear.
+    handleValidationErrors
 ];
 
-// Validaciones para la actualización de objetivos (PUT)
+// Validaciones para la actualización de un objetivo existente
 const validarActualizarObjetivo = [
-    body('nombre') // Tu original usaba 'nombre'
-        .optional()
-        .isLength({ min: 3 })
-        .withMessage('El nombre debe tener al menos 3 caracteres'),
-
+    validateStringField('nombre', 'El nombre del objetivo', { min: 3, max: 100, optional: true }),
+    validateStringField('descripcion', 'La descripción', { max: 1000, optional: true }),
     body('tipo_objetivo')
         .optional()
-        .isIn(['Salud', 'Finanzas', 'Desarrollo personal', 'Relaciones', 'Carrera profesional', 'Otros']) // Tus tipos originales
-        .withMessage('El tipo de objetivo no es válido'),
-
-    validateNumericOptional('valor_cuantitativo', 'El valor cuantitativo'),
-    body('unidad_medida')
-        .optional()
-        .isLength({ max: 50 })
-        .withMessage('La unidad de medida debe tener como máximo 50 caracteres'),
-
-    body('fecha_inicio') // Mantener la estructura de tu original con optional({checkFalsy: true})
-        .optional({ checkFalsy: true })
-        .isDate()
-        .withMessage('La fecha de inicio no es válida')
-        .custom((value) => {
-            if (!value) return true;
-
-            const currentDate = new Date();
-            currentDate.setHours(0, 0, 0, 0);
-            const startDate = new Date(value);
-            startDate.setHours(0, 0, 0, 0);
-            return startDate >= currentDate;
-        })
-        .withMessage('La fecha de inicio debe ser mayor o igual a la fecha actual'),
-
-    body('fecha_fin') // Mantener la estructura de tu original con optional({checkFalsy: true})
-        .optional({ checkFalsy: true })
-        .isDate()
-        .withMessage('La fecha de fin no es válida')
+        .isIn(tiposDeObjetivoPermitidos)
+        .withMessage('Tipo de objetivo no válido.'),
+    validateDecimalOptional('valor_inicial_numerico', 'El valor inicial numérico (usualmente no editable directamente tras creación)'),
+    validateDecimalOptional('valor_actual', 'El valor actual del objetivo'),
+    validateDecimalOptional('valor_cuantitativo', 'El valor cuantitativo meta'),
+    validateBooleanOptional('es_menor_mejor', 'El campo "es_menor_mejor"'),
+    validateStringField('unidad_medida', 'La unidad de medida', { max: 50, optional: true }),
+    validateDateOptional('fecha_inicio', 'La fecha de inicio'),
+    validateDateOptional('fecha_fin', 'La fecha de fin')
         .custom((value, { req }) => {
-            if (!value) {
-                return true;
-            }
+            // Para actualización, la validación cruzada de fechas puede ser compleja si se permite
+            // actualizar solo una fecha. Se asume que si ambas se envían, se validan.
+            // Si solo se envía una, el servicio debería manejar la lógica con la fecha existente.
+            const fechaInicioEnBody = req.body.fecha_inicio;
+            const fechaFinEnBody = value; // 'value' es fecha_fin en esta cadena de validación
 
-            const fechaFin = new Date(value);
-            fechaFin.setHours(0, 0, 0, 0);
-            const currentDate = new Date();
-            currentDate.setHours(0, 0, 0, 0);
-
-            if (fechaFin < currentDate) {
-                throw new Error('La fecha de fin no puede ser anterior a la fecha actual');
-            }
-
-            if (req.body.fecha_inicio) {
-                const fechaInicio = new Date(req.body.fecha_inicio);
-                fechaInicio.setHours(0, 0, 0, 0);
-                if (fechaFin <= fechaInicio) {
-                    throw new Error('La fecha de fin debe ser posterior a la fecha de inicio');
+            if (fechaFinEnBody && fechaInicioEnBody) {
+                if (new Date(fechaFinEnBody) <= new Date(fechaInicioEnBody)) {
+                    throw new Error('La fecha de fin debe ser posterior a la fecha de inicio, si ambas se actualizan.');
                 }
             }
+            // No se valida contra "hoy" en actualización, ya que se puede estar actualizando un objetivo cuya fecha_fin ya pasó.
             return true;
-        })
-        .withMessage('La fecha de fin debe ser hoy o una fecha futura y posterior a la fecha de inicio'),
-
-    // Middleware para manejar los resultados de la validación
-    (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
-        next();
-    }
+        }),
+    body('estado')
+        .optional()
+        .isIn(estadosDeObjetivoPermitidos)
+        .withMessage('Estado no válido.'),
+    // Campos específicos para cuando se actualiza el progreso del objetivo
+    validateDecimalOptional('progressValorActual', 'El valor actual del progreso (al actualizar progreso)'), 
+    validateStringField('comentarios_progreso', 'Los comentarios del progreso', {max: 500, optional: true}),
+    handleValidationErrors
 ];
 
 module.exports = {
