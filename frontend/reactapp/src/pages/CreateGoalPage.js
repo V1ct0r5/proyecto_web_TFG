@@ -1,111 +1,89 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Hook de navegación
-import ObjetivosForm from "../components/objetivos/ObjetivosForm"; // Componente del formulario de objetivos
-import api from "../services/apiService"; // Servicio API
-import { useAuth } from "../context/AuthContext"; // Contexto de autenticación
-import styles from "../layouts/AuthLayout.module.css";
-import { toast } from 'react-toastify'; // Notificaciones toast
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import ObjetivosForm from "../components/objetivos/ObjetivosForm";
+import api from "../services/apiService";
+import { useAuth } from "../context/AuthContext";
+import styles from "./CreateGoalPage.module.css";
+import { toast } from 'react-toastify';
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
-function ObjetivosPage() {
+function CreateObjectivePage() {
     const [objetivos, setObjetivos] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const location = useLocation();
+    const { logout } = useAuth();
 
-    // Determina si el usuario ya tiene objetivos.
     const hasObjectives = objetivos.length > 0;
 
     const handleObjectiveSubmission = async (objectiveData) => {
+        setIsSubmitting(true);
         try {
-            let response;
-            if (objectiveData.id_objetivo) {
-                // Si el objetivo tiene un ID, es una actualización
-                response = await api.updateObjective(objectiveData.id_objetivo, objectiveData);
-            } else {
-                // Si no tiene ID, es una creación de un nuevo objetivo
-                response = await api.createObjective(objectiveData);
-            }
-            toast.success('Objetivo guardado con éxito.');
-            navigate('/dashboard'); // Redirige al dashboard después de guardar
-            return response.data; // O el objeto creado/actualizado si lo necesitas
+            await api.createObjective(objectiveData);
+            toast.success('¡Nuevo objetivo creado con éxito!');
+            navigate('/dashboard', { replace: true });
         } catch (err) {
-            console.error("Error al guardar el objetivo:", err.response ? err.response.data : err.message);
-            const errorMessage = err.response && err.response.data.message ? err.response.data.message : "Error desconocido al guardar el objetivo.";
-            toast.error("Error: " + errorMessage);
-            throw new Error(errorMessage); // Lanza el error para que sea capturado por el onSubmitInternal del formulario
+            const errorMessage = err.data?.message || err.message || "Error desconocido al crear el objetivo.";
+            toast.error(`Error al crear el objetivo: ${errorMessage}`);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    // NUEVA FUNCIÓN: Manejador para el botón de cancelar en creación
     const handleCancelCreation = () => {
-        navigate('/dashboard'); // Redirige al dashboard al cancelar
+        navigate('/dashboard');
         toast.info("Creación de objetivo cancelada.");
     };
 
-    useEffect(() => {
-        const fetchObjectives = async () => {
-            setLoading(true);
-            try {
-                const response = await api.getObjectives();
-                setObjetivos(response.data);
-            } catch (err) {
-                console.error("Error al cargar los objetivos:", err.response ? err.response.data : err.message);
-                if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-                    console.warn("Error de autenticación al cargar objetivos en ObjetivosPage. Redirigiendo a login.");
-                    logout();
-                    navigate("/login");
-                } else {
-                    toast.error("Error al cargar tus objetivos. " + (err.response && err.response.data.message ? err.response.data.message : err.message));
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        const token = localStorage.getItem("token");
-        if (!token) {
-            console.warn("No token found in ObjetivosPage. Redirecting to login.");
-            logout();
-            navigate("/login");
-            setLoading(false);
-        } else {
-            fetchObjectives();
-        }
-    }, [navigate, logout]);
-
-    const handleLogout = async () => {
-        setLoading(true);
+    const fetchInitialObjectives = useCallback(async () => {
         try {
-            await api.logout();
-            toast.success('Sesión cerrada con éxito.');
+            const data = await api.getObjectives();
+            setObjetivos(Array.isArray(data) ? data : []);
         } catch (err) {
-            console.error("Error al cerrar sesión en el backend:", err);
-            toast.error('Error al cerrar sesión.');
-        } finally {
-            logout();
-            setLoading(false);
+            if (err.status === 401 || err.status === 403) {
+                toast.error("Tu sesión ha expirado o no estás autorizado. Por favor, inicia sesión.");
+                logout();
+                navigate("/login", { replace: true, state: { from: location } });
+            } else {
+                toast.error(err.data?.message || err.message || "Error al cargar datos para esta página.");
+            }
+            setObjetivos([]); // Asegurar que objetivos es un array en caso de error.
         }
+    }, [navigate, logout, location]);
+
+    useEffect(() => {
+        setLoading(true);
+        fetchInitialObjectives().finally(() => {
+            setLoading(false); // Asegurar que loading se desactiva después de la carga inicial
+        });
+    }, [fetchInitialObjectives]);
+
+    if (loading) {
+        return (
+            <div className={styles.pageLoadingContainer}>
+                <LoadingSpinner size="large" text="Preparando formulario..." />
+            </div>
+        );
     }
+
     return (
-        <div className={styles.authPage}>
-            <div className={styles.mainContentArea}>
-                <h2 className={styles.formTitle}>
-                    {hasObjectives ? "Crea un nuevo objetivo" : "Crea tu primer objetivo"}
+        <div className={styles.createGoalPageContainer}>
+            <div className={styles.formWrapper}>
+                <h2 className={styles.mainTitle}>
+                    {hasObjectives ? "Crea un Nuevo Objetivo" : "Crea Tu Primer Objetivo"}
                 </h2>
                 <ObjetivosForm
                     onSubmit={handleObjectiveSubmission}
-                    isFirstObjective={!hasObjectives}
+                    isEditMode={false}
+                    buttonText="Crear Objetivo"
                     onCancel={handleCancelCreation}
+                    isLoading={isSubmitting}
                 />
             </div>
-            {loading && (
-                <div className="loading-overlay">
-                    <p>Cargando...</p>
-                </div>
-            )}
         </div>
     );
 }
 
-export default ObjetivosPage;
+export default CreateObjectivePage;
