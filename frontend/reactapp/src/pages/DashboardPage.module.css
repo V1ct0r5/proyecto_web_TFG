@@ -1,98 +1,188 @@
-/* frontend\reactapp\src\pages\DashboardPage.module.css */
-
-.dashboardContainer {
-    padding: 1.5rem; /* MODIFICACIÓN: p-6 (1.5rem o 24px) en todos los lados */
-    max-width: 1200px; /* Ancho máximo para el contenido principal */
-    margin: 0 auto; /* Centrar el contenido */
+/* frontend/reactapp/src/pages/DashboardPage.module.css */
+.dashboardPageLayout {
+    padding: 1.5rem; /* Espaciado general */
     display: flex;
     flex-direction: column;
-    /* MODIFICACIÓN: space-y-6 (1.5rem o 24px) de margen vertical entre elementos hijos directos */
-    gap: 1.5rem; /* Usamos gap para simular space-y- entre los elementos principales del flex container */
+    gap: 2rem; /* Espacio entre la fila superior y las secciones inferiores */
+    background-color: var(--dashboard-bg, #f0f4f8); /* Un color de fondo muy suave */
+    min-height: calc(100vh - var(--header-height, 60px)); /* Ocupar altura menos el header */
 }
 
-.pageTitle {
-    font-size: 2.2rem; /* Mantengo el tamaño del título para legibilidad */
-    color: var(--foreground); /* Usar variable para el color del título */
+/* Estados de Carga y Error de Página Completa */
+.dashboardLoadingState,
+.dashboardErrorState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
     text-align: center;
-    margin-bottom: 0; /* El gap del contenedor principal ya maneja el espaciado */
+    flex-grow: 1; /* Para ocupar espacio si es el único elemento */
 }
-
-.loadingState,
-.errorState,
-.noGoalsMessage {
-    text-align: center;
+.dashboardErrorState .errorMessageText {
+    color: var(--destructive-color, #cc0000);
+    margin-bottom: 1.5rem;
     font-size: 1.1rem;
-    color: var(--muted-foreground); /* Usar variable para texto suave */
-    padding: 2rem;
-    background-color: var(--muted); /* Usar variable para fondo suave */
-    border-radius: var(--radius);
-    margin-top: 0; /* El gap del contenedor principal ya maneja el espaciado */
 }
 
-.errorState {
-    color: var(--destructive); /* Rojo para errores */
-    background-color: color-mix(in srgb, var(--destructive) 10%, transparent); /* Un rojo muy suave */
-    border: 1px solid var(--destructive);
-}
-
-/* Contenedor de los controles (búsqueda, filtro, orden) */
-.controlsContainer {
+/* Fila Superior de Stats Cards */
+.statsRowContainer {
     display: grid;
-    grid-template-columns: 1fr; /* Una columna en móvil */
-    gap: 1rem; /* MODIFICACIÓN: gap-4 (1rem o 16px) entre cada filtro */
-    padding: 1rem;
-    background-color: var(--muted); /* Fondo suave para los controles */
-    border-radius: var(--radius);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* 4 columnas en desktop, 2 en tablet, 1 en móvil */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+    gap: 1.5rem;
 }
 
-/* Media queries para los controles */
-@media (min-width: 768px) { /* Tablets y pantallas medianas */
-    .controlsContainer {
-        grid-template-columns: repeat(2, 1fr); /* Dos columnas */
+.statsCardItem {
+    background-color: var(--card-background, white);
+    border-radius: var(--radius-lg, 12px);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08));
+    border: 1px solid var(--border-color, #e5e7eb);
+    display: flex;
+    flex-direction: column; /* Para alinear el link al final */
+    min-height: 160px; /* Altura mínima para consistencia */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.statsCardItem:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg, 0 10px 20px rgba(0,0,0,0.1));
+}
+
+.statsIconWrapper {
+    font-size: 1.8rem; /* Tamaño del icono */
+    color: var(--primary-color, #007bff); /* Color base del icono, puede variar por tarjeta */
+    margin-bottom: 0.75rem;
+    /* Para centrar si el icono es un SVG o font-icon: */
+    /* display: flex; align-items: center; justify-content: center; 
+       width: 40px; height: 40px; background-color: var(--primary-light); border-radius: 50%; */
+}
+.statsContent {
+    flex-grow: 1; /* Empuja el link al final */
+}
+.statsTitle {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--muted-foreground, #566f82);
+    margin: 0 0 0.3rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.statsValue {
+    font-size: 1.6rem; /* Tamaño grande para el número principal */
+    font-weight: 700;
+    color: var(--foreground, #2c3e50);
+    line-height: 1.2;
+    margin: 0;
+}
+.statsDetails {
+    font-size: 0.85rem;
+    color: var(--muted-foreground, #7f8c8d);
+    margin-top: 0.25rem;
+}
+.statsLink {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--primary-color, #007bff);
+    text-decoration: none;
+    margin-top: 0.75rem; /* Espacio sobre el enlace */
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.statsLink:hover {
+    text-decoration: underline;
+    color: var(--primary-hover, #0056b3);
+}
+
+/* Placeholder para el gráfico de dona dentro de una StatsCard */
+.chartPlaceholderSmall {
+    height: 80px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+    font-style: italic;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    /* border: 1px dashed var(--border-color); */
+}
+
+/* Secciones Inferiores (Grid de 2 columnas) */
+.bottomSectionsGrid {
+    display: grid;
+    grid-template-columns: 1fr; /* Apilados en móvil por defecto */
+    gap: 1.5rem;
+}
+@media (min-width: 992px) { /* Para pantallas más grandes, dos columnas */
+    .bottomSectionsGrid {
+        grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.5fr); /* Columna de objetivos más ancha */
     }
 }
 
-@media (min-width: 1024px) { /* Pantallas grandes */
-    .controlsContainer {
-        grid-template-columns: repeat(3, 1fr); /* Tres columnas */
-    }
+.objectivesPreviewWrapper,
+.activityFeedWrapper {
+    background-color: var(--card-background, white);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    min-height: 300px; /* Para que tengan algo de altura */
 }
 
-/* Encabezado de la sección de objetivos (Título y botón de añadir) */
-.sectionHeader {
+/* Placeholder para la lista de objetivos y actividad reciente */
+.listSection { /* Usado por ambos placeholders de lista */
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Para que el botón "ver todos" se vaya abajo si la lista es corta */
+}
+.sectionTitle {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--heading-color);
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light, #f0f0f0);
+}
+.recentList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1; /* Para ocupar espacio y empujar "ver todos" abajo */
+}
+.recentListItem, .recentActivityItem {
+    padding: 0.6rem 0;
+    font-size: 0.95rem;
+    border-bottom: 1px dotted var(--border-ultralight, #f7f7f7);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0; /* El gap de .dashboardContainer ya maneja este espaciado */
-    padding-top: 0; /* Asegura que no haya padding extra si ya lo controla el gap */
-    gap: 1rem; /* MODIFICACIÓN: gap-4 (1rem o 16px) de espacio entre el título y el botón */
-    flex-wrap: wrap; /* Para que el botón se envuelva en móvil */
 }
-
-.sectionTitle {
-    font-size: 1.8rem; /* Mantengo el tamaño del título de sección */
-    color: var(--foreground); /* Usar variable para el color del título de sección */
-    margin: 0; /* Asegura que no tenga margen extra */
+.recentListItem:last-child, .recentActivityItem:last-child {
+    border-bottom: none;
 }
-
-/* Cuadrícula de Objetivos */
-.goalsGrid {
-    display: grid;
-    grid-template-columns: 1fr; /* Por defecto, 1 columna en móviles */
-    gap: 2rem; /* AUMENTO: Más espacio entre cada tarjeta (antes 1.5rem) */
+.objectiveName { color: var(--foreground); }
+.objectiveMeta { display: flex; align-items: center; gap: 0.75rem; color: var(--muted-foreground); font-size: 0.85rem; }
+.objectiveProgress { font-weight: 500; }
+.detailsArrowButton {
+    color: var(--primary-color) !important; /* Asegurar que el icono sea visible */
+    background: none !important;
+    border: none !important;
+    padding: 0.25rem !important;
+    box-shadow: none !important;
 }
+.detailsArrowButton:hover { color: var(--primary-hover) !important; }
 
-/* Media query para tablets (2 columnas) */
-@media (min-width: 768px) { /* md breakpoint */
-    .goalsGrid {
-        grid-template-columns: repeat(2, 1fr); /* Ahora 2 columnas de igual ancho */
-    }
+.activityDescription { color: var(--foreground); }
+.activityTimestamp { font-size: 0.8rem; color: var(--muted-foreground); white-space: nowrap; }
+
+.viewAllContainer {
+    margin-top: 1rem; /* Espacio sobre el botón */
+    text-align: center;
 }
-
-/* Media query para pantallas grandes (3 columnas) */
-@media (min-width: 1024px) { /* lg breakpoint */
-    .goalsGrid {
-        grid-template-columns: repeat(3, 1fr); /* Ahora 3 columnas de igual ancho */
-    }
-}   
+.noDataText {
+    color: var(--muted-foreground);
+    font-style: italic;
+    text-align: center;
+    padding: 2rem 0;
+}
