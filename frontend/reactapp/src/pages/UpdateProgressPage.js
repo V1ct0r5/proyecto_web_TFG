@@ -304,6 +304,7 @@ function UpdateProgressPage() {
                         <input
                             type="text" // Usar 'text' para permitir la entrada de decimales libremente antes de parsear
                             id="newProgressValue"
+                            inputmode="decimal"
                             className={styles.formInput}
                             value={newProgressValue}
                             onChange={handleValueChange}
