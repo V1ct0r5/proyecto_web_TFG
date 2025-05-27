@@ -3,50 +3,77 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const helmet = require('helmet'); // <--- Añadido
-const compression = require('compression'); // <--- Añadido
-const { sequelize } = require('./src/config/database');
-const usuariosRoutes = require('./src/api/routes/userRoutes');
-const objetivosRoutes = require('./src/api/routes/objectivesRoutes');
+const helmet = require('helmet');
+const compression = require('compression');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const path = require('path');
+
+const AppError = require('./src/utils/AppError');
+const userRoutes = require('./src/api/routes/userRoutes');
+const objectivesRoutes = require('./src/api/routes/objectivesRoutes');
 const errorHandler = require('./src/middlewares/errorHandler');
-const transactionMiddleware = require('./src/middlewares/transactionMiddleware'); // Asegúrate que la ruta es correcta
+// const transactionMiddleware = require('./src/middlewares/transactionMiddleware'); // Generalmente no se aplica globalmente
 
 const app = express();
 
-// Middlewares base
-app.use(cors()); // Habilitar CORS para todas las rutas y orígenes
-app.use(helmet()); // <--- Añadido: Establece varias cabeceras HTTP de seguridad
-app.use(compression()); // <--- Añadido: Comprime las respuestas HTTP
+// --- Middlewares Esenciales y de Seguridad ---
+const corsOptions = {
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Permitir el origen del frontend
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    allowedHeaders: ['Content-Type', 'Authorization'], // Cabeceras permitidas
+    credentials: true, // Permitir cookies/credenciales si se usan
+    optionsSuccessStatus: 200 
+};
+app.use(cors(corsOptions));
 
-app.use(express.json()); // Para parsear application/json
-app.use(express.urlencoded({ extended: true })); // Para parsear application/x-www-form-urlencoded
+app.use(helmet()); // Ayuda a establecer varias cabeceras HTTP de seguridad
+app.use(express.json({ limit: '10kb' })); // Parsear JSON, con límite de tamaño para seguridad
+app.use(express.urlencoded({ extended: true, limit: '10kb' })); // Parsear cuerpos URL-encoded, con límite
+app.use(compression()); // Comprimir respuestas HTTP para mejor rendimiento
 
-// Morgan para logging de solicitudes HTTP (en modo 'dev' para desarrollo)
+// Logging de peticiones HTTP (principalmente para desarrollo)
 if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+    app.use(morgan('dev'));
 }
 
-// Middleware de transacción (si es aplicable globalmente o en rutas específicas)
-// Considera si quieres que todas las rutas usen transacciones o solo algunas.
-// Si es solo para algunas, aplica este middleware directamente en esas rutas.
-// app.use(transactionMiddleware); // Comentado si no es global
+// --- Documentación de la API (Swagger / OpenAPI) ---
+try {
+    const swaggerDocumentPath = path.join(__dirname, './docs/api/swagger.yaml');
+    const swaggerDocument = YAML.load(swaggerDocumentPath);
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    // Opcional: console.log(`[API Docs] Documentación disponible en /api-docs`);
+} catch (e) {
+    console.error("[API Docs] Error al cargar swagger.yaml:", e.message);
+    // Considerar si el fallo al cargar Swagger debe detener la app o solo loguear.
+}
 
-// Rutas de la API
-app.use('/api', usuariosRoutes);
-app.use('/api', objetivosRoutes);
+// --- Rutas de la API ---
+app.use('/api', userRoutes);
+app.use('/api', objectivesRoutes);
 
-// Ruta de bienvenida o de estado
+// Ruta raíz de la API para verificar el estado del backend
+app.get('/api', (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        message: 'API de Seguimiento de Metas Personales funcionando correctamente. Documentación en /api-docs'
+    });
+});
+
+// Ruta raíz del servidor (opcional)
 app.get('/', (req, res) => {
-  res.json({ message: 'Bienvenido a la API de seguimiento de objetivos.' });
+    res.send('Servidor Backend TFG. Accede a /api para los endpoints o /api-docs para la documentación.');
 });
 
-// Middleware para manejar rutas no encontradas (404)
-app.use((req, res, next) => {
-  const AppError = require('./src/utils/AppError'); // Importación local para evitar error de carga circular si AppError usa algo de aquí
-  next(new AppError(`No se encuentra ${req.originalUrl} en este servidor`, 404));
+
+// --- Manejo de Rutas No Encontradas (404) ---
+// Captura todas las peticiones a rutas no definidas previamente
+app.all('*', (req, res, next) => {
+    next(new AppError(`La ruta ${req.originalUrl} no se ha encontrado en este servidor.`, 404));
 });
 
-// Middleware de manejo de errores global (Debe ser el último middleware)
+// --- Middleware Global de Manejo de Errores ---
+// Debe ser el último middleware registrado.
 app.use(errorHandler);
 
 module.exports = app;
