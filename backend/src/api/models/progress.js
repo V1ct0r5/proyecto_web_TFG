@@ -1,3 +1,4 @@
+// backend/src/api/models/progress.js
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
@@ -11,60 +12,55 @@ module.exports = (sequelize) => {
         id_objetivo: {
             type: DataTypes.INTEGER,
             allowNull: false,
+            // 'references' fue explícitamente eliminada en la versión "después" original de las asociaciones.
+            // Si la integridad referencial se maneja a nivel de base de datos o se infiere, esto es aceptable.
         },
-        id_usuario: { // Asumiendo que el progreso también se asocia directamente a un usuario
+        id_usuario: {
             type: DataTypes.INTEGER,
             allowNull: false,
+            // 'references' fue explícitamente eliminada en la versión "después" original de las asociaciones.
         },
         fecha_registro: {
-            type: DataTypes.DATEONLY,
+            type: DataTypes.DATEONLY, // Solo la fecha, sin la hora
             allowNull: false,
+            defaultValue: DataTypes.NOW, // Establece la fecha actual por defecto al crear
             validate: {
                 isDate: { msg: 'La fecha de registro debe ser una fecha válida.' }
             }
         },
         valor_actual: {
-            type: DataTypes.FLOAT, // o DataTypes.DECIMAL si prefieres más precisión
+            type: DataTypes.DECIMAL(10, 2), // Para precisión, ej. 10 dígitos totales, 2 después del decimal
             allowNull: false,
             validate: {
-                isFloat: { msg: 'El valor actual debe ser un número decimal.' },
-                notNull: { msg: 'El valor actual no puede ser nulo.' }, // redundante si allowNull es false, pero no daña
+                isDecimal: { msg: 'El valor actual debe ser un número decimal.' },
                 min: {
-                    args: [0], // <<< ASEGÚRATE DE QUE 'args' SEA UN ARRAY CON EL NÚMERO, ej. [0]
-                    msg: 'El valor actual no puede ser negativo.'
+                    args: [0],
+                    msg: 'El valor actual no puede ser negativo.' // Mensaje para la validación 'min'
                 }
             }
         },
         comentarios: {
-            type: DataTypes.STRING(500), // Longitud explícita, o DataTypes.TEXT si son muy largos
+            type: DataTypes.TEXT, // TEXT permite comentarios más largos que STRING(500)
             allowNull: true
         }
     }, {
-      tableName: 'Progresos', 
-      timestamps: true,
-      underscored: true
-  });
+        tableName: 'Progresos', // Nombre explícito de la tabla
+        timestamps: true,       // Habilita createdAt y updatedAt
+        underscored: true       // Usa snake_case para los nombres de columna autogenerados (ej. created_at)
+    });
 
-  Progress.associate = (models) => {
-      Progress.belongsTo(models.Objective, {
-          foreignKey: 'id_objetivo',
-          as: 'objetivo',
-          references: {
-              model: 'Objetivo', // <-- CAMBIADO de 'objectives' a 'Objetivos'
-              key: 'id_objetivo'  // <-- CAMBIADO de 'id' a 'id_objetivo' si es el PK de Objetivos
-          },
-          onDelete: 'CASCADE'
-      });
-      Progress.belongsTo(models.User, {
-          foreignKey: 'id_usuario',
-          as: 'usuario',
-          references: {
-              model: 'Usuario', // <-- CAMBIADO de 'users' a 'Usuarios'
-              key: 'id'
-          },
-          onDelete: 'CASCADE'
-      });
-  };
+    Progress.associate = (models) => {
+        Progress.belongsTo(models.Objective, {
+            foreignKey: 'id_objetivo', // Clave foránea en la tabla Progresos que referencia a Objective
+            as: 'objetivo',            // Alias para la asociación
+            onDelete: 'CASCADE'        // Si se elimina un Objetivo, se eliminan sus Progresos asociados
+        });
 
-  return Progress;
+        Progress.belongsTo(models.User, {
+            foreignKey: 'id_usuario',  // Clave foránea en la tabla Progresos que referencia a User
+            as: 'usuario',             // Alias para la asociación
+            onDelete: 'CASCADE'        // Si se elimina un Usuario, se eliminan sus Progresos asociados
+        });
+    };
+    return Progress;
 };
