@@ -1,8 +1,70 @@
+/* frontend/reactapp/src/components/ui/LoadingSpinner.module.css */
+
 .spinnerContainer {
-    display: flex;
-    justify-content: center; /* Centrar horizontalmente */
-    align-items: center;     /* Centrar verticalmente */
-    min-height: 150px;       /* Ajusta la altura mínima para que el spinner no quede pegado al texto */
-    width: 100%;
-    margin: 20px 0;          /* Espacio alrededor del spinner */
-}
+    display: inline-flex; /* Permite alinear el spinner y el texto opcional horizontalmente */
+    align-items: center;
+    gap: 0.5rem; /* Espacio entre el spinner y el texto, si existe */
+  }
+  
+  .spinner {
+    border-style: solid;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block; /* Para que el spinner fluya con el texto o como un bloque pequeño */
+  }
+  
+  /* Tamaños del spinner */
+  .small {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+  
+  .medium {
+    width: 32px;
+    height: 32px;
+    border-width: 4px;
+  }
+  
+  .large {
+    width: 48px;
+    height: 48px;
+    border-width: 5px;
+  }
+  
+  /* Colores del spinner, utilizando variables CSS para theming */
+  .primary {
+    border-color: var(--primary-color, #007bff); /* Color principal del borde */
+    border-top-color: var(--primary-color-light, #79bbff); /* Color más claro para el efecto de giro */
+  }
+  
+  .secondary {
+    border-color: var(--secondary-color, #6c757d);
+    border-top-color: var(--secondary-color-light, #adb5bd);
+  }
+  
+  .white {
+    border-color: #ffffff;
+    border-top-color: rgba(255, 255, 255, 0.3); /* Blanco con transparencia */
+  }
+  
+  .text { /* Variante de color que podría coincidir con el color de texto principal */
+    border-color: var(--text-color, #333);
+    border-top-color: var(--muted-foreground, #ccc);
+  }
+  
+  /* Animación de rotación */
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Estilo para el texto opcional junto al spinner */
+  .spinnerText {
+    font-size: 0.9rem;
+    color: var(--muted-foreground, #555);
+  }
