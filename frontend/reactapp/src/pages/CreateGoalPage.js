@@ -71,7 +71,7 @@ function CreateObjectivePage() {
     return (
         <div className={styles.createGoalPageContainer}>
             <div className={styles.formWrapper}>
-                <h2 className={styles.mainTitle}>
+                <h2 className={styles.formTitle}>
                     {hasObjectives ? "Crea un Nuevo Objetivo" : "Crea Tu Primer Objetivo"}
                 </h2>
                 <ObjetivosForm
