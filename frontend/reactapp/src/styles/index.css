@@ -1,5 +1,3 @@
-/* frontend/reactapp/src/styles/App.css */
-
 /* Variables CSS */
 :root {
   --background: hsl(0 0% 100%);
@@ -47,8 +45,13 @@
   --sidebar-border: hsl(220 13% 91%);
   --sidebar-ring: #4F46E5;
 
-  /* **Importante:** Ajusta esta altura a la altura real de tu AppHeader */
   --app-header-height: 59px;
+
+  --chart-bar-completed-bg: rgba(79, 70, 229, 0.7);
+  --chart-bar-completed-border: var(--primary);
+
+  --chart-bar-remaining-bg: rgba(100, 116, 139, 0.6);
+  --chart-bar-remaining-border: var(--muted-foreground);
 }
 
 /* Base styles and resets */
@@ -131,6 +134,11 @@ a:hover {
   overflow-y: auto; /* Habilita el desplazamiento vertical para el contenido de las páginas */
   padding: 1.5rem; /* Padding general para el contenido de las páginas */
   background-color: var(--background);
+  display: flex;
+  flex-direction: column; /* Centra el contenido verticalmente */
+  justify-content: center; /* Centra horizontalmente en el espacio flex */
+  align-items: center; /* Centra verticalmente los elementos del formulario */
+  position: relative; /* Para posicionar elementos absolutos como el botón de cancelar */
 }
 
 /* Estilos para centrar el contenido en rutas de autenticación (login, registro) */
