@@ -14,8 +14,6 @@ if (env === 'test') {
 }
 dotenv.config({ path: envPath });
 
-console.log(`Cargando variables de entorno para ${env} desde ${envPath}`);
-
 const dbName = process.env.NODE_ENV === 'test' ? process.env.DB_NAME_TEST : process.env.DB_NAME;
 const dbUser = process.env.NODE_ENV === 'test' ? process.env.DB_USER_TEST : process.env.DB_USER;
 const dbPassword = process.env.NODE_ENV === 'test' ? process.env.DB_PASSWORD_TEST : process.env.DB_PASSWORD;
@@ -48,7 +46,7 @@ const sequelizeInstance = new Sequelize(
         dialectOptions: {
             charset: 'utf8mb4',
         },
-        logging: env === 'development' ? console.log : false,
+        logging: env === 'development' ? console.log : false, // Logging específico de desarrollo puede mantenerse o eliminarse
         pool: {
             max: 5,
             min: 0,
@@ -59,22 +57,22 @@ const sequelizeInstance = new Sequelize(
 );
 
 // --- Importar todos los modelos ---
-// Asegúrate que los nombres de archivo aquí ('user', 'objetivo', 'progress')
-// coincidan con los nombres reales de tus archivos de modelos.
-db.User = require('../api/models/user')(sequelizeInstance);
-db.Objective = require('../api/models/objectives')(sequelizeInstance); // Asegúrate que el archivo se llama 'objetivo.js'
-db.Progress = require('../api/models/progress')(sequelizeInstance);
+require('../api/models/user')(sequelizeInstance);
+require('../api/models/objectives')(sequelizeInstance);
+require('../api/models/progress')(sequelizeInstance);
 
 db.sequelize = sequelizeInstance;
 db.Sequelize = Sequelize;
-db.DataTypes = DataTypes;
+
+// --- Asignar modelos al objeto db usando los nombres con los que fueron definidos ---
+db.Usuario = sequelizeInstance.models.Usuario;
+db.Objetivo = sequelizeInstance.models.Objetivo;
+db.Progress = sequelizeInstance.models.Progress;
 
 // --- Ejecutar asociaciones ---
-Object.keys(db).forEach(modelName => {
-    // Asegurarse de que el modelo tiene una función associate y no es una propiedad de Sequelize
-    if (db[modelName] && typeof db[modelName].associate === 'function') {
-        db[modelName].associate(db);
-        console.log(`[DB] Asociaciones para el modelo ${modelName} inicializadas.`);
+Object.keys(sequelizeInstance.models).forEach(modelName => {
+    if (sequelizeInstance.models[modelName].associate) {
+        sequelizeInstance.models[modelName].associate(sequelizeInstance.models);
     }
 });
 
@@ -82,32 +80,28 @@ let isInitialized = false;
 
 async function initializeDatabase() {
     if (isInitialized) {
-        console.log('[DB] Base de datos ya inicializada, saltando.');
         return db.sequelize;
     }
     try {
-        console.log(`[DB] Intentando conectar a la base de datos '${dbName}'...`);
         await db.sequelize.authenticate();
-        console.log(`[DB] Conexión a la base de datos '${dbName}' establecida con éxito.`);
 
-        // --- Sincronización de modelos ---
-        const forceSync = false; // MANTENER EN FALSE EN PRODUCCIÓN (borra toda la base de datos)
-        const alterSync = true;  // Usar alter: true para añadir/modificar columnas sin perder datos
+        const forceSync = process.env.DB_FORCE_SYNC === 'true' || false;
+        const alterSync = process.env.DB_ALTER_SYNC === 'true' || (env === 'development' && !forceSync);
 
-        if (alterSync) {
+        if (alterSync && !forceSync) {
             await db.sequelize.sync({ alter: true });
         } else if (forceSync) {
-            await db.sequelize.sync({ force: forceSync });
+            console.warn('[DB] Sincronizando base de datos con { force: true } - ¡SE PERDERÁN TODOS LOS DATOS!');
+            await db.sequelize.sync({ force: true });
         } else {
-             await db.sequelize.sync(); // O solo await db.sequelize.authenticate() si no quieres ningún sync
+            await db.sequelize.sync();
         }
-        
-        // La lógica del usuario de prueba debe ir *después* de que se sincronicen los modelos
-        // y solo si forceSync es true (si has borrado la base de datos)
-        if (forceSync) {            const existingUser = await db.User.findOne({ where: { correo_electronico: 'test@example.com' } });
+
+        if (forceSync) {
+            const existingUser = await db.Usuario.findOne({ where: { correo_electronico: 'test@example.com' } });
             if (!existingUser) {
-                const hashedPassword = await bcrypt.hash(env.DB_PASSWORD, 10);
-                await db.User.create({
+                const hashedPassword = await bcrypt.hash(process.env.DB_PASSWORD_TEST_USER || 'password123', 10);
+                await db.Usuario.create({
                     nombre_usuario: 'usuario_prueba',
                     correo_electronico: 'test@example.com',
                     contrasena: hashedPassword
@@ -119,7 +113,7 @@ async function initializeDatabase() {
         return db.sequelize;
 
     } catch (error) {
-        console.error(`[DB] Error de conexión a la base de datos '${dbName}':`, error);
+        console.error(`[DB] Error de conexión/sincronización con la base de datos '${dbName}':`, error);
         throw error;
     }
 }
