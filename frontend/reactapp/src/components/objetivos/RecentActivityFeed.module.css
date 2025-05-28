@@ -1,0 +1,32 @@
+/* frontend/reactapp/src/components/dashboard/RecentActivityFeed.module.css */
+.feedContainer {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Para que la sección ocupe el alto del wrapper */
+    min-height: 0; /* Ayuda a flex-grow a funcionar correctamente */
+}
+.feedTitle { 
+    font-size: 1.1rem; font-weight: 600; margin: 0 0 1rem 0;
+    color: var(--heading-color);
+}
+.feedList { list-style: none; padding: 0; margin: 0; }
+.feedItem {
+    display: flex;
+    gap: 0.75rem; /* Espacio entre icono y contenido */
+    padding: 0.75rem 0.2rem;
+    border-bottom: 1px solid var(--border-ultralight, #f7f7f7);
+}
+.feedItem:last-child { border-bottom: none; }
+.activityIcon {
+    font-size: 1.2rem; /* Tamaño del icono de actividad */
+    margin-top: 0.1rem; /* Alineación vertical ligera */
+}
+.activityContent { display: flex; flex-direction: column; }
+.activityDescription { 
+    font-size: 0.9rem; 
+    color: var(--foreground);
+    margin: 0 0 0.2rem 0; 
+    line-height: 1.4;
+}
+.activityTime { font-size: 0.75rem; color: var(--muted-foreground); }
+.noData { color: var(--muted-foreground); font-style: italic; padding: 1rem 0; }
