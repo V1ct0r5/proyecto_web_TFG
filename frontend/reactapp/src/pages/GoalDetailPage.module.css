@@ -1,12 +1,10 @@
 /* GoalDetailPage.module.css */
 
 .pageContainer {
-    padding: 0 2rem; /* Espaciado lateral principal de la página */
     font-family: 'Inter', sans-serif;
     color: var(--foreground);
     background-color: var(--background);
     width: 100%;
-    max-width: 1200px; /* Ancho máximo para el contenido centrado */
     margin: 0 auto; /* Centrado horizontal */
 }
 
