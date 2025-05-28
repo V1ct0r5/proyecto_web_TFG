@@ -1,3 +1,4 @@
+// frontend/reactapp/src/context/AuthContext.js
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 
 const AuthContext = createContext(null);
@@ -5,7 +6,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(null);
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true); // Se mantiene true hasta que se verifique el token inicial
 
     useEffect(() => {
         let isMounted = true;
@@ -21,7 +22,7 @@ export const AuthProvider = ({ children }) => {
                     setUser(parsedUser);
                 }
             } catch (e) {
-                // console.error("AuthContext: Error al parsear datos de usuario desde localStorage:", e); // Limpiado
+                // En caso de error al parsear, limpiar localStorage para evitar estados corruptos
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
                 if (isMounted) {
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }) => {
                 }
             }
         } else {
+            // Asegurar que no haya datos parciales en localStorage
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             if (isMounted) {
@@ -38,12 +40,13 @@ export const AuthProvider = ({ children }) => {
             }
         }
         if (isMounted) {
-            setLoading(false);
+            setLoading(false); // Finaliza la carga inicial después de verificar localStorage
         }
-        return () => { isMounted = false; }; // Cleanup para evitar memory leaks si el provider se desmonta
+        return () => { isMounted = false; }; // Cleanup para evitar actualizaciones en un componente desmontado
     }, []);
 
     useEffect(() => {
+        // Sincronizar el token con localStorage cuando cambie
         if (token) {
             localStorage.setItem("token", token);
         } else {
@@ -55,6 +58,7 @@ export const AuthProvider = ({ children }) => {
         setToken(newToken);
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
+        setLoading(false); // Asegurar que el estado de carga sea falso después del login
     }, []);
 
     const logout = useCallback(() => {
@@ -62,28 +66,29 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        setLoading(false); // Asegurar que el estado de carga sea falso después del logout
     }, []);
 
+    // Memoizar el valor del contexto para optimizar rendimiento
     const authValue = useMemo(() => ({
         token,
         user,
         isAuthenticated: !!token,
-        loading,
+        isLoading: loading, // Exponer 'loading' como 'isLoading' para mayor claridad
         login,
         logout,
-    }), [token, user, loading, login, logout]); // login y logout añadidas como dependencias (correctas)
+    }), [token, user, loading, login, logout]);
 
     return (
         <AuthContext.Provider value={authValue}>
-            {/* Solo renderizar hijos cuando la carga inicial haya terminado */}
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (context === null) { // Comparación precisa con el valor inicial del contexto
+    if (context === null) {
         throw new Error("useAuth debe ser usado dentro de un AuthProvider");
     }
     return context;
