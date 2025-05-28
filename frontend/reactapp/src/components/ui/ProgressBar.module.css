@@ -1,0 +1,62 @@
+/* frontend/reactapp/src/components/ui/ProgressBar.module.css */
+
+.progressBarContainer {
+    width: 100%;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.progressBarTrack {
+    background-color: #e9ecef; /* GRIS CLARO: Este es el color de "lo que falta para el 100%" */
+    border-radius: 5px;
+    height: 12px;
+    position: relative; /* Útil si en el futuro el fill necesitara ser absoluto, pero no es estrictamente necesario aquí */
+    overflow: hidden;   /* Para que el relleno respete los bordes redondeados del track */
+}
+
+.progressBarFill {
+    /* El color de fondo se establecerá dinámicamente desde el componente JS */
+    /* background-color: #6f42c1; /* Color por defecto si no se establece dinámicamente */
+    height: 100%;
+    display: block;
+    border-radius: 5px; /* Redondea todos los bordes del relleno */
+    /* Si el porcentaje es 0, el ancho será 0 y no se verá.
+       Si es 100%, el ancho será 100% y cubrirá todo el track,
+       y como tiene border-radius: 5px, se verá correcto. */
+    transition: width 0.4s ease-in-out, background-color 0.4s ease-in-out;
+}
+
+.progressLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.3rem;
+    padding: 0 2px; 
+}
+
+.statusText {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    color: #495057;
+    display: flex;
+    align-items: center;
+}
+
+.statusIcon {
+    margin-right: 0.4rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.1em;
+}
+
+/* Colores específicos para los iconos de estado/tendencia */
+.iconUp {
+    color: var(--success-color, #28a745);
+}
+.iconDown {
+    color: var(--destructive-color, #dc3545);
+}
+.iconNeutral {
+    color: var(--warning-color, #ffc107);
+}
