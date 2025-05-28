@@ -1,35 +1,16 @@
-// backend/src/api/services/objectivesService.js
 const objectiveRepository = require('../repositories/objectivesRepository');
 const db = require('../../config/database');
 const AppError = require('../../utils/AppError');
 
 const { Objetivo, Progress } = db.sequelize.models;
 
-/**
- * Calcula el progreso de un objetivo.
- * @param {number | string | null} initialValue
- * @param {number | string | null} currentValue
- * @param {number | string | null} targetValue
- * @param {boolean} esMenorMejor
- * @returns {number} Progreso en porcentaje (0-100).
- */
 function _calculateProgress(initialValue, currentValue, targetValue, esMenorMejor) {
     const numInitial = parseFloat(initialValue);
     const numCurrent = parseFloat(currentValue);
     const numTarget = parseFloat(targetValue);
-
-    if (isNaN(numInitial) || isNaN(numCurrent) || isNaN(numTarget)) {
-        return 0;
-    }
-    if (numTarget === numInitial) {
-        return numCurrent === numTarget ? 100 : 0;
-    }
-    let progress;
-    if (esMenorMejor) {
-        progress = ((numInitial - numCurrent) / (numInitial - numTarget)) * 100;
-    } else {
-        progress = ((numCurrent - numInitial) / (numTarget - numInitial)) * 100;
-    }
+    if (isNaN(numInitial) || isNaN(numCurrent) || isNaN(numTarget)) return 0;
+    if (numTarget === numInitial) return (esMenorMejor ? numCurrent <= numTarget : numCurrent >= numTarget) ? 100 : 0;
+    let progress = esMenorMejor ? ((numInitial - numCurrent) / (numInitial - numTarget)) * 100 : ((numCurrent - numInitial) / (numTarget - numInitial)) * 100;
     return Math.max(0, Math.min(100, Math.round(progress)));
 }
 
@@ -38,12 +19,7 @@ exports.obtenerTodosLosObjetivos = async (userId) => {
         const objetivos = await objectiveRepository.findAll(userId);
         return objetivos.map(obj => {
             const objetivoJson = obj.toJSON ? obj.toJSON() : { ...obj };
-            objetivoJson.progreso_calculado = _calculateProgress(
-                objetivoJson.valor_inicial_numerico,
-                objetivoJson.valor_actual,
-                objetivoJson.valor_cuantitativo,
-                objetivoJson.es_menor_mejor
-            );
+            objetivoJson.progreso_calculado = _calculateProgress(objetivoJson.valor_inicial_numerico, objetivoJson.valor_actual, objetivoJson.valor_cuantitativo, objetivoJson.es_menor_mejor);
             return objetivoJson;
         });
     } catch (error) {
@@ -54,84 +30,38 @@ exports.obtenerTodosLosObjetivos = async (userId) => {
 exports.obtenerObjetivoPorId = async (objectiveId, userId) => {
     try {
         const objetivo = await objectiveRepository.findById(objectiveId, userId, {
-            include: [{
-                model: Progress,
-                as: 'progresos',
-                attributes: ['fecha_registro', 'valor_actual'],
-                order: [['fecha_registro', 'ASC']]
-            }]
+            include: [{ model: Progress, as: 'progresos', attributes: ['id_progreso', 'fecha_registro', 'valor_actual', 'comentarios', 'createdAt', 'updatedAt'], order: [['fecha_registro', 'ASC'], ['createdAt', 'ASC']] }]
         });
-
-        if (!objetivo) {
-            throw new AppError('Objetivo no encontrado o no pertenece al usuario.', 404);
-        }
-        
+        if (!objetivo) throw new AppError('Objetivo no encontrado o no pertenece al usuario.', 404);
         const objetivoJson = objetivo.toJSON ? objetivo.toJSON() : { ...objetivo };
-        objetivoJson.progreso_calculado = _calculateProgress(
-            objetivoJson.valor_inicial_numerico,
-            objetivoJson.valor_actual,
-            objetivoJson.valor_cuantitativo,
-            objetivoJson.es_menor_mejor
-        );
-        
-        if (objetivoJson.progresos && Array.isArray(objetivoJson.progresos)) {
-            objetivoJson.historial_progreso = objetivoJson.progresos.map(entry => ({
-                date: entry.fecha_registro ? new Date(entry.fecha_registro).toISOString() : null,
-                value: parseFloat(entry.valor_actual)
-            }));
-        } else {
-            objetivoJson.historial_progreso = [];
-        }
-        delete objetivoJson.progresos;
-
+        objetivoJson.progreso_calculado = _calculateProgress(objetivoJson.valor_inicial_numerico, objetivoJson.valor_actual, objetivoJson.valor_cuantitativo, objetivoJson.es_menor_mejor);
+        objetivoJson.historial_progreso = (objetivoJson.progresos && Array.isArray(objetivoJson.progresos)) ? objetivoJson.progresos.map(entry => ({ id: entry.id_progreso, date: entry.fecha_registro ? new Date(entry.fecha_registro).toISOString().split('T')[0] : (entry.createdAt ? new Date(entry.createdAt).toISOString().split('T')[0] : null), value: parseFloat(entry.valor_actual), notes: entry.comentarios, createdAt: entry.createdAt, updatedAt: entry.updatedAt })) : [];
         return objetivoJson;
     } catch (error) {
         if (error instanceof AppError) throw error;
-        throw new AppError('Error al obtener el objetivo.', 500, error);
+        throw new AppError('Error al obtener el detalle del objetivo.', 500, error);
     }
 };
 
 exports.crearObjetivo = async (objectiveData, userId) => {
     const t = await db.sequelize.transaction();
     try {
-        const valorInicialNum = (objectiveData.valor_inicial_numerico !== undefined && objectiveData.valor_inicial_numerico !== null) 
-                                ? parseFloat(objectiveData.valor_inicial_numerico) 
-                                : 0; // Default si no se provee o es inválido
-
-        const valorActualParaCreacion = (objectiveData.valor_actual !== undefined && objectiveData.valor_actual !== null)
-                                      ? parseFloat(objectiveData.valor_actual)
-                                      : valorInicialNum;
-
-
+        const valorInicialNum = (objectiveData.valor_inicial_numerico !== undefined && objectiveData.valor_inicial_numerico !== null && String(objectiveData.valor_inicial_numerico).trim() !== "") ? parseFloat(objectiveData.valor_inicial_numerico) : null;
         const newObjectiveData = {
-            ...objectiveData,
-            id_usuario: userId,
-            valor_actual: valorActualParaCreacion,
-            valor_inicial_numerico: (objectiveData.valor_inicial_numerico !== undefined && objectiveData.valor_inicial_numerico !== null) ? parseFloat(objectiveData.valor_inicial_numerico) : null,
-            valor_cuantitativo: (objectiveData.valor_cuantitativo !== undefined && objectiveData.valor_cuantitativo !== null) ? parseFloat(objectiveData.valor_cuantitativo) : null,
+            ...objectiveData, id_usuario: userId, valor_actual: valorInicialNum, valor_inicial_numerico: valorInicialNum,
+            valor_cuantitativo: (objectiveData.valor_cuantitativo !== undefined && objectiveData.valor_cuantitativo !== null && String(objectiveData.valor_cuantitativo).trim() !== "") ? parseFloat(objectiveData.valor_cuantitativo) : null,
             es_menor_mejor: typeof objectiveData.es_menor_mejor === 'boolean' ? objectiveData.es_menor_mejor : false,
             estado: objectiveData.estado || 'Pendiente',
         };
-
         const objetivoCreado = await objectiveRepository.create(newObjectiveData, { transaction: t });
-
         if (newObjectiveData.valor_inicial_numerico !== null) {
-            await Progress.create({
-                id_objetivo: objetivoCreado.id_objetivo,
-                id_usuario: userId,
-                fecha_registro: new Date(),
-                valor_actual: newObjectiveData.valor_inicial_numerico,
-                comentarios: 'Valor inicial del objetivo.'
-            }, { transaction: t });
+            await Progress.create({ id_objetivo: objetivoCreado.id_objetivo, id_usuario: userId, fecha_registro: new Date(), valor_actual: newObjectiveData.valor_inicial_numerico, comentarios: 'Valor inicial del objetivo.' }, { transaction: t });
         }
         await t.commit();
         return this.obtenerObjetivoPorId(objetivoCreado.id_objetivo, userId);
     } catch (error) {
         await t.rollback();
-        if (error.name === 'SequelizeValidationError') {
-            const messages = error.errors.map(e => e.message).join('. ');
-            throw new AppError(`Error de validación al crear objetivo: ${messages}`, 400, error.errors);
-        }
+        if (error.name === 'SequelizeValidationError') throw new AppError(`Error de validación al crear objetivo: ${error.errors.map(e => e.message).join('. ')}`, 400, error.errors);
         throw new AppError('Error al crear el objetivo.', 500, error);
     }
 };
@@ -139,76 +69,83 @@ exports.crearObjetivo = async (objectiveData, userId) => {
 exports.actualizarObjetivo = async (objectiveId, userId, objectiveData, progressData) => {
     const t = await db.sequelize.transaction();
     try {
-        const objetivoExistente = await Objetivo.findOne({
-            where: { id_objetivo: objectiveId, id_usuario: userId },
-            transaction: t 
-        });
+        const objetivoExistente = await Objetivo.findOne({ where: { id_objetivo: objectiveId, id_usuario: userId }, transaction: t });
+        if (!objetivoExistente) { await t.rollback(); throw new AppError('Objetivo no encontrado o no pertenece al usuario.', 404); }
 
-        if (!objetivoExistente) {
-            await t.rollback();
-            throw new AppError('Objetivo no encontrado o no pertenece al usuario.', 404);
-        }
-        
-        const updateFields = { ...objectiveData };
-        delete updateFields.valor_inicial_numerico; // No se puede modificar
-        delete updateFields.id_usuario;           // No se puede modificar
+        const updateFieldsObjective = { ...objectiveData };
+        delete updateFieldsObjective.valor_inicial_numerico; delete updateFieldsObjective.id_usuario; delete updateFieldsObjective.id_objetivo;
 
+        let parsedProgressValue;
         if (progressData && progressData.valor_actual !== undefined && progressData.valor_actual !== null) {
-            updateFields.valor_actual = parseFloat(progressData.valor_actual);
+            parsedProgressValue = parseFloat(progressData.valor_actual);
+            if (isNaN(parsedProgressValue)) { await t.rollback(); throw new AppError('El valor del progreso (progressData.valor_actual) debe ser un número.', 400); }
+            updateFieldsObjective.valor_actual = parsedProgressValue;
+        } else {
+            parsedProgressValue = parseFloat(objetivoExistente.valor_actual);
+            if(isNaN(parsedProgressValue)) parsedProgressValue = parseFloat(objetivoExistente.valor_inicial_numerico);
         }
 
-        ['valor_cuantitativo', 'valor_actual'].forEach(field => {
-            if (updateFields[field] !== undefined && updateFields[field] !== null && updateFields[field] !== '') {
-                const parsed = parseFloat(updateFields[field]);
-                if (isNaN(parsed)) throw new AppError(`Valor inválido para ${field}.`, 400);
-                updateFields[field] = parsed;
-            } else if (updateFields[field] === '') {
-                 updateFields[field] = null;
-            }
-        });
-        if (updateFields.es_menor_mejor !== undefined) {
-            updateFields.es_menor_mejor = typeof updateFields.es_menor_mejor === 'boolean' ? updateFields.es_menor_mejor : (String(updateFields.es_menor_mejor).toLowerCase() === 'true');
-        }
+        let newCalculatedStatus = objectiveData.estado || objetivoExistente.estado;
+        const numericInitial = parseFloat(objetivoExistente.valor_inicial_numerico);
+        const numericTarget = parseFloat(objetivoExistente.valor_cuantitativo);
+        const isLowerBetter = objetivoExistente.es_menor_mejor;
 
-        await Objetivo.update(updateFields, {
-            where: { id_objetivo: objectiveId, id_usuario: userId },
-            transaction: t
-        });
-
-        if (progressData && progressData.valor_actual !== undefined && progressData.valor_actual !== null ) {
-            const valorProgreso = parseFloat(progressData.valor_actual);
-            if (!isNaN(valorProgreso)) {
-                await Progress.create({
-                    id_objetivo: objectiveId,
-                    id_usuario: userId,
-                    fecha_registro: new Date(),
-                    valor_actual: valorProgreso,
-                    comentarios: progressData.comentarios || 'Actualización de progreso.'
-                }, { transaction: t });
+        if (!isNaN(numericInitial) && !isNaN(numericTarget) && !isNaN(parsedProgressValue)) {
+            let isCompleted = isLowerBetter ? (parsedProgressValue <= numericTarget) : (parsedProgressValue >= numericTarget);
+            if (isCompleted) {
+                newCalculatedStatus = 'Completado';
+            } else {
+                if (objetivoExistente.estado === 'Pendiente' || (objectiveData.estado === 'Pendiente' && newCalculatedStatus === 'Pendiente') ) {
+                    if (parsedProgressValue !== numericInitial) newCalculatedStatus = 'En progreso';
+                } else if (objetivoExistente.estado === 'Completado' || (objectiveData.estado === 'Completado' && newCalculatedStatus === 'Completado')) {
+                    newCalculatedStatus = 'En progreso';
+                }
             }
         }
-        
+        updateFieldsObjective.estado = newCalculatedStatus;
+
+        if (updateFieldsObjective.valor_cuantitativo !== undefined) {
+            if (String(updateFieldsObjective.valor_cuantitativo).trim() === '') updateFieldsObjective.valor_cuantitativo = null;
+            else {
+                const parsedTarget = parseFloat(updateFieldsObjective.valor_cuantitativo);
+                if (isNaN(parsedTarget)) { await t.rollback(); throw new AppError("Valor inválido para 'valor_cuantitativo'. Debe ser un número.", 400); }
+                updateFieldsObjective.valor_cuantitativo = parsedTarget;
+            }
+        }
+        if (updateFieldsObjective.es_menor_mejor !== undefined) {
+            updateFieldsObjective.es_menor_mejor = typeof updateFieldsObjective.es_menor_mejor === 'boolean' ? updateFieldsObjective.es_menor_mejor : (String(updateFieldsObjective.es_menor_mejor).toLowerCase() === 'true');
+        }
+
+        if (Object.keys(updateFieldsObjective).length > 0) {
+            await objetivoExistente.update(updateFieldsObjective, { transaction: t });
+        }
+
+        if (progressData && progressData.valor_actual !== undefined && progressData.valor_actual !== null && !isNaN(parsedProgressValue) ) {
+            const progressEntryData = {
+                id_objetivo: objectiveId, id_usuario: userId, fecha_registro: new Date(),
+                valor_actual: parsedProgressValue, comentarios: progressData.comentarios || null
+            };
+            await Progress.create(progressEntryData, { transaction: t });
+        }
+
         await t.commit();
         return this.obtenerObjetivoPorId(objectiveId, userId);
-        
+
     } catch (error) {
-        await t.rollback();
-        if (error.name === 'SequelizeValidationError') {
-            const messages = error.errors.map(e => e.message).join('. ');
-            throw new AppError(`Error de validación al actualizar objetivo: ${messages}`, 400, error.errors);
+        if (t && t.finished !== 'commit' && t.finished !== 'rollback') {
+            try { await t.rollback(); } catch (rollbackError) { /* Ignorar errores de rollback secundario */ }
         }
+        if (error.name === 'SequelizeValidationError') throw new AppError(`Error de validación al actualizar objetivo: ${error.errors.map(e => e.message).join('. ')}`, 400, error.errors);
         if (error instanceof AppError) throw error;
-        throw new AppError('Error al actualizar el objetivo.', 500, error);
+        throw new AppError('Error interno del servidor al actualizar el objetivo.', 500, error);
     }
 };
 
 exports.eliminarObjetivo = async (objectiveId, userId) => {
     try {
         const deletedCount = await objectiveRepository.delete(objectiveId, userId);
-        if (deletedCount === 0) {
-            throw new AppError('Objetivo no encontrado o no pertenece al usuario.', 404);
-        }
-        return { message: `Objetivo con ID ${objectiveId} eliminado.`, count: deletedCount };
+        if (deletedCount === 0) throw new AppError('Objetivo no encontrado o no pertenece al usuario.', 404);
+        return { message: `Objetivo con ID ${objectiveId} eliminado exitosamente.` };
     } catch (error) {
         if (error instanceof AppError) throw error;
         throw new AppError('Error al eliminar el objetivo.', 500, error);
@@ -223,5 +160,3 @@ exports.usuarioTieneObjetivos = async (userId) => {
         throw new AppError('Error al verificar si el usuario tiene objetivos.', 500, error);
     }
 };
-
-module.exports = exports;
