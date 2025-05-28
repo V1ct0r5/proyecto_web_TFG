@@ -367,10 +367,15 @@
 
 .editFormContainer { /* Contenedor para el formulario de edición (si se muestra en la misma página) */
     background-color: var(--card);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    border: 1px solid #E0E0E0; 
+    border-radius: 12px; 
     padding: 2rem;
     margin-top: 2rem;
+}
+
+.chartContainer {
+    position: relative;
 }
 
 /* Media Queries para responsividad */
