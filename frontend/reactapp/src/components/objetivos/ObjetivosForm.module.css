@@ -1,12 +1,13 @@
 /* Contenedor principal del formulario */
 .formContainer {
     background-color: #FFFFFF;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    border: 1px solid #E0E0E0;
     border-radius: 0.5rem;
-    padding: 1.5rem; /* Padding base para móviles */
-    width: 100%; /* Ocupa el ancho disponible */
-    max-width: 768px; /* Limita el ancho máximo en pantallas grandes (ajusta según diseño) */
-    margin: 0 auto 2rem auto; /* Centra el contenedor horizontalmente y añade margen inferior */
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto 2rem auto;
 }
 
 /* Media query para ajustar padding en pantallas más grandes */
