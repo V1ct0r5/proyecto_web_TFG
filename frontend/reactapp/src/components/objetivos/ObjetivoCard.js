@@ -22,7 +22,7 @@ function ObjetivoCard({ objective }) {
             case 'Finanzas': return <MdAttachMoney />;
             case 'Desarrollo personal': return <MdAutoStories />;
             case 'Relaciones': return <MdPeople />;
-            case 'Carrera profesional': return <MdWork />; // Asegurar que coincida con el valor exacto
+            case 'Carrera profesional': return <MdWork />;
             default: return <MdStar />;
         }
     };
@@ -30,72 +30,69 @@ function ObjetivoCard({ objective }) {
     let progressPercentage = 0;
     let showProgressBar = false;
 
-    // Convertir a números y manejar valores nulos/indefinidos con fallback a 0
-    const initialValue = parseFloat(objective.valor_inicial_numerico) || 0;
-    const targetValue = parseFloat(objective.valor_cuantitativo) || 0;
-    // currentValue puede ser NaN si objective.valor_actual no es numérico o es null/undefined
-    let currentValue = parseFloat(objective.valor_actual); 
-
+    const initialValueStr = objective.valor_inicial_numerico;
+    const targetValueStr = objective.valor_cuantitativo;
+    const currentValueStr = objective.valor_actual;
     const isLowerBetter = objective.es_menor_mejor;
 
-    // Determinar si el objetivo es cuantitativo y tiene valores válidos para calcular el progreso
-    const hasQuantitativeValues =
-        typeof objective.valor_inicial_numerico !== 'undefined' && objective.valor_inicial_numerico !== null &&
-        typeof objective.valor_cuantitativo !== 'undefined' && objective.valor_cuantitativo !== null &&
-        typeof objective.valor_actual !== 'undefined' && objective.valor_actual !== null && // valor_actual debe existir
-        !isNaN(initialValue) && // Y los valores parseados deben ser números
-        !isNaN(targetValue) &&
-        !isNaN(currentValue);
+    let initialValue = NaN, targetValue = NaN, currentValue = NaN;
+    let hasQuantitativeValues = false;
+
+    const isPotentiallyQuantitative =
+        initialValueStr !== null && typeof initialValueStr !== 'undefined' &&
+        targetValueStr !== null && typeof targetValueStr !== 'undefined';
+
+    if (isPotentiallyQuantitative) {
+        initialValue = parseFloat(initialValueStr);
+        targetValue = parseFloat(targetValueStr);
+
+        if (currentValueStr !== null && typeof currentValueStr !== 'undefined' && !isNaN(parseFloat(currentValueStr))) {
+            currentValue = parseFloat(currentValueStr);
+        } else if (!isNaN(initialValue)) {
+            currentValue = initialValue;
+        }
+
+        if (!isNaN(initialValue) && !isNaN(targetValue) && !isNaN(currentValue)) {
+            hasQuantitativeValues = true;
+        }
+    }
 
     if (hasQuantitativeValues) {
         showProgressBar = true;
 
         if (initialValue === targetValue) {
-            // Si el objetivo es alcanzar un valor específico (ej. initial=50, target=50)
-            progressPercentage = (currentValue === targetValue) ? 100 : 0;
+            progressPercentage = (isLowerBetter ? currentValue <= targetValue : currentValue >= targetValue) ? 100 : 0;
         } else {
-            let totalRange;
-            let progressMade;
+            let totalRangeEffective;
+            let progressMadeEffective;
 
-            if (isLowerBetter) { // Menor es mejor (ej. de 100 a 50)
-                totalRange = initialValue - targetValue; // Rango positivo
-                progressMade = initialValue - currentValue; // Cuánto se ha "reducido" desde el inicio
-            } else { // Mayor es mejor (ej. de 50 a 100)
-                totalRange = targetValue - initialValue; // Rango positivo
-                progressMade = currentValue - initialValue; // Cuánto se ha "incrementado" desde el inicio
+            if (isLowerBetter) {
+                totalRangeEffective = initialValue - targetValue;
+                progressMadeEffective = initialValue - currentValue;
+            } else {
+                totalRangeEffective = targetValue - initialValue;
+                progressMadeEffective = currentValue - initialValue;
             }
 
-            if (totalRange === 0) { 
-                // Este caso ya está cubierto por initialValue === targetValue, pero como salvaguarda.
-                progressPercentage = (isLowerBetter ? currentValue <= targetValue : currentValue >= targetValue) ? 100 : 0;
+            if (totalRangeEffective <= 0) {
+                 progressPercentage = (isLowerBetter ? currentValue <= targetValue : currentValue >= targetValue) ? 100 : 0;
             } else {
-                // El progreso es la proporción del avance logrado dentro del rango total.
-                // Math.min asegura que no se exceda el 100% si se supera el objetivo.
-                // Math.max asegura que no sea negativo si se retrocede más allá del inicio.
-                progressPercentage = (Math.max(0, Math.min(progressMade, totalRange)) / totalRange) * 100;
+                progressPercentage = (progressMadeEffective / totalRangeEffective) * 100;
             }
         }
-        // Asegurar que el porcentaje final esté estrictamente entre 0 y 100.
         progressPercentage = Math.max(0, Math.min(100, progressPercentage));
 
     } else {
-        // No es cuantitativo o faltan valores críticos
         showProgressBar = false;
         progressPercentage = 0;
     }
 
-    // La lógica del estado tiene la última palabra sobre el progreso y visibilidad de la barra.
     if (objective.estado === 'Completado') {
         progressPercentage = 100;
-        showProgressBar = true; // Un objetivo completado siempre muestra su barra al 100% si es cuantitativo o no
+        showProgressBar = true;
     } else if (objective.estado === 'Pendiente') {
-        progressPercentage = 0;
-        // Para objetivos pendientes, mostrar la barra si es cuantitativo (incluso si está en 0%)
-        // Si no es cuantitativo, no mostrar la barra.
         showProgressBar = hasQuantitativeValues;
     }
-    // Para "En Progreso", se usa el progressPercentage calculado y showProgressBar ya definido.
-    // Para "Fallido" o "Archivado", se usa el progressPercentage calculado y showProgressBar.
 
     const lastUpdated = objective.updatedAt ? new Date(objective.updatedAt).toLocaleDateString() : 'N/A';
     const statusClassName = `status-${objective.estado?.toLowerCase().replace(/\s/g, '')}`;
@@ -128,7 +125,7 @@ function ObjetivoCard({ objective }) {
                                     progressPercentage < 66 ? styles.progressFillMedium :
                                     styles.progressFillHigh
                                 }`}
-                                style={{ width: `${progressPercentage}%` }}
+                                style={{ width: `${Math.max(0, Math.min(100,progressPercentage))}%` }}
                             ></div>
                         </div>
                     </div>
@@ -139,13 +136,13 @@ function ObjetivoCard({ objective }) {
                         <div className={styles.progressValueBox}>
                             <div className={styles.progressValueLabel}>Actual:</div>
                             <div className={styles.progressValueNumber}>
-                                {isNaN(currentValue) ? 'N/A' : currentValue.toLocaleString()} {objective.unidad_medida || ''}
+                                {isNaN(currentValue) ? (initialValueStr !== null && typeof initialValueStr !== 'undefined' && !isNaN(parseFloat(initialValueStr)) ? parseFloat(initialValueStr).toLocaleString() : 'N/A') : currentValue.toLocaleString()} {objective.unidad_medida || ''}
                             </div>
                         </div>
                         <div className={styles.progressValueBox}>
                             <div className={styles.progressValueLabel}>Meta:</div>
                             <div className={styles.progressValueNumber}>
-                                {targetValue.toLocaleString()} {objective.unidad_medida || ''}
+                                {isNaN(targetValue) ? 'N/A' : targetValue.toLocaleString()} {objective.unidad_medida || ''}
                             </div>
                         </div>
                     </div>
