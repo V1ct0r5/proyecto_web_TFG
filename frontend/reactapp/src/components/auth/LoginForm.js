@@ -9,7 +9,7 @@ import Input from "../ui/Input";
 import Button from "../ui/Button";
 import FormGroup from "../ui/FormGroup";
 import LoadingSpinner from "../ui/LoadingSpinner";
-// import styles from './LoginForm.module.css'; // Descomentar si se usan estilos específicos
+// import styles from './LoginForm.module.css'; // Activar si se añaden estilos específicos del módulo
 
 function LoginForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,18 +18,17 @@ function LoginForm() {
         register,
         handleSubmit,
         formState: { errors },
-        setError // Para establecer errores de servidor en campos específicos
+        setError // Para establecer errores provenientes del servidor en campos específicos
     } = useForm({
-        mode: "onBlur" // Validar al perder el foco después del primer intento de envío
+        mode: "onBlur" // Validar al perder el foco para mejorar UX tras el primer intento de envío
     });
 
     const navigate = useNavigate();
     const location = useLocation();
-    const { login: contextLogin } = useAuth(); // Renombrar para evitar colisión con variables locales
+    const { login: contextLogin } = useAuth(); // Renombrar para claridad y evitar colisión
 
     const onSubmit = async (data) => {
         setIsSubmitting(true);
-
         try {
             const responseData = await api.login({
                 correo_electronico: data.email,
@@ -41,35 +40,42 @@ function LoginForm() {
                 toast.success(`¡Bienvenido de nuevo, ${responseData.usuario.nombre_usuario}!`);
 
                 const from = location.state?.from?.pathname;
+                // Validar que 'from' no sea una ruta de autenticación o la raíz para evitar bucles/redirecciones no deseadas
                 const fromIsValidRedirect = from && from !== '/login' && from !== '/register' && from !== '/';
 
                 if (fromIsValidRedirect) {
                     navigate(from, { replace: true });
-                } else if (responseData.hasObjectives === false) {
+                } else if (responseData.hasObjectives === false) { // Redirigir a crear objetivo si es un usuario nuevo sin objetivos
                     navigate("/objectives", { replace: true });
                     toast.info("¡Comencemos creando tu primer objetivo!");
                 } else {
                     navigate("/dashboard", { replace: true });
                 }
             } else {
-                // Este caso es para respuestas 2xx inesperadas sin token/usuario
-                toast.error("Error inesperado del servidor al iniciar sesión. Inténtalo de nuevo.");
+                // Manejo de respuestas exitosas (2xx) pero inesperadas del servidor (sin token/usuario)
+                toast.error("Respuesta inesperada del servidor al iniciar sesión. Inténtalo de nuevo.");
             }
-
         } catch (error) {
-            // Asumimos que el interceptor de apiService ya formateó el error
+            // apiService ya debería haber formateado el error y mostrado un toast genérico si es 401/403 no login
             const displayMessage = error.data?.message || error.message || "Error al iniciar sesión. Verifica tus credenciales.";
-            toast.error(displayMessage);
+            if (error.status !== 401 && error.status !== 403) { // Evitar doble toast si apiService ya mostró uno por 401/403 de sesión expirada
+                toast.error(displayMessage);
+            }
             
-            if (error.status === 401 && typeof setError === 'function') { // Credenciales incorrectas
-                setError("email", { type: "server", message: " " }); // Mensaje vacío para el campo, el toast ya informa
-                setError("password", { type: "server", message: "Credenciales incorrectas." });
-            } else if (error.data && error.data.errors && Array.isArray(error.data.errors) && typeof setError === 'function') {
-                // Para errores de validación más genéricos (menos común en login)
+            // Marcar campos como erróneos en el formulario si el backend devuelve errores específicos
+            if (error.status === 401 || error.status === 400) { // Errores comunes para credenciales incorrectas
+                if (typeof setError === 'function') {
+                    setError("email", { type: "server", message: " " }); // Mensaje vacío para el campo, el toast general ya informa
+                    setError("password", { type: "server", message: "Credenciales incorrectas." });
+                }
+            } else if (error.data?.errors && Array.isArray(error.data.errors) && typeof setError === 'function') {
+                // Mapeo de errores de validación del backend a campos del formulario
                 error.data.errors.forEach(err => {
-                    const field = err.path || err.param;
-                    if (field) {
-                       setError(field, { type: "server", message: err.msg });
+                    const fieldName = err.path || err.param || (err.field ? err.field.toLowerCase() : null);
+                    // Mapeo específico si el nombre del campo del backend difiere del nombre en react-hook-form
+                    const reactHookFormField = fieldName === 'correo_electronico' ? 'email' : fieldName;
+                    if (reactHookFormField) {
+                        setError(reactHookFormField, { type: "server", message: err.msg || err.message });
                     }
                 });
             }
@@ -79,10 +85,10 @@ function LoginForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} noValidate> {/* Considerar className={styles.loginForm} */}
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <FormGroup
                 label="Correo Electrónico"
-                htmlFor="login-email" // IDs únicos
+                htmlFor="login-email"
                 required
                 error={errors.email?.message}
             >
@@ -105,7 +111,7 @@ function LoginForm() {
 
             <FormGroup
                 label="Contraseña"
-                htmlFor="login-password" // IDs únicos
+                htmlFor="login-password"
                 required
                 error={errors.password?.message}
             >
@@ -115,7 +121,7 @@ function LoginForm() {
                     placeholder="Tu contraseña"
                     {...register("password", {
                         required: "La contraseña es obligatoria.",
-                        // No se suele validar longitud mínima en el login frontend
+                        // Validación de longitud mínima usualmente se maneja en el registro o backend
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.password}
