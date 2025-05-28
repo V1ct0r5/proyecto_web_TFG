@@ -1,30 +1,82 @@
-/* frontend/reactapp/src/layouts/AuthLayout.module.css */
 
-/* Estilo para el título del formulario dentro de esta área */
+/* Estilos para el layout de las páginas de autenticación (Login, Registro) */
+
+/* Contenedor principal de la página de autenticación */
+.authPage {
+    display: grid;
+    grid-template-rows: auto 1fr; /* Fila para header (opcional) y contenido principal */
+    grid-template-areas:
+        "header"        /* Área opcional para un header si se incluye en este grid */
+        "main-content"; /* Área para el contenido principal del formulario */
+    padding: 0; /* Sin padding en el contenedor de página completo */
+    box-sizing: border-box;
+    /* Considerar min-height: 100vh; si este layout es el nivel más alto y debe ocupar toda la pantalla */
+}
+
+/* Área de contenido principal donde se renderiza el formulario */
+.mainContentArea {
+    grid-area: main-content;
+    display: flex;
+    flex-direction: column; /* Centra el contenido verticalmente */
+    justify-content: center; /* Centra horizontalmente en el espacio flex */
+    align-items: center; /* Centra verticalmente los elementos del formulario */
+    padding: 1.5rem 0.8rem; /* Espaciado interno */
+    box-sizing: border-box;
+    overflow-y: auto; /* Permite scroll si el contenido excede la altura */
+    position: relative; /* Para posicionar elementos absolutos como el botón de cancelar */
+}
+
+/* Estilos para el título del formulario (usado en LoginPage y RegistroPage) */
 .formTitle {
     text-align: center;
     margin-bottom: 1.5rem;
-    margin-top: 0;
-    color: #333;
+    margin-top: 0; /* Evitar margen superior si está al inicio del .mainContentArea */
+    color: var(--foreground, #333); /* Usar variable CSS si está definida, sino fallback */
     font-size: 1.8rem;
-  }
-  
-  /* Estilo para el párrafo de pie de formulario */
-  .formFooter {
+}
+
+/* Estilo para el párrafo de pie de formulario (usado en LoginPage y RegistroPage) */
+.formFooter {
     text-align: center;
     margin-top: 1rem;
     font-size: 0.9rem;
-    color: #555;
-  }
-  
-  /* Estilo para los enlaces dentro del pie de formulario */
-  .formLink {
-    color: #2563eb;
+    color: var(--muted-foreground, #555); /* Usar variable CSS o fallback */
+}
+
+/* Estilo para los enlaces dentro del pie de formulario (usado en LoginPage y RegistroPage) */
+.formLink {
+    color: var(--primary, #2563eb); /* Usar variable CSS o fallback */
     text-decoration: none;
     font-weight: 500;
     transition: text-decoration 0.2s ease;
-  }
-  
-  .formLink:hover {
+}
+
+.formLink:hover {
     text-decoration: underline;
-  }
+}
+
+/* Estilos para el botón de cancelar (opcional, para este layout) */
+.cancelButton {
+    position: absolute;
+    top: 1rem; 
+    right: 1rem;
+    background-color: var(--destructive, #dc3545); /* Color para acciones destructivas o de cancelación */
+    color: var(--destructive-foreground, #fff); /* Color de texto para el botón destructivo */
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--radius, 0.25rem); /* Usar variable de radio de borde global */
+    cursor: pointer;
+    font-size: var(--font-size-md, 1rem); /* Usar variable de tamaño de fuente global */
+    transition: background-color 0.3s ease;
+    z-index: 10; /* Asegura que esté por encima de otros elementos si es necesario */
+}
+
+.cancelButton:hover {
+    background-color: var(--destructive-hover, #c82333); /* Tono más oscuro para hover */
+}
+
+.cancelButton:disabled {
+    background-color: var(--muted, #6c757d); /* Color para estado deshabilitado */
+    color: var(--muted-foreground, #ccc);
+    cursor: not-allowed;
+}
