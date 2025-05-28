@@ -1,6 +1,6 @@
 // backend/src/api/repositories/objectiveRepository.js
 const db = require('../../config/database');
-const Objetivo = db.Objective; // Usar el nombre del modelo tal como se define en db.Objective
+const Objetivo = db.Objetivo; // Usar el nombre del modelo tal como se define en db.Objective
 const Progress = db.Progress; // Asegúrate de importar Progress aquí si se necesita directamente (no en este caso, el servicio lo maneja)
 
 class ObjectiveRepository {
