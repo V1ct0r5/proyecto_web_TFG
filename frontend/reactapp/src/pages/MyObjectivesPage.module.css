@@ -1,20 +1,18 @@
-/* frontend\reactapp\src\pages\DashboardPage.module.css */
 
 .dashboardContainer {
-    padding: 1.5rem; /* MODIFICACIÓN: p-6 (1.5rem o 24px) en todos los lados */
-    max-width: 1200px; /* Ancho máximo para el contenido principal */
-    margin: 0 auto; /* Centrar el contenido */
+    padding: 1.5rem; /* Espaciado interno general del contenedor */
+    max-width: 1200px; /* Ancho máximo para el contenido */
+    margin: 0 auto; /* Centrado horizontal del contenedor */
     display: flex;
     flex-direction: column;
-    /* MODIFICACIÓN: space-y-6 (1.5rem o 24px) de margen vertical entre elementos hijos directos */
-    gap: 1.5rem; /* Usamos gap para simular space-y- entre los elementos principales del flex container */
+    gap: 1.5rem; /* Espaciado vertical entre elementos hijos directos */
 }
 
 .pageTitle {
-    font-size: 2.2rem; /* Mantengo el tamaño del título para legibilidad */
-    color: var(--foreground); /* Usar variable para el color del título */
+    font-size: 2.2rem;
+    color: var(--foreground);
     text-align: center;
-    margin-bottom: 0; /* El gap del contenedor principal ya maneja el espaciado */
+    margin-bottom: 0; /* Gestionado por el 'gap' del contenedor padre */
 }
 
 .loadingState,
@@ -22,32 +20,32 @@
 .noGoalsMessage {
     text-align: center;
     font-size: 1.1rem;
-    color: var(--muted-foreground); /* Usar variable para texto suave */
+    color: var(--muted-foreground);
     padding: 2rem;
-    background-color: var(--muted); /* Usar variable para fondo suave */
+    background-color: var(--muted);
     border-radius: var(--radius);
-    margin-top: 0; /* El gap del contenedor principal ya maneja el espaciado */
+    margin-top: 0; /* Gestionado por el 'gap' del contenedor padre */
 }
 
 .errorState {
-    color: var(--destructive); /* Rojo para errores */
-    background-color: color-mix(in srgb, var(--destructive) 10%, transparent); /* Un rojo muy suave */
+    color: var(--destructive);
+    background-color: color-mix(in srgb, var(--destructive) 10%, transparent); /* Fondo rojo suave */
     border: 1px solid var(--destructive);
 }
 
-/* Contenedor de los controles (búsqueda, filtro, orden) */
+/* Contenedor para filtros y controles de búsqueda/ordenación */
 .controlsContainer {
     display: grid;
-    grid-template-columns: 1fr; /* Una columna en móvil */
-    gap: 1rem; /* MODIFICACIÓN: gap-4 (1rem o 16px) entre cada filtro */
+    grid-template-columns: 1fr; /* Una columna por defecto en móviles */
+    gap: 1rem; /* Espaciado entre controles */
     padding: 1rem;
-    background-color: var(--muted); /* Fondo suave para los controles */
+    background-color: var(--muted);
     border-radius: var(--radius);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Media queries para los controles */
-@media (min-width: 768px) { /* Tablets y pantallas medianas */
+/* Adaptación de columnas para los controles en diferentes tamaños de pantalla */
+@media (min-width: 768px) { /* Tablets */
     .controlsContainer {
         grid-template-columns: repeat(2, 1fr); /* Dos columnas */
     }
@@ -59,40 +57,39 @@
     }
 }
 
-/* Encabezado de la sección de objetivos (Título y botón de añadir) */
+/* Encabezado para secciones (ej. título de "Mis Objetivos" y botón de "Añadir") */
 .sectionHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0; /* El gap de .dashboardContainer ya maneja este espaciado */
-    padding-top: 0; /* Asegura que no haya padding extra si ya lo controla el gap */
-    gap: 1rem; /* MODIFICACIÓN: gap-4 (1rem o 16px) de espacio entre el título y el botón */
-    flex-wrap: wrap; /* Para que el botón se envuelva en móvil */
+    margin-bottom: 0; /* Gestionado por el 'gap' del contenedor padre */
+    padding-top: 0;
+    gap: 1rem; /* Espacio entre título y botón */
+    flex-wrap: wrap; /* Permite que el botón se ajuste en pantallas pequeñas */
 }
 
 .sectionTitle {
-    font-size: 1.8rem; /* Mantengo el tamaño del título de sección */
-    color: var(--foreground); /* Usar variable para el color del título de sección */
-    margin: 0; /* Asegura que no tenga margen extra */
+    font-size: 1.8rem;
+    color: var(--foreground);
+    margin: 0; /* Evita márgenes adicionales */
 }
 
-/* Cuadrícula de Objetivos */
+/* Cuadrícula para mostrar las tarjetas de objetivos */
 .goalsGrid {
     display: grid;
-    grid-template-columns: 1fr; /* Por defecto, 1 columna en móviles */
-    gap: 2rem; /* AUMENTO: Más espacio entre cada tarjeta (antes 1.5rem) */
+    grid-template-columns: 1fr; /* Una columna por defecto en móviles */
+    gap: 2rem; /* Espaciado entre las tarjetas de objetivo */
 }
 
-/* Media query para tablets (2 columnas) */
-@media (min-width: 768px) { /* md breakpoint */
+/* Adaptación de columnas para la cuadrícula de objetivos */
+@media (min-width: 768px) { /* Tablets (md breakpoint) */
     .goalsGrid {
-        grid-template-columns: repeat(2, 1fr); /* Ahora 2 columnas de igual ancho */
+        grid-template-columns: repeat(2, 1fr); /* Dos columnas */
     }
 }
 
-/* Media query para pantallas grandes (3 columnas) */
-@media (min-width: 1024px) { /* lg breakpoint */
+@media (min-width: 1024px) { /* Pantallas grandes (lg breakpoint) */
     .goalsGrid {
-        grid-template-columns: repeat(3, 1fr); /* Ahora 3 columnas de igual ancho */
+        grid-template-columns: repeat(3, 1fr); /* Tres columnas */
     }
-}   
+}
