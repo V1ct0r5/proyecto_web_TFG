@@ -58,6 +58,10 @@ module.exports = (sequelize) => {
         id_usuario: {
             type: DataTypes.INTEGER,
             allowNull: false,
+            references: {
+                model: 'Usuarios',
+                key: 'id'
+            }
         },
     }, {
         tableName: 'Objetivos',
@@ -66,7 +70,7 @@ module.exports = (sequelize) => {
     });
 
     Objetivo.associate = (models) => {
-        Objetivo.belongsTo(models.User, { // Un objetivo pertenece a un usuario
+        Objetivo.belongsTo(models.Usuario, { // Un objetivo pertenece a un usuario
             foreignKey: 'id_usuario',
             as: 'usuario',
             onDelete: 'CASCADE'
