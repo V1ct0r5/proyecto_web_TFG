@@ -1,7 +1,6 @@
 
 .dashboardContainer {
     padding: 1.5rem; /* Espaciado interno general del contenedor */
-    max-width: 1200px; /* Ancho máximo para el contenido */
     margin: 0 auto; /* Centrado horizontal del contenedor */
     display: flex;
     flex-direction: column;
