@@ -21,7 +21,7 @@ import Sidebar from './layouts/SideBar/SideBar';
 import FullPageLoader from './components/ui/FullPageLoader';
 
 // Estilos y Contexto
-import './styles/index.css';
+import './styles/index.css'; // Asumiendo que moviste los estilos de App.css a index.css
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-calendar/dist/Calendar.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -31,47 +31,36 @@ function AppContent() {
     const { isAuthenticated, isLoading, logout } = useAuth();
     const location = useLocation();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    console.log("AppContent RENDER - isLoggingOut:", isLoggingOut, "isLoading(Auth):", isLoading, "isAuthenticated(Auth):", isAuthenticated, "Path:", location.pathname);
 
     useEffect(() => {
         const handleLogoutEvent = () => {
-            console.log("AppContent: Event 'logoutUser' received. Current isAuthenticated (from hook):", isAuthenticated, "Current isLoggingOut (from state):", isLoggingOut);
             if (!isLoggingOut && isAuthenticated) {
-                console.log("AppContent: Setting isLoggingOut = true, calling context.logout().");
                 setIsLoggingOut(true);
                 logout();
-            } else {
-                console.log("AppContent: Event 'logoutUser' received but conditions not met or already processing. isAuthenticated:", isAuthenticated, "isLoggingOut:", isLoggingOut);
             }
         };
-        console.log("AppContent: Attaching logoutUser event listener. isAuthenticated:", isAuthenticated, "isLoggingOut:", isLoggingOut);
         window.addEventListener('logoutUser', handleLogoutEvent);
         return () => {
-            console.log("AppContent: Removing logoutUser event listener. isAuthenticated:", isAuthenticated, "isLoggingOut:", isLoggingOut);
             window.removeEventListener('logoutUser', handleLogoutEvent);
         };
-    }, [logout, isAuthenticated, isLoggingOut]); // Dependencias clave para el estado del logout
+    }, [logout, isAuthenticated, isLoggingOut]);
 
     useEffect(() => {
-        console.log("AppContent: Cleanup effect for isLoggingOut. Path:", location.pathname, "isLoggingOut:", isLoggingOut, "isAuthenticated:", isAuthenticated, "isLoading:", isLoading);
         if (isLoggingOut && location.pathname === '/login' && !isAuthenticated && !isLoading) {
-            console.log("AppContent: Cleanup - Resetting isLoggingOut to false.");
             setIsLoggingOut(false);
         }
     }, [location.pathname, isLoggingOut, isAuthenticated, isLoading]);
 
     const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
 
-    // Loader para la carga inicial de AuthContext (si no estás en ruta de auth y no autenticado aún)
-    // Este loader SÍ puede retornar temprano porque es para la inicialización de la app.
+    // Loader para la carga inicial de AuthContext
     if (isLoading && !isAuthenticated && !isAuthRoute) {
-        console.log("AppContent: RENDERIZANDO FullPageLoader (carga inicial).");
         return <FullPageLoader message="Inicializando..." />;
     }
     
     return (
         <div className="App">
-            {/* Loader para "Sesión Expirada" como overlay, no bloquea el render de Routes */}
+            {/* Loader para "Sesión Expirada" como overlay */}
             {isLoggingOut && location.pathname !== '/login' && (
                 <FullPageLoader message="Tu sesión ha expirado. Redirigiendo al login..." />
             )}
