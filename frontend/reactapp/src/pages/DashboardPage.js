@@ -55,30 +55,23 @@ function DashboardPage() {
                     categoryDistribution: Array.isArray(summaryResult.value.categoryDistribution) ? summaryResult.value.categoryDistribution : [],
                 });
             } else if (summaryResult.status === 'rejected') {
-                console.error("Error fetching summary stats:", summaryResult.reason);
-                // Considerar este error como crítico para el dashboard
                 throw summaryResult.reason;
             }
 
             if (objectivesResult.status === 'fulfilled' && objectivesResult.value) {
                 setRecentObjectives(Array.isArray(objectivesResult.value) ? objectivesResult.value : []);
             } else if (objectivesResult.status === 'rejected') {
-                console.error("Error fetching recent objectives:", objectivesResult.reason);
                 toast.warn("No se pudieron cargar los objetivos recientes.");
             }
 
             if (activityResult.status === 'fulfilled' && activityResult.value) {
                 setRecentActivities(Array.isArray(activityResult.value) ? activityResult.value : []);
             } else if (activityResult.status === 'rejected') {
-                console.error("Error fetching recent activities:", activityResult.reason);
                 toast.warn("No se pudo cargar la actividad reciente.");
             }
         } catch (err) {
-            console.error("DashboardPage: Error crítico al cargar datos del dashboard:", err);
             const errorMessage = err.data?.message || err.message || "No se pudieron cargar los datos del panel de control.";
             setError(errorMessage);
-            // No mostrar toast aquí si ya se muestra un error general en la página
-            // Resetear datos a un estado vacío o por defecto en caso de error crítico
             setSummaryData({ totalObjectives: 0, statusCounts: {}, averageProgress: 0, dueSoonCount: 0, categoryDistribution: [] });
             setRecentObjectives([]);
             setRecentActivities([]);
@@ -94,22 +87,20 @@ function DashboardPage() {
     const renderStatusList = () => {
         const statusOrder = ['En progreso', 'Pendiente', 'Completado', 'Fallido', 'Archivado', 'No Iniciados'];
         const statusColors = {
-            'En progreso': 'var(--info-color, #6f42c1)', // Morado/Púrpura para "En Progreso"
-            'Pendiente': 'var(--warning-color, #ffc107)', // Amarillo/Naranja para "Pendiente"
-            'Completado': 'var(--success-color, #28a745)', // Verde para "Completado"
-            'Fallido': 'var(--destructive-color, #dc3545)', // Rojo para "Fallido"
-            'Archivado': 'var(--secondary-color, #6c757d)', // Gris para "Archivado"
-            'No Iniciados': 'var(--muted-color, #adb5bd)', // Gris más claro para "No Iniciados"
+            'En progreso': 'var(--info-color, #6f42c1)',
+            'Pendiente': 'var(--warning-color, #ffc107)',
+            'Completado': 'var(--success-color, #28a745)',
+            'Fallido': 'var(--destructive-color, #dc3545)',
+            'Archivado': 'var(--secondary-color, #6c757d)',
+            'No Iniciados': 'var(--muted-color, #adb5bd)',
         };
 
-        // Filtrar y ordenar los estados que tienen objetivos
         const statusesToDisplay = statusOrder.filter(statusName =>
             summaryData.statusCounts &&
             summaryData.statusCounts[statusName] !== undefined &&
             summaryData.statusCounts[statusName] > 0
         );
 
-        // Si hay objetivos pero no hay desglose por estado (caso raro, pero posible)
         if (summaryData.totalObjectives > 0 && statusesToDisplay.length === 0) {
             return (
                 <ul className={styles.statusList}>
@@ -140,12 +131,10 @@ function DashboardPage() {
         );
     };
 
-    // Estado de carga principal para toda la página
     if (loading) {
         return <div className={styles.dashboardLoadingState}><LoadingSpinner size="large" text="Cargando tu Panel de Control..." /></div>;
     }
 
-    // Estado de error crítico (si los datos principales como el sumario no se cargaron)
     if (error && !summaryData.totalObjectives && recentObjectives.length === 0 && recentActivities.length === 0) {
         return (
             <div className={styles.dashboardErrorState}>
@@ -160,7 +149,7 @@ function DashboardPage() {
             <section className={styles.statsRowContainer}>
                 <StatsCard
                     title="Total de Objetivos"
-                    value={summaryData.totalObjectives.toString()} // StatsCard espera string o JSX para value
+                    value={summaryData.totalObjectives.toString()}
                     linkTo="/mis-objetivos"
                     linkText="Ver todos los objetivos"
                 >
@@ -169,11 +158,12 @@ function DashboardPage() {
 
                 <StatsCard
                     title="Progreso Promedio"
-                    value={`${Math.round(summaryData.averageProgress || 0)}%`}
+                    value={summaryData.averageProgress || 0} 
+                    decimalPlacesToShow={1}
+                    valueDescription="%"
                 >
                     <ProgressBar
                         percentage={summaryData.averageProgress || 0}
-                    // El componente ProgressBar internamente define el texto basado en el porcentaje
                     />
                 </StatsCard>
 
@@ -181,7 +171,7 @@ function DashboardPage() {
                     icon={<FaClock />}
                     title="PRÓXIMOS A VENCER"
                     value={summaryData.dueSoonCount.toString()}
-                    valueDescription="objetivos" // Prop para describir la unidad del valor
+                    valueDescription="objetivos"
                     details="En los próximos 7 días"
                     linkTo="/mis-objetivos?filter=dueSoon"
                     linkText="Ver calendario"
@@ -190,18 +180,17 @@ function DashboardPage() {
                 <StatsCard
                     icon={<FaChartPie />}
                     title="CATEGORÍAS"
-                    // Muestra la categoría principal o un texto genérico si no hay distribución
                     details={
                         summaryData.categoryDistribution?.length
                             ? `Principal: ${summaryData.categoryDistribution[0]?.name || 'N/A'}`
                             : 'Ver detalle de categorías'
                     }
-                    linkTo="/analisis" // Asumiendo que /analisis mostrará detalles de categorías
+                    linkTo="/analisis"
                     linkText="Ver Análisis"
                 >
                     <CategoryDonutChart
                         data={summaryData.categoryDistribution}
-                        simpleMode={true} // Modo simplificado para vista previa en dashboard
+                        simpleMode={true}
                     />
                 </StatsCard>
             </section>
@@ -215,7 +204,6 @@ function DashboardPage() {
                 </div>
             </section>
 
-            {/* Mensaje de error parcial si algunos datos fallaron pero otros se cargaron */}
             {error && (summaryData.totalObjectives > 0 || recentObjectives.length > 0 || recentActivities.length > 0) && (
                 <p className={styles.partialErrorText}>
                     Algunos datos del dashboard no pudieron cargarse. La información mostrada podría estar incompleta.
