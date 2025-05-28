@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import styles from './GoalDetailPage.module.css';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import GoalProgressChart from '../components/charts/GoalProgressChart';
+import DistributionBarChart from '../components/charts/DistributionBarChart';
 import Button from '../components/ui/Button';
 import { differenceInDays, parseISO, format, isValid, isPast, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -477,22 +478,15 @@ function GoalDetailPage() {
                     </div>
 
                     <div className={`${styles.card} ${styles.distributionCard}`}>
-                        <h2 className={styles.cardTitle}>Distribución</h2>
+                        <h2 className={styles.cardTitle}>Distribución del Progreso</h2>
                         {isQuantitativeGoal ? (
-                            <>
-                                <div className={styles.barChartPlaceholder}>
-                                    <div className={styles.completedBar} style={{ height: `${finalProgressPercentage}%` }}>
-                                        <span className={styles.barValue}>{Math.round(finalProgressPercentage)}%</span>
-                                    </div>
-                                    <div className={styles.remainingBar} style={{ height: `${progressRemaining}%` }}>
-                                        <span className={styles.barValue}>{Math.round(progressRemaining)}%</span>
-                                    </div>
-                                </div>
-                                <div className={styles.distributionLabels}>
-                                    <div className={styles.distributionLabelItem}>Completado</div>
-                                    <div className={styles.distributionLabelItem}>Restante</div>
-                                </div>
-                            </>
+                            <div className={styles.chartContainer} style={{ height: '150px' }}> {/* Ajusta la altura según necesites */}
+                                <DistributionBarChart
+                                    completedPercentage={finalProgressPercentage}
+                                    remainingPercentage={progressRemaining}
+                                    unitMeasure={goalData.unidad_medida || '%'} // Pasar la unidad de medida o '%' por defecto
+                                />
+                            </div>
                         ) : (
                             <p className={styles.noDataMessage}>No hay datos cuantitativos para la distribución.</p>
                         )}
