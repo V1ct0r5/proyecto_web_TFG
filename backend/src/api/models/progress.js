@@ -1,4 +1,3 @@
-// backend/src/api/models/progress.js
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
@@ -12,13 +11,18 @@ module.exports = (sequelize) => {
         id_objetivo: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            // 'references' fue explícitamente eliminada en la versión "después" original de las asociaciones.
-            // Si la integridad referencial se maneja a nivel de base de datos o se infiere, esto es aceptable.
+            references: {
+                model: 'Objetivos',
+                key: 'id_objetivo'
+            }
         },
         id_usuario: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            // 'references' fue explícitamente eliminada en la versión "después" original de las asociaciones.
+            references: {
+                model: 'Usuarios',
+                key: 'id'
+            }
         },
         fecha_registro: {
             type: DataTypes.DATEONLY, // Solo la fecha, sin la hora
@@ -50,16 +54,16 @@ module.exports = (sequelize) => {
     });
 
     Progress.associate = (models) => {
-        Progress.belongsTo(models.Objective, {
-            foreignKey: 'id_objetivo', // Clave foránea en la tabla Progresos que referencia a Objective
-            as: 'objetivo',            // Alias para la asociación
-            onDelete: 'CASCADE'        // Si se elimina un Objetivo, se eliminan sus Progresos asociados
+        Progress.belongsTo(models.Objetivo, { // Asumiendo que 'Objetivo' es el nombre del modelo en models
+            foreignKey: 'id_objetivo',     // Clave foránea en la tabla Progresos que referencia a Objective
+            as: 'objetivo',                // Alias para la asociación
+            onDelete: 'CASCADE'            // Si se elimina un Objetivo, se eliminan sus Progresos asociados
         });
 
-        Progress.belongsTo(models.User, {
-            foreignKey: 'id_usuario',  // Clave foránea en la tabla Progresos que referencia a User
-            as: 'usuario',             // Alias para la asociación
-            onDelete: 'CASCADE'        // Si se elimina un Usuario, se eliminan sus Progresos asociados
+        Progress.belongsTo(models.Usuario, { // Asumiendo que 'Usuario' es el nombre del modelo en models
+            foreignKey: 'id_usuario',      // Clave foránea en la tabla Progresos que referencia a User
+            as: 'usuario',                 // Alias para la asociación
+            onDelete: 'CASCADE'            // Si se elimina un Usuario, se eliminan sus Progresos asociados
         });
     };
     return Progress;
