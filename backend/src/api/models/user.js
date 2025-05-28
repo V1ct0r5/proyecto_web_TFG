@@ -31,7 +31,7 @@ module.exports = (sequelize) => {
   });
 
   Usuario.associate = (models) => {
-    Usuario.hasMany(models.Objective, {
+    Usuario.hasMany(models.Objetivo, {
         foreignKey: 'id_usuario', // Clave foránea en la tabla 'objectives'
         as: 'objetivos',          // Alias para incluir objetivos con el usuario
         onDelete: 'CASCADE'       // Eliminar objetivos del usuario si el usuario es eliminado
