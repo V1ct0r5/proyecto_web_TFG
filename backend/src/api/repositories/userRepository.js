@@ -1,9 +1,9 @@
 const db = require('../../config/database');
-const User = db.User;
+const Usuario = db.Usuario;
 
 class UserRepository {
     constructor() {
-        this.model = User;
+        this.model = Usuario;
     }
 
     async findAll() {
@@ -23,13 +23,14 @@ class UserRepository {
     }
 
     async update(userId, updatedData) {
-        const [updatedRows] = await this.model.update(updatedData, {
-            where: { id: userId }
+        const [updatedRowsCount] = await this.model.update(updatedData, {
+            where: { id: userId },
+            // returning: true, // Esto solo funciona con ciertos dialectos como PostgreSQL
         });
-        if (updatedRows > 0) {
+        if (updatedRowsCount > 0) {
             return await this.findById(userId); // Retorna el usuario actualizado
         }
-        return null;
+        return null; // O lanzar un error si se esperaba una actualización
     }
 
     async delete(userId) {
