@@ -1,4 +1,3 @@
-
 /* Estilos para el layout de las páginas de autenticación (Login, Registro) */
 
 /* Contenedor principal de la página de autenticación */
@@ -17,13 +16,15 @@
 .mainContentArea {
     grid-area: main-content;
     display: flex;
-    flex-direction: column; /* Centra el contenido verticalmente */
-    justify-content: center; /* Centra horizontalmente en el espacio flex */
-    align-items: center; /* Centra verticalmente los elementos del formulario */
-    padding: 1.5rem 0.8rem; /* Espaciado interno */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
     box-sizing: border-box;
-    overflow-y: auto; /* Permite scroll si el contenido excede la altura */
-    position: relative; /* Para posicionar elementos absolutos como el botón de cancelar */
+    overflow-y: auto;
+    padding: 1.5rem 0.8rem;
+    background-color: var(--background);
+    position: relative;
 }
 
 /* Estilos para el título del formulario (usado en LoginPage y RegistroPage) */
@@ -58,7 +59,7 @@
 /* Estilos para el botón de cancelar (opcional, para este layout) */
 .cancelButton {
     position: absolute;
-    top: 1rem; 
+    top: 1rem;
     right: 1rem;
     background-color: var(--destructive, #dc3545); /* Color para acciones destructivas o de cancelación */
     color: var(--destructive-foreground, #fff); /* Color de texto para el botón destructivo */
