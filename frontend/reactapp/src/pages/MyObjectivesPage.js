@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -9,10 +9,10 @@ import Input from "../components/ui/Input";
 import FormGroup from "../components/ui/FormGroup";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 
-import styles from "./MyObjectivesPage.module.css"; // Usar 'styles' consistentemente
+import styles from "./MyObjectivesPage.module.css";
 
 function MyObjectivesPage() {
-    const [objetivos, setObjetivos] = useState([]); // <--- BUENA INICIALIZACIÓN
+    const [objetivos, setObjetivos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -24,9 +24,10 @@ function MyObjectivesPage() {
     const initialDisplayLimit = 6;
 
     const navigate = useNavigate();
+    const processedNoObjectivesRef = useRef(false);
 
     const tipoObjetivoOptions = useMemo(() => [
-        "Todas", "Salud", "Finanzas", "Desarrollo personal", 
+        "Todas", "Salud", "Finanzas", "Desarrollo personal",
         "Relaciones", "Carrera profesional", "Otros"
     ], []);
 
@@ -43,35 +44,57 @@ function MyObjectivesPage() {
     const fetchObjetivos = useCallback(async () => {
         setIsLoading(true);
         setError(null);
+        let redirected = false;
         try {
-            const data = await api.getObjectives(); // o api.obtenerTodosLosObjetivos si renombraste en apiService
-            // Asegurar que 'data' es un array antes de actualizar el estado
-            setObjetivos(Array.isArray(data) ? data : []); 
+            const data = await api.getObjectives();
+
+            if (Array.isArray(data)) {
+                setObjetivos(data);
+                if (data.length === 0) {
+                    if (!processedNoObjectivesRef.current) {
+                        processedNoObjectivesRef.current = true;
+                        toast.info("Aún no tienes objetivos. ¡Vamos a crear el primero!", { autoClose: 4000 });
+                        navigate('/objectives', { replace: true });
+                        redirected = true;
+                        return;
+                    } else {
+                        if (window.location.pathname === '/mis-objetivos') {
+                            navigate('/objectives', { replace: true, state: { message: "Crea tu primer objetivo." } });
+                        }
+                        redirected = true;
+                        return;
+                    }
+                } else {
+                    processedNoObjectivesRef.current = false;
+                }
+            } else {
+                setObjetivos([]);
+                processedNoObjectivesRef.current = false;
+            }
         } catch (err) {
-            console.error("MyObjectivesPage: Error al cargar objetivos:", err);
             const errorMessage = err.message || "Error al cargar los objetivos. Intenta de nuevo más tarde.";
             setError(errorMessage);
-            // toast.error(errorMessage); // El interceptor de apiService podría ya mostrar un toast
-            setObjetivos([]); // <--- Asegurar que sea un array vacío en caso de error
+            setObjetivos([]);
+            processedNoObjectivesRef.current = false;
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [navigate]);
 
     useEffect(() => {
         fetchObjetivos();
     }, [fetchObjetivos]);
 
-    const filteredAndSortedObjetivos = useMemo(() => {
-        // 'objetivos' debería ser siempre un array debido a la inicialización y a fetchObjetivos
-        if (!Array.isArray(objetivos)) {
-            // Este console.warn es para depurar si algo inesperado ocurre y 'objetivos' no es un array
-            console.warn("MyObjectivesPage: 'objetivos' en useMemo no es un array. Valor:", objetivos);
-            return []; // Devolver un array vacío como fallback seguro
-        }
-        
-        let result = [...objetivos]; // Trabajar con una copia
+    const handleObjectiveDeleted = useCallback(() => {
+        processedNoObjectivesRef.current = false;
+        fetchObjetivos();
+    }, [fetchObjetivos]);
 
+    const filteredAndSortedObjetivos = useMemo(() => {
+        if (!Array.isArray(objetivos)) {
+            return [];
+        }
+        let result = [...objetivos];
         if (filterCategory !== "Todas") {
             result = result.filter(obj => obj.tipo_objetivo === filterCategory);
         }
@@ -84,10 +107,10 @@ function MyObjectivesPage() {
         }
         switch (sortBy) {
             case "recientes":
-                result.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+                result.sort((a, b) => new Date(b.created_at || b.createdAt || 0) - new Date(a.created_at || a.createdAt || 0));
                 break;
             case "antiguos":
-                result.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+                result.sort((a, b) => new Date(a.created_at || a.createdAt || 0) - new Date(b.created_at || b.createdAt || 0));
                 break;
             case "nombreAsc":
                 result.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
@@ -114,9 +137,8 @@ function MyObjectivesPage() {
         return result;
     }, [objetivos, searchTerm, filterCategory, sortBy]);
 
-    // 'objectivesToRender' siempre será un array si 'filteredAndSortedObjetivos' lo es.
-    const objectivesToRender = showAllObjectives 
-        ? filteredAndSortedObjetivos 
+    const objectivesToRender = showAllObjectives
+        ? filteredAndSortedObjetivos
         : filteredAndSortedObjetivos.slice(0, initialDisplayLimit);
 
     const hasMoreThanInitialLimit = filteredAndSortedObjetivos.length > initialDisplayLimit;
@@ -128,14 +150,12 @@ function MyObjectivesPage() {
     if (isLoading) {
         return (
             <div className={styles.centeredStatus}>
-                <LoadingSpinner />
-                <p>Cargando tus objetivos...</p>
+                <LoadingSpinner size="large" text="Cargando tus objetivos..." />
             </div>
         );
     }
 
-    // Mostrar error si existe, incluso si no hay objetivos (prioridad al error)
-    if (error && !objetivos.length) { // Modificado para mostrar error solo si no hay objetivos que mostrar
+    if (error && filteredAndSortedObjetivos.length === 0) {
         return (
             <div className={styles.centeredStatus}>
                 <p className={styles.errorMessage}>Error: {error}</p>
@@ -143,91 +163,91 @@ function MyObjectivesPage() {
             </div>
         );
     }
-    
+
     return (
         <div className={styles.dashboardContainer}>
-            <div className={styles.controlsAndCreateButton}>
-                <div className={styles.controlsContainer}>
-                    <FormGroup label="Buscar:" htmlFor="search-term" inline smallLabel>
-                        <Input
-                            type="text"
-                            id="search-term"
-                            placeholder="Nombre o descripción..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className={styles.searchInput}
-                        />
-                    </FormGroup>
-                    <FormGroup label="Categoría:" htmlFor="filter-category" inline smallLabel>
-                        <Input
-                            type="select"
-                            id="filter-category"
-                            value={filterCategory}
-                            onChange={(e) => setFilterCategory(e.target.value)}
-                            className={styles.filterSelect}
-                        >
-                            {tipoObjetivoOptions.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                            ))}
-                        </Input>
-                    </FormGroup>
-                    <FormGroup label="Ordenar por:" htmlFor="sort-by" inline smallLabel>
-                        <Input
-                            type="select"
-                            id="sort-by"
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            className={styles.sortSelect}
-                        >
-                            {sortByOptions.map(option => (
-                                <option key={option.value} value={option.value}>{option.label}</option>
-                            ))}
-                        </Input>
-                    </FormGroup>
-                </div>
-                <Button 
-                    onClick={handleCreateObjective} 
-                    className={styles.buttonCreateObjective}
+            <div className={styles.pageHeader}>
+                <Button
+                    onClick={handleCreateObjective}
+                    className={styles.createButtonTopRight}
                     variant="primary"
                 >
                     Añadir Nuevo Objetivo
                 </Button>
             </div>
-            {filteredAndSortedObjetivos.length === 0 ? (
+
+            <div className={styles.topControlBar}>
+                <FormGroup label="Buscar:" htmlFor="search-term" inline smallLabel className={styles.searchFormGroup}>
+                    <Input
+                        type="text"
+                        id="search-term"
+                        placeholder="Nombre o descripción..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={styles.searchInput}
+                    />
+                </FormGroup>
+                <FormGroup label="Categoría:" htmlFor="filter-category" inline smallLabel className={styles.filterFormGroup}>
+                    <Input
+                        type="select"
+                        id="filter-category"
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value)}
+                        className={styles.filterSelect}
+                    >
+                        {tipoObjetivoOptions.map(option => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
+                    </Input>
+                </FormGroup>
+                <FormGroup label="Ordenar por:" htmlFor="sort-by" inline smallLabel className={styles.sortFormGroup}>
+                    <Input
+                        type="select"
+                        id="sort-by"
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className={styles.sortSelect}
+                    >
+                        {sortByOptions.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </Input>
+                </FormGroup>
+            </div>
+            {filteredAndSortedObjetivos.length === 0 && !isLoading ? (
                 <div className={styles.centeredStatus}>
                     <p className={styles.noGoalsMessage}>
-                        {!searchTerm && filterCategory === "Todas"
+                        {!searchTerm && filterCategory === "Todas" && !error
                             ? "Aún no tienes objetivos creados. ¡Empieza añadiendo uno!"
                             : "No se encontraron objetivos que coincidan con tu búsqueda o filtros."}
                     </p>
-                    {/* Mostrar error aquí si ocurrió pero hay datos viejos o se quiere mostrar siempre que haya error */}
                     {error && <p className={styles.errorMessageSecondary}>({error})</p>}
                 </div>
             ) : (
                 <>
                     {error && <p className={styles.errorMessageTop}>Hubo un error al actualizar: {error} <Button onClick={fetchObjetivos} size="small" variant="outline">Reintentar</Button></p>}
                     <div className={`${styles.goalsGrid} ${showAllObjectives ? styles.expandedGrid : ''}`}>
-                        {objectivesToRender.map((objetivo) => ( // objectivesToRender también es un array
+                        {objectivesToRender.map((objetivo) => (
                             <ObjetivoCard
                                 key={objetivo.id_objetivo || objetivo.id}
                                 objective={objetivo}
-                                // onObjectiveUpdate={fetchObjetivos} // Para refrescar si una card hace una acción
+                                onObjectiveDeleted={handleObjectiveDeleted}
                             />
                         ))}
                     </div>
 
-                    {hasMoreThanInitialLimit && !showAllObjectives && ( // Solo mostrar si no se muestran todos
+                    {hasMoreThanInitialLimit && !showAllObjectives && (
                         <div className={styles.viewMoreContainer}>
                             <Button
                                 className={styles.toggleViewButton}
-                                onClick={() => setShowAllObjectives(true)} // Cambiado para mostrar todos
+                                onClick={() => setShowAllObjectives(true)}
                                 variant="outline"
                             >
                                 {`Ver ${filteredAndSortedObjetivos.length - initialDisplayLimit} más (${filteredAndSortedObjetivos.length} en total)`}
                             </Button>
                         </div>
                     )}
-                     {showAllObjectives && filteredAndSortedObjetivos.length > initialDisplayLimit && ( // Mostrar "ver menos" si se muestran todos y hay más del límite
+                     {showAllObjectives && filteredAndSortedObjetivos.length > initialDisplayLimit && (
                         <div className={styles.viewMoreContainer}>
                             <Button
                                 className={styles.toggleViewButton}
