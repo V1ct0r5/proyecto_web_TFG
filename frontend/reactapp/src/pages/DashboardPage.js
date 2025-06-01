@@ -1,5 +1,4 @@
-// frontend/reactapp/src/pages/DashboardPage.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './DashboardPage.module.css';
 import api from '../services/apiService';
@@ -8,7 +7,7 @@ import Button from '../components/ui/Button';
 import { toast } from 'react-toastify';
 
 // Iconos
-import { FaClock, FaChartPie, FaChartBar, FaCircle } from 'react-icons/fa';
+import { FaClock, FaChartPie, FaCircle } from 'react-icons/fa'; // FaChartBar eliminado
 
 // Componentes Hijos
 import StatsCard from '../components/objetivos/StatsCard';
@@ -30,11 +29,15 @@ function DashboardPage() {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const navigate = useNavigate(); // eslint-disable-line no-unused-vars
+    const navigate = useNavigate();
+
+    const processedNoObjectivesRef = useRef(false);
 
     const fetchDashboardData = useCallback(async () => {
         setLoading(true);
         setError(null);
+        let localRedirected = false;
+
         try {
             const summaryPromise = api.getDashboardSummaryStats();
             const objectivesPreviewPromise = api.getDashboardRecentObjectives(4);
@@ -47,38 +50,66 @@ function DashboardPage() {
             const [summaryResult, objectivesResult, activityResult] = results;
 
             if (summaryResult.status === 'fulfilled' && summaryResult.value) {
+                const summaryValue = summaryResult.value;
+                const currentTotalObjectives = summaryValue.totalObjectives || 0;
+
+                if (currentTotalObjectives === 0) {
+                    if (!processedNoObjectivesRef.current) {
+                        processedNoObjectivesRef.current = true;
+                        toast.info("¡Bienvenido! Parece que aún no tienes objetivos. Vamos a crear el primero.", { autoClose: 4000 });
+                        navigate('/objectives', { replace: true, state: { message: "Crea tu primer objetivo para empezar." } });
+                        setSummaryData({ totalObjectives: 0, statusCounts: {}, averageProgress: 0, dueSoonCount: 0, categoryDistribution: [] });
+                        setRecentObjectives([]);
+                        setRecentActivities([]);
+                        localRedirected = true;
+                        return;
+                    } else if (window.location.pathname === '/dashboard') {
+                        navigate('/objectives', { replace: true, state: { message: "Crea tu primer objetivo para empezar." } });
+                        localRedirected = true;
+                        return;
+                    }
+                } else {
+                    processedNoObjectivesRef.current = false;
+                }
+
                 setSummaryData({
-                    totalObjectives: summaryResult.value.totalObjectives || 0,
-                    statusCounts: summaryResult.value.statusCounts || {},
-                    averageProgress: summaryResult.value.averageProgress || 0,
-                    dueSoonCount: summaryResult.value.dueSoonCount || 0,
-                    categoryDistribution: Array.isArray(summaryResult.value.categoryDistribution) ? summaryResult.value.categoryDistribution : [],
+                    totalObjectives: summaryValue.totalObjectives || 0,
+                    statusCounts: summaryValue.statusCounts || {},
+                    averageProgress: summaryValue.averageProgress || 0,
+                    dueSoonCount: summaryValue.dueSoonCount || 0,
+                    categoryDistribution: Array.isArray(summaryValue.categoryDistribution) ? summaryValue.categoryDistribution : [],
                 });
+
             } else if (summaryResult.status === 'rejected') {
+                processedNoObjectivesRef.current = false;
                 throw summaryResult.reason;
             }
 
-            if (objectivesResult.status === 'fulfilled' && objectivesResult.value) {
-                setRecentObjectives(Array.isArray(objectivesResult.value) ? objectivesResult.value : []);
-            } else if (objectivesResult.status === 'rejected') {
-                toast.warn("No se pudieron cargar los objetivos recientes.");
+            if (!localRedirected) {
+                if (objectivesResult.status === 'fulfilled' && objectivesResult.value) {
+                    setRecentObjectives(Array.isArray(objectivesResult.value) ? objectivesResult.value : []);
+                } else if (objectivesResult.status === 'rejected') {
+                    toast.warn("No se pudieron cargar los objetivos recientes.");
+                }
+
+                if (activityResult.status === 'fulfilled' && activityResult.value) {
+                    setRecentActivities(Array.isArray(activityResult.value) ? activityResult.value : []);
+                } else if (activityResult.status === 'rejected') {
+                    toast.warn("No se pudo cargar la actividad reciente.");
+                }
             }
 
-            if (activityResult.status === 'fulfilled' && activityResult.value) {
-                setRecentActivities(Array.isArray(activityResult.value) ? activityResult.value : []);
-            } else if (activityResult.status === 'rejected') {
-                toast.warn("No se pudo cargar la actividad reciente.");
-            }
         } catch (err) {
             const errorMessage = err.data?.message || err.message || "No se pudieron cargar los datos del panel de control.";
             setError(errorMessage);
+            processedNoObjectivesRef.current = false;
             setSummaryData({ totalObjectives: 0, statusCounts: {}, averageProgress: 0, dueSoonCount: 0, categoryDistribution: [] });
             setRecentObjectives([]);
             setRecentActivities([]);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [navigate]);
 
     useEffect(() => {
         fetchDashboardData();
@@ -158,7 +189,7 @@ function DashboardPage() {
 
                 <StatsCard
                     title="Progreso Promedio"
-                    value={summaryData.averageProgress || 0} 
+                    value={summaryData.averageProgress || 0}
                     decimalPlacesToShow={1}
                     valueDescription="%"
                 >
@@ -196,11 +227,17 @@ function DashboardPage() {
             </section>
 
             <section className={styles.bottomSectionsGrid}>
-                <div className={styles.objectivesPreviewWrapper}>
-                    <RecentObjectivesList objectives={recentObjectives} />
+                <div className={styles.objectivesSectionWrapper}>
+                    <h3 className={styles.sectionTitle}>Objetivos Clave / Recientes</h3>
+                    <div className={styles.objectivesPreviewWrapper}>
+                        <RecentObjectivesList objectives={recentObjectives} />
+                    </div>
                 </div>
-                <div className={styles.activityFeedWrapper}>
-                    <RecentActivityFeed activities={recentActivities} />
+                <div className={styles.activitySectionWrapper}>
+                    <h3 className={styles.sectionTitle}>Actividad Reciente</h3>
+                    <div className={styles.activityFeedWrapper}>
+                        <RecentActivityFeed activities={recentActivities} />
+                    </div>
                 </div>
             </section>
 
