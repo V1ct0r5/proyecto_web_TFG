@@ -2,14 +2,14 @@
 .dashboardPageLayout {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* Espacio entre filas de tarjetas y secciones inferiores */
-    background-color: #ffffff;
-    height: 100%; /* Ocupa el 100% de la altura de su contenedor padre */
-    overflow: hidden; /* Previene scroll en este layout; el scroll será interno */
+    gap: 1.5rem;
+    background-color: var(--background, #f4f7f9);
+    height: 100%;
+    overflow: hidden;
     box-sizing: border-box;
+    padding: 1.5rem;
 }
 
-/* Estados de Carga y Error que ocupan toda la altura disponible */
 .dashboardLoadingState,
 .dashboardErrorState {
     display: flex;
@@ -18,208 +18,89 @@
     justify-content: center;
     padding: 3rem 1rem;
     text-align: center;
-    height: 100%; /* Ocupa el espacio si es el único hijo de dashboardPageLayout */
+    height: 100%;
     box-sizing: border-box;
 }
 .dashboardErrorState .errorMessageText {
-    color: var(--destructive-color, #cc0000);
+    color: var(--destructive, #dc3545);
     margin-bottom: 1.5rem;
     font-size: 1.1rem;
 }
 
-/* Fila Superior de Tarjetas de Estadísticas */
 .statsRowContainer {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1.5rem;
-    flex-shrink: 0; /* Evita que se encoja si el contenido inferior necesita espacio */
+    flex-shrink: 0;
 }
 
-/* Contenedor para las Secciones Inferiores (Objetivos y Actividad) */
 .bottomSectionsGrid {
     display: grid;
-    grid-template-columns: 1fr; /* Una columna en móvil por defecto */
+    grid-template-columns: 1fr;
     gap: 1.5rem;
-    flex-grow: 1; /* Esta sección se expandirá para ocupar el espacio vertical restante */
-    min-height: 0; /* Necesario para que flex-grow funcione en contenedores anidados */
-    overflow: hidden; /* El grid no debe scrollear, sus hijos lo harán */
+    flex-grow: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
-@media (min-width: 992px) { /* Dos columnas para tablets/desktop pequeños */
+@media (min-width: 992px) {
     .bottomSectionsGrid {
-        grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.5fr); /* Columna de objetivos más ancha */
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.8fr);
     }
 }
 
-/* Contenedores individuales para Objetivos Recientes y Actividad Reciente */
 .objectivesPreviewWrapper,
 .activityFeedWrapper {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: none; /* Estilo plano, sin sombra elevada */
-    border: 1px solid #e0e0e0; /* o var(--border-color, #e0e0e0) */
-    padding: 1.25rem 1.5rem; 
-    display: flex; 
-    flex-direction: column;
-    overflow-y: auto; /* Permite scroll vertical interno si el contenido excede la altura */
-    min-height: 0; /* Para correcto funcionamiento de overflow y flex-grow en hijos */
-}
-
-/* Estructura común para secciones con título, lista y botón "ver todos" */
-.listSection { 
+    background-color: var(--card-background, #ffffff);
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border-light, #e9ecef);
+    padding: 1.25rem 1.5rem;
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* Ocupa la altura disponible dentro de su wrapper */
+    overflow-y: auto;
     min-height: 0;
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03));
 }
 
-.sectionTitle {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--heading-color);
-    margin: 0 0 1rem 0;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-light, #f0f0f0);
-    flex-shrink: 0; /* El título no se encoge */
-}
-
-.recentList { /* ul */
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    flex-grow: 1; /* La lista ocupa el espacio vertical restante */
-    overflow-y: auto; /* Scroll interno para la lista */
-    margin-bottom: 1rem; /* Espacio antes del botón "Ver todos" */
-}
-
-.recentListItem, 
-.recentActivityItem {
-    padding: 0.6rem 0;
-    font-size: 0.95rem;
-    border-bottom: 1px dotted var(--border-ultralight, #f7f7f7);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem; /* Espacio entre elementos del ítem */
-}
-.recentListItem:last-child, 
-.recentActivityItem:last-child {
-    border-bottom: none;
-}
-
-.objectiveName { 
-    color: var(--foreground); 
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; /* Para nombres de objetivo largos */
-    flex-grow: 1;
-    margin-right: 0.5rem;
-}
-.objectiveMeta { 
-    display: flex; 
-    align-items: center; 
-    gap: 0.75rem; 
-    color: var(--muted-foreground); 
-    font-size: 0.85rem; 
-    flex-shrink: 0; /* No se encoge */
-}
-.objectiveUpdate { 
-    white-space: nowrap; 
-}
-.objectiveProgress { 
-    font-weight: 500; 
-    white-space: nowrap; 
-}
-
-.detailsArrowButton {
-    color: var(--primary-color) !important; 
-    background: none !important;
-    border: none !important;
-    padding: 0.25rem !important;
-    box-shadow: none !important;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-}
-.detailsArrowButton:hover { 
-    color: var(--primary-hover) !important; 
-}
-
-.activityDescription { 
-    color: var(--foreground); 
-    flex-grow: 1;
-    margin-right: 0.5rem;
-    /* Considerar: white-space, overflow, text-overflow para descripciones largas */
-}
-.activityTimestamp { 
-    font-size: 0.8rem; 
-    color: var(--muted-foreground); 
-    white-space: nowrap; 
-    flex-shrink: 0; /* No se encoge */
-}
-
-.viewAllContainer {
-    margin-top: auto; /* Empuja al final del contenedor flex .listSection */
-    padding-top: 1rem; /* Espacio sobre el botón */
-    text-align: center;
-    flex-shrink: 0; /* No se encoge */
-}
-
-.noDataText {
-    color: var(--muted-foreground);
-    font-style: italic;
-    text-align: center;
-    padding: 2rem 0;
-    flex-grow: 1; /* Ayuda a centrar si está dentro de un contenedor flex */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Estilos para la lista de estados (usada en la tarjeta "Total de Objetivos") */
 .statusList {
     list-style: none;
     padding: 0;
-    margin-top: 0.75rem; 
-    font-size: 0.9rem;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
 }
 
 .statusItem {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.4rem 0;
+    padding: 0.35rem 0;
 }
 
 .statusName {
     flex-grow: 1;
-    color: #555555;
+    color: var(--muted-foreground, #555555);
 }
 
 .statusCount {
-    font-weight: 500;
-    color: #000000;
-    min-width: 20px; /* Para alinear números de 1 o 2 dígitos */
+    font-weight: 600;
+    color: var(--foreground, #000000);
+    min-width: 20px;
     text-align: right;
 }
 
-/* Estilo para el valor principal en una StatsCard si se pasa como JSX */
-.valueFromStatsCard { 
-    font-size: 2.25rem; 
-    font-weight: 700;
-    color: #000000;
-    line-height: 1.1;
-    margin: 0 0 0.25rem 0;
+.noStatusData {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    margin-top: 0.5rem;
 }
 
-/* Mensaje de error parcial dentro del dashboard */
 .partialErrorText {
     margin-top: 1rem;
     padding: 0.75rem;
-    background-color: var(--warning-light-bg, #fff3cd);
-    color: var(--warning-dark-text, #856404);
+    background-color: var(--warning-background-soft, #fff3cd);
+    color: var(--warning-foreground-strong, #856404);
     border: 1px solid var(--warning-border, #ffeeba);
-    border-radius: var(--radius-md, 8px);
+    border-radius: var(--radius-md, 6px);
     font-size: 0.9rem;
     text-align: center;
 }
