@@ -30,6 +30,17 @@
   font-size: 1.8rem; /* Ajusta el tamaño de fuente */
 }
 
+/* Ejemplo para CreateGoalPage.module.css */
+.pageInfoMessage {
+  background-color: var(--info-background-color, #e6f7ff); /* Usa tus variables de color CSS */
+  color: var(--info-color, #007bff);
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid var(--info-border-color, #91d5ff);
+}
+
 /* Media query para ajustar padding lateral en pantallas más grandes */
 @media (min-width: 640px) { /* sm breakpoint */
   .objetivosPage {
