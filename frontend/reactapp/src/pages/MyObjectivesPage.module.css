@@ -1,94 +1,95 @@
-
 .dashboardContainer {
-    padding: 1.5rem; /* Espaciado interno general del contenedor */
-    margin: 0 auto; /* Centrado horizontal del contenedor */
+    padding: 1.5rem;
+    margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* Espaciado vertical entre elementos hijos directos */
+    gap: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.pageTitle {
-    font-size: 2.2rem;
-    color: var(--foreground);
-    text-align: center;
-    margin-bottom: 0; /* Gestionado por el 'gap' del contenedor padre */
-}
-
-.loadingState,
-.errorState,
-.noGoalsMessage {
-    text-align: center;
-    font-size: 1.1rem;
-    color: var(--muted-foreground);
-    padding: 2rem;
-    background-color: var(--muted);
-    border-radius: var(--radius);
-    margin-top: 0; /* Gestionado por el 'gap' del contenedor padre */
-}
-
-.errorState {
-    color: var(--destructive);
-    background-color: color-mix(in srgb, var(--destructive) 10%, transparent); /* Fondo rojo suave */
-    border: 1px solid var(--destructive);
-}
-
-/* Contenedor para filtros y controles de búsqueda/ordenación */
-.controlsContainer {
-    display: grid;
-    grid-template-columns: 1fr; /* Una columna por defecto en móviles */
-    gap: 1rem; /* Espaciado entre controles */
-    padding: 1rem;
-    background-color: var(--muted);
-    border-radius: var(--radius);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* Adaptación de columnas para los controles en diferentes tamaños de pantalla */
-@media (min-width: 768px) { /* Tablets */
-    .controlsContainer {
-        grid-template-columns: repeat(2, 1fr); /* Dos columnas */
-    }
-}
-
-@media (min-width: 1024px) { /* Pantallas grandes */
-    .controlsContainer {
-        grid-template-columns: repeat(3, 1fr); /* Tres columnas */
-    }
-}
-
-/* Encabezado para secciones (ej. título de "Mis Objetivos" y botón de "Añadir") */
-.sectionHeader {
+.pageHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0; /* Gestionado por el 'gap' del contenedor padre */
-    padding-top: 0;
-    gap: 1rem; /* Espacio entre título y botón */
-    flex-wrap: wrap; /* Permite que el botón se ajuste en pantallas pequeñas */
 }
 
-.sectionTitle {
-    font-size: 1.8rem;
-    color: var(--foreground);
-    margin: 0; /* Evita márgenes adicionales */
+.pageTitleActual {
+    font-size: 1.75rem;
+    color: var(--heading-color, var(--foreground));
+    margin: 0;
+    font-weight: 600;
 }
 
-/* Cuadrícula para mostrar las tarjetas de objetivos */
+.createButtonTopRight {
+    white-space: nowrap;
+    margin-top: 0 !important;
+}
+
+.topControlBar {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: flex-end;
+}
+
+.searchFormGroup,
+.filterFormGroup,
+.sortFormGroup {
+    min-width: 0;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .topControlBar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .searchFormGroup { grid-column: 1 / 2; }
+    .filterFormGroup { grid-column: 2 / 3; }
+    .sortFormGroup { grid-column: 1 / -1; }
+}
+
+@media (min-width: 1024px) {
+    .topControlBar {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .searchFormGroup {
+        grid-column: 1 / 2;
+    }
+    .filterFormGroup {
+        grid-column: 2 / 3;
+    }
+    .sortFormGroup {
+        grid-column: 3 / 4;
+    }
+}
+
 .goalsGrid {
     display: grid;
-    grid-template-columns: 1fr; /* Una columna por defecto en móviles */
-    gap: 2rem; /* Espaciado entre las tarjetas de objetivo */
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
 }
-
-/* Adaptación de columnas para la cuadrícula de objetivos */
-@media (min-width: 768px) { /* Tablets (md breakpoint) */
+@media (min-width: 768px) and (max-width: 1023px) {
     .goalsGrid {
-        grid-template-columns: repeat(2, 1fr); /* Dos columnas */
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (min-width: 1024px) {
+    .goalsGrid {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
-@media (min-width: 1024px) { /* Pantallas grandes (lg breakpoint) */
-    .goalsGrid {
-        grid-template-columns: repeat(3, 1fr); /* Tres columnas */
-    }
+.centeredStatus {
+    text-align: center; padding: 2rem; border-radius: var(--radius);
+    margin-top: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 1rem;
 }
+.noGoalsMessage { font-size: 1.1rem; color: var(--muted-foreground); }
+.errorMessage { color: var(--destructive); }
+.errorMessageSecondary { font-size: 0.9rem; color: var(--muted-foreground); }
+.errorMessageTop {
+    color: var(--destructive-foreground); background-color: var(--destructive);
+    padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 0.9rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.viewMoreContainer { display: flex; justify-content: center; margin-top: 1rem; }
