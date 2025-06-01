@@ -352,8 +352,7 @@ function GoalDetailPage() {
     if (loading) {
         return (
             <div className={styles.pageContainer}>
-                <LoadingSpinner />
-                <p>Cargando detalles del objetivo...</p>
+                <LoadingSpinner size='large' text='Cargando detalles del objetivo...'/>
             </div>
         );
     }
