@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './RecentObjectivesList.module.css';
 import Button from '../ui/Button';
-import { FaArrowRight } from 'react-icons/fa';
+import { FaArrowRight, FaChartLine } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -15,10 +15,12 @@ const RecentObjectivesList = ({ objectives }) => {
 
     return (
         <div className={styles.listContainer}>
-            <h3 className={styles.listTitle}>Objetivos Clave / Recientes</h3>
             <ul className={styles.list}>
                 {objectives.map(obj => (
                     <li key={obj.id_objetivo} className={styles.listItem}>
+                        <div className={styles.objectiveIcon}>
+                            <FaChartLine />
+                        </div>
                         <div className={styles.objectiveInfo}>
                             <Link to={`/objectives/${obj.id_objetivo}`} className={styles.objectiveNameLink}>
                                 {obj.nombre}
