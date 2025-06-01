@@ -153,7 +153,7 @@ function UpdateProgressPage() {
         return valueToShow.toFixed(1);
     }, [newProgressValue, goalData]);
 
-    if (loading) return (<div className={styles.updateProgressPage}><LoadingSpinner /><p>Cargando objetivo para actualización...</p></div>);
+    if (loading) return (<div className={styles.updateProgressPage}><LoadingSpinner size='large' text='Cargando objetivo para actualización...'/></div>);
     if (error && !goalData) return (<div className={`${styles.updateProgressPage} ${styles.updateProgressPageError}`}><p>{error}</p><Button onClick={() => navigate('/')}>Volver al Dashboard</Button></div>);
     if (!goalData) return (<div className={styles.updateProgressPage}><p>No se encontró el objetivo para actualizar o no se pudo cargar.</p><Button onClick={() => navigate('/')}>Volver al Dashboard</Button></div>);
 
