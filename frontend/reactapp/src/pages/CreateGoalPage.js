@@ -16,7 +16,13 @@ function CreateObjectivePage() {
     const location = useLocation();
     const { logout } = useAuth();
 
-    const hasObjectives = objetivos.length > 0;
+    const [pageMessage, setPageMessage] = useState('');
+
+    useEffect(() => {
+        if (location.state?.message) {
+            setPageMessage(location.state.message);
+        }
+    }, [location.state]);
 
     const handleObjectiveSubmission = async (objectiveData) => {
         setIsSubmitting(true);
@@ -33,32 +39,34 @@ function CreateObjectivePage() {
     };
 
     const handleCancelCreation = () => {
-        navigate('/dashboard');
+        if (objetivos.length > 0) {
+            navigate('/dashboard');
+        } else {
+            navigate('/dashboard');
+        }
         toast.info("Creación de objetivo cancelada.");
     };
 
-    const fetchInitialObjectives = useCallback(async () => {
+    const fetchInitialObjectivesForTitle = useCallback(async () => {
         try {
             const data = await api.getObjectives();
             setObjetivos(Array.isArray(data) ? data : []);
         } catch (err) {
             if (err.status === 401 || err.status === 403) {
-                toast.error("Tu sesión ha expirado o no estás autorizado. Por favor, inicia sesión.");
+                toast.error("Tu sesión ha expirado o no estás autorizado.");
                 logout();
                 navigate("/login", { replace: true, state: { from: location } });
-            } else {
-                toast.error(err.data?.message || err.message || "Error al cargar datos para esta página.");
             }
-            setObjetivos([]); // Asegurar que objetivos es un array en caso de error.
+            setObjetivos([]);
         }
     }, [navigate, logout, location]);
 
     useEffect(() => {
         setLoading(true);
-        fetchInitialObjectives().finally(() => {
-            setLoading(false); // Asegurar que loading se desactiva después de la carga inicial
+        fetchInitialObjectivesForTitle().finally(() => {
+            setLoading(false);
         });
-    }, [fetchInitialObjectives]);
+    }, [fetchInitialObjectivesForTitle]);
 
     if (loading) {
         return (
@@ -71,8 +79,9 @@ function CreateObjectivePage() {
     return (
         <div className={styles.createGoalPageContainer}>
             <div className={styles.formWrapper}>
+                {pageMessage && <p className={styles.pageInfoMessage}>{pageMessage}</p>}
                 <h2 className={styles.formTitle}>
-                    {hasObjectives ? "Crea un Nuevo Objetivo" : "Crea Tu Primer Objetivo"}
+                    {objetivos.length > 0 ? "Crea un Nuevo Objetivo" : "Crea Tu Primer Objetivo"}
                 </h2>
                 <ObjetivosForm
                     onSubmit={handleObjectiveSubmission}
