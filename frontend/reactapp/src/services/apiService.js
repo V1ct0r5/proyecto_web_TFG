@@ -10,16 +10,12 @@ const apiService = axios.create({
     },
 });
 
-// Evento global para notificar el cierre de sesión por expiración o error de autenticación
 const logoutEvent = new Event('logoutUser');
-// Bandera para evitar múltiples inicializaciones del proceso de logout por errores concurrentes
 let logoutProcessInitiated = false;
 
-// Interceptor de solicitud para adjuntar el token de autenticación
 apiService.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
-        // No enviar el header Authorization en peticiones de login o registro
         if (token && config.url !== '/auth/login' && config.url !== '/auth/register') {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
@@ -30,7 +26,6 @@ apiService.interceptors.request.use(
     }
 );
 
-// Interceptor de respuesta para manejo centralizado de errores y expiración de sesión
 apiService.interceptors.response.use(
     response => response,
     async error => {
@@ -39,48 +34,31 @@ apiService.interceptors.response.use(
 
         if (error.response) {
             const { status, data } = error.response;
-            
-            // Manejo para sesión expirada o token inválido en peticiones autenticadas (no login)
-            if ((status === 401 || status === 403) && !isLoginAttempt && !originalRequest._retry) {
-                originalRequest._retry = true; // Marcar la petición para evitar reprocesamiento por este interceptor
 
+            if ((status === 401 || status === 403) && !isLoginAttempt && !originalRequest._retry) {
+                originalRequest._retry = true;
                 if (!logoutProcessInitiated) {
                     logoutProcessInitiated = true;
-
                     toast.error('Tu sesión ha expirado o el acceso ha sido denegado. Por favor, inicia sesión de nuevo.', {
-                        position: "top-center",
-                        autoClose: 4000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
+                        position: "top-center", autoClose: 4000, hideProgressBar: false,
+                        closeOnClick: true, pauseOnHover: true, draggable: true, progress: undefined,
                     });
-
-                    window.dispatchEvent(logoutEvent); // Disparar evento para manejo global del logout
-                    
-                    // Resetear la bandera después de un tiempo para permitir futuros manejos de errores de sesión
-                    setTimeout(() => {
-                        logoutProcessInitiated = false;
-                    }, 5000); // Resetear después de 5 segundos
+                    window.dispatchEvent(logoutEvent);
+                    setTimeout(() => { logoutProcessInitiated = false; }, 5000);
                 }
-                
                 return Promise.reject(new Error(data?.message || error.message || 'Authentication Error: Session Expired or Invalid Token'));
             }
 
-            // Para todos los demás errores de respuesta
             const errorMessage = data?.message || error.message || 'Ocurrió un error.';
             const errorToThrow = new Error(errorMessage);
-            errorToThrow.data = data; // Adjuntar datos del backend al error
-            errorToThrow.status = status; // Adjuntar status http al error
+            errorToThrow.data = data;
+            errorToThrow.status = status;
             return Promise.reject(errorToThrow);
 
         } else if (error.request) {
-            // Error de red (petición hecha, pero no se recibió respuesta)
             toast.error('Error de red. Por favor, verifica tu conexión.', { position: "top-center" });
             return Promise.reject(new Error('Error de red. Por favor, verifica tu conexión o intenta más tarde.'));
         } else {
-            // Error en la configuración de la petición
             toast.error('Error al configurar la petición.', { position: "top-center" });
             return Promise.reject(new Error(`Error en la configuración de la petición: ${error.message}`));
         }
@@ -91,9 +69,9 @@ const api = {
     register: async (userData) => {
         try {
             const response = await apiService.post('/auth/register', userData);
-            return response.data; 
+            return response.data;
         } catch (error) {
-            throw error; 
+            throw error;
         }
     },
     login: async (credentials) => {
@@ -104,7 +82,7 @@ const api = {
             throw error;
         }
     },
-    logout: async () => { 
+    logout: async () => {
         try {
             const response = await apiService.delete('/auth/logout');
             return response.data;
@@ -136,8 +114,7 @@ const api = {
             throw error;
         }
     },
-    updateObjective: async (objectiveId, dataToUpdate) => { 
-
+    updateObjective: async (objectiveId, dataToUpdate) => {
         try {
             const response = await apiService.put(`/objectives/${objectiveId}`, dataToUpdate);
             return response.data;
@@ -148,7 +125,7 @@ const api = {
     deleteObjective: async (objectiveId) => {
         try {
             const response = await apiService.delete(`/objectives/${objectiveId}`);
-            return response.data; 
+            return response.data;
         } catch (error) {
             throw error;
         }
@@ -156,15 +133,15 @@ const api = {
     getDashboardSummaryStats: async () => {
         try {
             const response = await apiService.get('/dashboard/summary-stats');
-            return response.data; 
+            return response.data;
         } catch (error) {
-            throw error; 
+            throw error;
         }
     },
     getDashboardRecentObjectives: async (limit = 4) => {
         try {
             const response = await apiService.get(`/dashboard/recent-objectives?limit=${limit}`);
-            return response.data; 
+            return response.data;
         } catch (error) {
             throw error;
         }
@@ -172,7 +149,72 @@ const api = {
     getDashboardRecentActivities: async (limit = 5) => {
         try {
             const response = await apiService.get(`/dashboard/recent-activities?limit=${limit}`);
-            return response.data; 
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAnalysisSummary: async (params) => {
+        try {
+            const response = await apiService.get('/analysis/summary', { params });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getCategoryDistribution: async (params) => {
+        try {
+            const response = await apiService.get('/analysis/distribution/category', { params });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getObjectiveStatusDistribution: async (params) => {
+        try {
+            const response = await apiService.get('/analysis/distribution/status', { params });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getMonthlyProgress: async (params) => {
+        try {
+            const response = await apiService.get('/analysis/progress/monthly', { params });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getObjectivesProgressChartData: async (params) => {
+        try {
+            const response = await apiService.get('/analysis/objectives-progress', { params });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getRankedObjectives: async (params) => {
+        try {
+            const response = await apiService.get('/analysis/ranked-objectives', { params });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getCategoryAverageProgress: async (params) => {
+        try {
+            const response = await apiService.get('/analysis/category-average-progress', { params });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+    getDetailedObjectivesByCategory: async (params) => {
+        try {
+            const response = await apiService.get('/analysis/objectives-by-category-detailed', { params });
+            return response.data;
         } catch (error) {
             throw error;
         }
