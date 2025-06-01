@@ -69,11 +69,11 @@ html,
 body,
 #root {
   margin: 0;
-  height: 100%; /* Muy importante para que el <body> y #root tomen el 100% de la altura de la ventana */
-  font-family: "Inter", sans-serif; /* Asumo una fuente, cámbiala si usas otra */
+  height: 100%;
+  font-family: "Inter", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow: hidden; /* Controla el overflow a nivel de la raíz, evitando scroll en todo el documento */
+  overflow: hidden;
   background-color: var(--background);
   color: var(--foreground);
   line-height: 1.6;
@@ -109,48 +109,49 @@ a:hover {
 /* Contenedor principal de la aplicación (Sidebar + Contenido Principal) */
 .App {
   display: flex;
-  flex-direction: row; /* Sidebar y main-layout-content se colocan en fila */
-  height: 100vh; /* Ocupa el 100% de la altura del viewport */
-  width: 100vw; /* Ocupa el 100% del ancho del viewport */
-  overflow: hidden; /* Evita scroll indeseado en el contenedor general */
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 /* Contenedor para el AppHeader y el Main (todo lo que va a la derecha del Sidebar) */
 .main-layout-content {
-  flex-grow: 1; /* Este contenedor ocupa el espacio restante horizontalmente */
+  flex-grow: 1;
   display: flex;
-  flex-direction: column; /* AppHeader y main-content-area se apilan verticalmente */
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh; /* Ocupa el 100% de la altura del viewport */
-  overflow: hidden; /* El scroll se gestiona en .main-content-area */
+  height: 100vh;
+  overflow: hidden;
   background-color: var(--background);
 }
 
 /* Área de contenido principal de las páginas (donde se cargan las rutas) */
 .main-content-area {
-  flex-grow: 1; /* Ocupa todo el espacio vertical restante debajo del AppHeader */
+  flex-grow: 1;
   box-sizing: border-box;
-  overflow-y: auto; /* Habilita el desplazamiento vertical para el contenido de las páginas */
-  padding: 1.5rem; /* Padding general para el contenido de las páginas */
+  overflow-y: auto;
+  padding: 1.5rem;
   background-color: var(--background);
   display: flex;
-  flex-direction: column; /* Centra el contenido verticalmente */
-  justify-content: center; /* Centra horizontalmente en el espacio flex */
-  align-items: center; /* Centra verticalmente los elementos del formulario */
-  position: relative; /* Para posicionar elementos absolutos como el botón de cancelar */
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  position: relative;
+  width: 100%;
 }
 
 /* Estilos para centrar el contenido en rutas de autenticación (login, registro) */
 .main-centered-auth {
   flex-grow: 1;
   display: flex;
-  flex-direction: column; /* Para centrar verticalmente, se necesita flex-direction */
-  justify-content: center; /* Centrado vertical */
-  align-items: center; /* Centrado horizontal */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   background-color: var(--background);
-  padding: 1.5rem; /* Padding general */
-  overflow-y: auto; /* Si el formulario es muy largo, permite scroll */
+  padding: 1.5rem;
+  overflow-y: auto;
 }
 
 /* Clase para el título de la página dentro del main-content-area */
@@ -158,8 +159,8 @@ a:hover {
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--foreground);
-  margin-bottom: 1.5rem; /* Espacio debajo del título de la página */
-  margin-top: 0; /* Asegura que no tenga margen superior adicional */
+  margin-bottom: 1.5rem;
+  margin-top: 0;
 }
 
 /* Estas reglas de 'main' deben ser eliminadas o comentadas si estaban para cuando 'main' era el contenedor principal de rutas sin un header encima */
