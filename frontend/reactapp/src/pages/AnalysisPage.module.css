@@ -1,0 +1,177 @@
+.analysisPageContainer {
+    padding: 1.5rem 2rem;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex-grow: 1;
+}
+
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.pageTitle {
+    font-size: 1.75rem;
+    color: var(--heading-color, var(--foreground));
+    margin: 0;
+    font-weight: 600;
+}
+
+.timeFilterSelect {
+    min-width: 160px;
+}
+
+.statsRow {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(1, 1fr);
+    margin-bottom: 1rem;
+}
+@media (min-width: 600px) {
+    .statsRow {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (min-width: 992px) {
+    .statsRow {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.tabsContainer {
+    display: inline-flex;
+    background-color: var(--muted);
+    border-radius: var(--radius);
+    padding: 0.25rem;
+    margin-bottom: 1.5rem;
+    width: max-content;
+}
+
+.tabButton {
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--muted-foreground);
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    margin: 0;
+}
+.tabButton:hover:not([data-active="true"]) {
+    color: var(--foreground);
+    background-color: transparent !important;
+}
+.tabButton[data-active="true"] {
+    background-color: var(--card, #ffffff);
+    color: var(--heading-color);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.tabContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.sectionWrapper {
+    background-color: var(--card, #ffffff);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border-light, #e9ecef);
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03));
+    display: flex;
+    flex-direction: column;
+}
+
+.chartTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--heading-color, var(--foreground));
+    margin: 0 0 0.25rem 0;
+    display: block;
+}
+.chartSubtitle {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    margin: 0 0 1.2rem 0;
+    display: block;
+}
+
+.donutChartsRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+@media (min-width: 768px) {
+    .donutChartsRow {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.chartContainer {
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+    flex-grow: 1;
+}
+.chartContainerFullWidth {
+    composes: chartContainer;
+    min-height: 350px;
+}
+
+.noDataText {
+    flex-grow: 1; display: flex; align-items: center;
+    justify-content: center; color: var(--muted-foreground);
+    font-size: 0.9rem; min-height: 100px;
+}
+
+.rankedObjectivesGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+@media (min-width: 768px) {
+    .rankedObjectivesGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.categoriesDetailGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+@media (min-width: 992px) {
+    .categoriesDetailGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.statsDetailText { font-size: 0.8rem; color: var(--muted-foreground); margin: 0.2rem 0 0 0; line-height: 1.4; }
+.statsDetailTextSmall { font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.3rem; line-height: 1.3; }
+.categoryListInCard { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.categoryChip { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: var(--radius); color: #ffffff; font-weight: 500; text-transform: capitalize;}
+.categoryChipMore { font-size: 0.7rem; padding: 0.2rem 0.3rem; color: var(--muted-foreground); }
+
+.placeholderContent {
+    padding: 2rem; text-align: center; color: var(--muted-foreground);
+    background-color: var(--card); border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+.centeredStatus {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 3rem 1rem; text-align: center;
+    min-height: 300px; flex-grow: 1;
+}
+.errorMessage { color: var(--destructive); margin-bottom: 1rem; }
+.retryButton { margin-top: 0 !important; }
