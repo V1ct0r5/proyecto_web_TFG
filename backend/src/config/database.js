@@ -103,7 +103,7 @@ async function initializeDatabase() {
         if (forceSync) {
             const existingUser = await db.Usuario.findOne({ where: { correo_electronico: 'test@example.com' } });
             if (!existingUser) {
-                const hashedPassword = await bcrypt.hash(process.env.DB_PASSWORD_TEST_USER || 'password123', 10);
+                const hashedPassword = await bcrypt.hash(process.env.DB_PASSWORD_TEST_USER, 10);
                 await db.Usuario.create({
                     nombre_usuario: 'usuario_prueba',
                     correo_electronico: 'test@example.com',
