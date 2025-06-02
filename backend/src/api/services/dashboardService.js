@@ -1,7 +1,7 @@
 // backend/src/api/services/dashboardService.js
 const { Op, fn, col } = require('sequelize');
 const db = require('../../config/database');
-const { Objetivo, Progress } = db.sequelize.models; // Asumo que User no se usa directamente aquí, si no, re-añadir
+const { Objetivo, Progress, ActivityLog } = db.sequelize.models; // Asumo que User no se usa directamente aquí, si no, re-añadir
 const AppError = require('../../utils/AppError');
 
 
@@ -223,4 +223,41 @@ exports.fetchRecentActivities = async (userId, limit) => {
     );
 
     return uniqueActivities.slice(0, limit);
+};
+
+exports.fetchRecentActivities = async (userId, limit) => {
+    try {
+        const activities = await ActivityLog.findAll({
+            where: { id_usuario: userId },
+            order: [['createdAt', 'DESC']], // 'createdAt' es el timestamp del log
+            limit: limit,
+            include: [ // Opcional: incluir el nombre del objetivo si está asociado
+                {
+                    model: Objetivo,
+                    as: 'objetivo', // Debe coincidir con el alias en ActivityLog.associate
+                    attributes: ['nombre'] // Solo el nombre del objetivo
+                }
+            ],
+            raw: false, // Para que funcione bien el include y el anidamiento
+        });
+
+        // Mapear al formato que espera tu frontend (si es necesario)
+        return activities.map(act => {
+            // La descripción ya debería estar bien formateada desde donde se creó el log.
+            // El 'type' también viene del log.
+            // El timestamp es act.createdAt
+            return {
+                id: act.id_activity_log, // O genera un ID único si es necesario
+                type: act.tipo_actividad,
+                description: act.descripcion,
+                timestamp: act.createdAt, // Usar createdAt como el timestamp de la actividad
+                objectiveId: act.id_objetivo, // Disponible si se incluyó y asoció
+                objectiveName: act.objetivo ? act.objetivo.nombre : null // Nombre del objetivo si se incluyó
+            };
+        });
+
+    } catch (error) {
+        console.error('Error en fetchRecentActivities (servicio):', error);
+        throw new AppError('Error al obtener la actividad reciente.', 500, error);
+    }
 };
