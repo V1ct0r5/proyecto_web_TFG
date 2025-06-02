@@ -46,7 +46,7 @@ const sequelizeInstance = new Sequelize(
         dialectOptions: {
             charset: 'utf8mb4',
         },
-        logging: env === 'development' ? console.log : false, // Logging específico de desarrollo puede mantenerse o eliminarse
+        logging: env === 'development' ? console.log : false,
         pool: {
             max: 5,
             min: 0,
@@ -60,6 +60,7 @@ const sequelizeInstance = new Sequelize(
 require('../api/models/user')(sequelizeInstance);
 require('../api/models/objectives')(sequelizeInstance);
 require('../api/models/progress')(sequelizeInstance);
+require('../api/models/activityLog')(sequelizeInstance); // Modelo añadido
 
 db.sequelize = sequelizeInstance;
 db.Sequelize = Sequelize;
@@ -68,6 +69,7 @@ db.Sequelize = Sequelize;
 db.Usuario = sequelizeInstance.models.Usuario;
 db.Objetivo = sequelizeInstance.models.Objetivo;
 db.Progress = sequelizeInstance.models.Progress;
+db.ActivityLog = sequelizeInstance.models.ActivityLog; // Modelo añadido
 
 // --- Ejecutar asociaciones ---
 Object.keys(sequelizeInstance.models).forEach(modelName => {
@@ -89,7 +91,8 @@ async function initializeDatabase() {
         const alterSync = process.env.DB_ALTER_SYNC === 'true' || (env === 'development' && !forceSync);
 
         if (alterSync && !forceSync) {
-            await db.sequelize.sync({ alter: true });
+            // La sincronización con { alter: true } ha sido desactivada.
+            // Los cambios de esquema deben manejarse mediante migraciones.
         } else if (forceSync) {
             console.warn('[DB] Sincronizando base de datos con { force: true } - ¡SE PERDERÁN TODOS LOS DATOS!');
             await db.sequelize.sync({ force: true });
