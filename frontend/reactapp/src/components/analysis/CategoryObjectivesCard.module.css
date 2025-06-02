@@ -1,0 +1,103 @@
+/* frontend/reactapp/src/components/analysis/CategoryObjectivesCard.module.css */
+.categoryCard {
+    background-color: var(--card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.categoryHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-ultralight, #f0f0f0);
+}
+
+.categoryColorDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.categoryName {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--heading-color);
+    margin: 0;
+    flex-grow: 1;
+}
+
+.objectiveCountBadge {
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    background-color: var(--muted);
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+}
+
+.objectivesList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.objectiveItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.objectiveNameLink {
+    font-weight: 500;
+    color: var(--link-color);
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+.objectiveNameLink:hover {
+    text-decoration: underline;
+}
+
+.objectiveProgressInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--foreground);
+}
+.objectiveProgressInfo span:first-child { /* Estilo para el porcentaje */
+    font-weight: 600;
+}
+.objectiveValues {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+}
+
+.noObjectivesText {
+    font-size: 0.9rem;
+    color: var(--muted-foreground);
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.inlineProgressBarContainer {
+    height: 8px;
+    background-color: var(--muted);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-top: 0.2rem;
+}
+
+.inlineProgressFill {
+    height: 100%;
+    transition: width 0.3s ease-in-out;
+    border-radius: var(--radius);
+}
