@@ -1,0 +1,109 @@
+.rankedListContainer {
+    background-color: var(--card-background, #ffffff);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--border-light, #e9ecef);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+}
+
+.listTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--heading-color);
+    margin: 0 0 1rem 0;
+}
+
+.objectiveList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* Espacio entre items */
+}
+
+.objectiveItem {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-ultralight, #f5f5f5);
+}
+.objectiveItem:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.objectiveLink {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-decoration: none;
+    color: var(--foreground);
+    padding: 0.3rem 0.1rem;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s ease;
+}
+
+.objectiveLink:hover {
+    background-color: var(--muted);
+}
+
+.objectiveInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex-grow: 1;
+    margin-right: 0.5rem; /* Espacio antes del porcentaje */
+}
+
+.objectiveName {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--link-color);
+}
+
+.objectiveCategory {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+}
+
+.objectiveProgressDetails {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: right;
+}
+
+.objectivePercentage {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--primary); /* O usa el color del objetivo */
+    min-width: 35px; /* Para alinear porcentajes */
+}
+.objectiveValues {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+}
+
+.noDataText {
+    color: var(--muted-foreground);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+/* Estilos para InlineProgressBar */
+.inlineProgressBarContainer {
+    height: 6px;
+    background-color: var(--muted);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-top: 0.3rem; /* Espacio después del texto del objetivo */
+}
+
+.inlineProgressFill {
+    height: 100%;
+    transition: width 0.3s ease-in-out;
+    border-radius: var(--radius);
+}
