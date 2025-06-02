@@ -1,4 +1,3 @@
-// frontend/reactapp/src/App.js
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
@@ -12,6 +11,7 @@ import EditGoalPage from './pages/EditGoalPage';
 import GoalDetailPage from './pages/GoalDetailPage';
 import UpdateProgressPage from './pages/UpdateProgressPage';
 import NewDashboardPage from './pages/DashboardPage';
+import AnalysisPage from './pages/AnalysisPage'; // Nueva página importada
 
 // Componentes/Layouts
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -21,7 +21,7 @@ import Sidebar from './layouts/SideBar/SideBar';
 import FullPageLoader from './components/ui/FullPageLoader';
 
 // Estilos y Contexto
-import './styles/index.css'; // Asumiendo que moviste los estilos de App.css a index.css
+import './styles/index.css';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-calendar/dist/Calendar.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -53,38 +53,36 @@ function AppContent() {
 
     const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
 
-    // Loader para la carga inicial de AuthContext
     if (isLoading && !isAuthenticated && !isAuthRoute) {
         return <FullPageLoader message="Inicializando..." />;
     }
-    
+
     return (
         <div className="App">
-            {/* Loader para "Sesión Expirada" como overlay */}
             {isLoggingOut && location.pathname !== '/login' && (
                 <FullPageLoader message="Tu sesión ha expirado. Redirigiendo al login..." />
             )}
 
             {isAuthenticated && !isAuthRoute && <Sidebar />}
-            
+
             <div className={`main-layout-content ${isAuthenticated && !isAuthRoute ? "with-sidebar" : ""}`}>
                 {isAuthenticated && !isAuthRoute && <AppHeader />}
-                
+
                 <main className={isAuthenticated && !isAuthRoute ? "main-content-area" : "main-content-centered"}>
                     <Routes>
-                        <Route 
-                            path="/" 
-                            element={isLoading ? <FullPageLoader message="Cargando..." /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)} 
+                        <Route
+                            path="/"
+                            element={isLoading ? <FullPageLoader message="Cargando..." /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)}
                         />
-                        
+
                         <Route element={isLoading ? <FullPageLoader message="Cargando..." /> : <AuthLayout />}>
-                            <Route 
-                                path="/login" 
+                            <Route
+                                path="/login"
                                 element={isLoading ? <FullPageLoader /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />) }
                             />
-                            <Route 
-                                path="/register" 
-                                element={isLoading ? <FullPageLoader /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />)} 
+                            <Route
+                                path="/register"
+                                element={isLoading ? <FullPageLoader /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />)}
                             />
                         </Route>
 
@@ -92,17 +90,17 @@ function AppContent() {
                             <Route path="/dashboard" element={<NewDashboardPage />} />
                             <Route path="/objectives" element={<CreateGoalPage />} />
                             <Route path="/mis-objetivos" element={<MyObjectivesPage />} />
-                            <Route path="/analisis" element={<div>Página de Análisis (Placeholder)</div>} />
+                            <Route path="/analisis" element={<AnalysisPage />} /> {/* Ruta actualizada */}
                             <Route path="/perfil" element={<div>Página de Mi Perfil (Placeholder)</div>} />
                             <Route path="/configuracion" element={<div>Página de Configuración (Placeholder)</div>} />
                             <Route path="/objectives/edit/:id" element={<EditGoalPage />} />
                             <Route path="/objectives/:id" element={<GoalDetailPage />} />
                             <Route path="/objectives/:id/update-progress" element={<UpdateProgressPage />} />
                         </Route>
-                        
-                        <Route 
-                            path="*" 
-                            element={isLoading ? <FullPageLoader message="Cargando..." /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)} 
+
+                        <Route
+                            path="*"
+                            element={isLoading ? <FullPageLoader message="Cargando..." /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)}
                         />
                     </Routes>
                 </main>
