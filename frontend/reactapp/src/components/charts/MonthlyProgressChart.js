@@ -1,0 +1,81 @@
+import React, { useMemo } from 'react';
+import { Line } from 'react-chartjs-2';
+import {
+    Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement,
+    Title, Tooltip, Legend, Filler
+} from 'chart.js';
+
+// NOTA: ChartJS.register DEBE realizarse una única vez de forma global en la aplicación.
+ChartJS.register(
+    CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler
+);
+
+// TODO: Mover getLineChartColors a un archivo de utilidades de gráficos.
+const getLineChartColors = (index) => {
+    const colors = [
+        { border: 'rgba(75, 192, 192, 1)', background: 'rgba(75, 192, 192, 0.2)' },
+        { border: 'rgba(255, 99, 132, 1)', background: 'rgba(255, 99, 132, 0.2)' },
+        { border: 'rgba(54, 162, 235, 1)', background: 'rgba(54, 162, 235, 0.2)' },
+        { border: 'rgba(255, 206, 86, 1)', background: 'rgba(255, 206, 86, 0.2)' },
+        { border: 'rgba(153, 102, 255, 1)', background: 'rgba(153, 102, 255, 0.2)' },
+        { border: 'rgba(255, 159, 64, 1)', background: 'rgba(255, 159, 64, 0.2)' }
+    ];
+    return colors[index % colors.length];
+};
+
+// data: [{ month: 'Enero', Fitness: 20, Finanzas: 30 }, ...]
+const MonthlyProgressChart = ({ data }) => {
+    const processedChartData = useMemo(() => {
+        if (!data || data.length === 0) {
+            return { labels: [], datasets: [] };
+        }
+        const labels = data.map(item => item.month);
+        const categories = Object.keys(data[0] || {}).filter(key => key !== 'month');
+        const datasets = categories.map((category, index) => {
+            const categoryData = data.map(item => item[category] || 0);
+            const colors = getLineChartColors(index);
+            return {
+                label: category, data: categoryData,
+                borderColor: colors.border, backgroundColor: colors.background,
+                fill: false, tension: 0.2, pointRadius: 3, pointHoverRadius: 5,
+            };
+        });
+        return { labels, datasets };
+    }, [data]);
+
+    if (!data || data.length === 0) {
+        return <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--muted-foreground)' }}>No hay datos de progreso mensual para mostrar.</p>;
+    }
+
+    const options = {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Progreso (%)' }, ticks: { callback: value => value + '%' } },
+            x: { title: { display: true, text: 'Mes' } }
+        },
+        plugins: {
+            legend: { position: 'bottom' }, title: { display: false },
+            tooltip: {
+                mode: 'index', intersect: false,
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) label += ': ';
+                        if (context.parsed.y !== null) label += context.parsed.y.toFixed(1) + '%';
+                        return label;
+                    }
+                }
+            }
+        },
+        interaction: { mode: 'index', intersect: false },
+    };
+
+    // TODO: Mover estos estilos a un archivo CSS module.
+    return (
+        <div style={{ height: '100%', width: '100%', position: 'relative', minHeight: '350px' }}>
+            <Line data={processedChartData} options={options} />
+        </div>
+    );
+};
+
+export default MonthlyProgressChart;
