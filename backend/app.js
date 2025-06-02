@@ -13,6 +13,7 @@ const AppError = require('./src/utils/AppError');
 const userRoutes = require('./src/api/routes/userRoutes');
 const objectivesRoutes = require('./src/api/routes/objectivesRoutes');
 const dashboardRoutes = require('./src/api/routes/dashboardRoutes'); // Nuevas rutas del dashboard
+const analysisRoutes = require('./src/api/routes/analysisRoutes');
 const errorHandler = require('./src/middlewares/errorHandler');
 // const transactionMiddleware = require('./src/middlewares/transactionMiddleware'); // Middleware de transacciones, generalmente no se aplica globalmente
 
@@ -52,7 +53,9 @@ try {
 // --- Rutas de la API ---
 app.use('/api', userRoutes);
 app.use('/api', objectivesRoutes);
-app.use('/api', dashboardRoutes); // Registro de las nuevas rutas del dashboard
+app.use('/api', dashboardRoutes);
+app.use('/api/analysis', analysisRoutes);
+
 
 // Ruta raíz de la API para verificar el estado del backend
 app.get('/api', (req, res) => {
