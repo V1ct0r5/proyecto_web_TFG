@@ -2,100 +2,130 @@ import React from 'react';
 import styles from './ObjetivoCard.module.css';
 import { useNavigate } from 'react-router-dom';
 import {
-    MdFavorite,
-    MdAttachMoney,
-    MdAutoStories,
-    MdPeople,
-    MdWork,
-    MdStar,
-    MdCalendarToday,
-    MdEdit,
-    MdOutlineRemoveRedEye
-} from 'react-icons/md';
+    FaChartLine,
+    FaArrowRight,
+    FaRegDotCircle,
+    FaHeartbeat,
+    FaPiggyBank,
+    FaUserGraduate,
+    FaUsers,
+    FaBriefcase,
+    FaStar,
+    FaEdit,
+    FaEye,
+    FaCalendarAlt
+} from 'react-icons/fa';
 
-function ObjetivoCard({ objective }) {
+const getObjectiveTypeIcon = (category) => {
+    switch (category) {
+        case 'Salud': return <FaHeartbeat className={styles.listItemTypeIcon} />;
+        case 'Finanzas': return <FaPiggyBank className={styles.listItemTypeIcon} />;
+        case 'Desarrollo personal': return <FaUserGraduate className={styles.listItemTypeIcon} />;
+        case 'Relaciones': return <FaUsers className={styles.listItemTypeIcon} />;
+        case 'Carrera profesional': return <FaBriefcase className={styles.listItemTypeIcon} />;
+        default: return <FaRegDotCircle className={styles.listItemTypeIcon} />;
+    }
+};
+
+function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }) {
     const navigate = useNavigate();
 
-    const getCategoryIcon = (category) => {
+    const progressPercentage = objective.progreso_calculado !== undefined && objective.progreso_calculado !== null
+        ? Math.round(objective.progreso_calculado)
+        : 0;
+
+    const lastUpdated = objective.updatedAt
+        ? new Date(objective.updatedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric', year: 'numeric' })
+        : 'N/A';
+
+    const handleCardClick = () => {
+        navigate(`/objectives/${objective.id_objetivo}`);
+    };
+
+    if (isListItemStyle) {
+        const objectiveTypeIcon = getObjectiveTypeIcon(objective.tipo_objetivo);
+        return (
+            <div
+                className={styles.objetivoCardListItemStyle}
+                onClick={handleCardClick}
+                role="button"
+                tabIndex="0"
+                onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
+                aria-label={`Ver detalles del objetivo ${objective.nombre}`}
+            >
+                <div className={styles.listItemIconContainer}>
+                    {objectiveTypeIcon}
+                </div>
+                <div className={styles.listItemDetails}>
+                    <h4 className={styles.listItemTitle}>{objective.nombre}</h4>
+                    <p className={styles.listItemUpdateDate}>Actualizado: {lastUpdated}</p>
+                </div>
+                <div className={styles.listItemProgress}>
+                    <span className={styles.listItemProgressText}>Progreso</span>
+                    <span className={styles.listItemProgressPercentage}>{progressPercentage}%</span>
+                </div>
+                <button
+                    className={styles.listItemArrowButton}
+                    onClick={(e) => { e.stopPropagation(); handleCardClick();}}
+                    aria-label={`Ver detalles de ${objective.nombre}`}
+                >
+                    <FaArrowRight />
+                </button>
+            </div>
+        );
+    }
+
+    // Renderizado de la tarjeta detallada original
+    const getCategoryIconOriginal = (category) => {
         switch (category) {
-            case 'Salud': return <MdFavorite />;
-            case 'Finanzas': return <MdAttachMoney />;
-            case 'Desarrollo personal': return <MdAutoStories />;
-            case 'Relaciones': return <MdPeople />;
-            case 'Carrera profesional': return <MdWork />;
-            default: return <MdStar />;
+            case 'Salud': return <FaHeartbeat />;
+            case 'Finanzas': return <FaPiggyBank />;
+            case 'Desarrollo personal': return <FaUserGraduate />;
+            case 'Relaciones': return <FaUsers />;
+            case 'Carrera profesional': return <FaBriefcase />;
+            default: return <FaStar />;
         }
     };
 
-    let progressPercentage = 0;
     let showProgressBar = false;
-
-    const initialValueStr = objective.valor_inicial_numerico;
-    const targetValueStr = objective.valor_cuantitativo;
-    const currentValueStr = objective.valor_actual;
-    const isLowerBetter = objective.es_menor_mejor;
-
     let initialValue = NaN, targetValue = NaN, currentValue = NaN;
     let hasQuantitativeValues = false;
-
     const isPotentiallyQuantitative =
-        initialValueStr !== null && typeof initialValueStr !== 'undefined' &&
-        targetValueStr !== null && typeof targetValueStr !== 'undefined';
+        objective.valor_inicial_numerico !== null && typeof objective.valor_inicial_numerico !== 'undefined' &&
+        objective.valor_cuantitativo !== null && typeof objective.valor_cuantitativo !== 'undefined';
 
     if (isPotentiallyQuantitative) {
-        initialValue = parseFloat(initialValueStr);
-        targetValue = parseFloat(targetValueStr);
-
-        if (currentValueStr !== null && typeof currentValueStr !== 'undefined' && !isNaN(parseFloat(currentValueStr))) {
-            currentValue = parseFloat(currentValueStr);
-        } else if (!isNaN(initialValue)) {
-            currentValue = initialValue;
-        }
-
-        if (!isNaN(initialValue) && !isNaN(targetValue) && !isNaN(currentValue)) {
-            hasQuantitativeValues = true;
-        }
+        initialValue = parseFloat(objective.valor_inicial_numerico);
+        targetValue = parseFloat(objective.valor_cuantitativo);
+        currentValue = (objective.valor_actual !== null && typeof objective.valor_actual !== 'undefined' && !isNaN(parseFloat(objective.valor_actual)))
+            ? parseFloat(objective.valor_actual)
+            : initialValue;
+        if (!isNaN(initialValue) && !isNaN(targetValue) && !isNaN(currentValue)) hasQuantitativeValues = true;
     }
 
+    let detailedProgressPercentage = 0;
     if (hasQuantitativeValues) {
         showProgressBar = true;
-
         if (initialValue === targetValue) {
-            progressPercentage = (isLowerBetter ? currentValue <= targetValue : currentValue >= targetValue) ? 100 : 0;
+            detailedProgressPercentage = (objective.es_menor_mejor ? currentValue <= targetValue : currentValue >= targetValue) ? 100 : 0;
         } else {
-            let totalRangeEffective;
-            let progressMadeEffective;
-
-            if (isLowerBetter) {
-                totalRangeEffective = initialValue - targetValue;
-                progressMadeEffective = initialValue - currentValue;
-            } else {
-                totalRangeEffective = targetValue - initialValue;
-                progressMadeEffective = currentValue - initialValue;
-            }
-
-            if (totalRangeEffective <= 0) {
-                 progressPercentage = (isLowerBetter ? currentValue <= targetValue : currentValue >= targetValue) ? 100 : 0;
-            } else {
-                progressPercentage = (progressMadeEffective / totalRangeEffective) * 100;
-            }
+            let totalRangeEffective = objective.es_menor_mejor ? initialValue - targetValue : targetValue - initialValue;
+            let progressMadeEffective = objective.es_menor_mejor ? initialValue - currentValue : currentValue - initialValue;
+            if (totalRangeEffective <= 0) detailedProgressPercentage = (objective.es_menor_mejor ? currentValue <= targetValue : currentValue >= targetValue) ? 100 : 0;
+            else detailedProgressPercentage = (progressMadeEffective / totalRangeEffective) * 100;
         }
-        progressPercentage = Math.max(0, Math.min(100, progressPercentage));
-
+        detailedProgressPercentage = Math.max(0, Math.min(100, detailedProgressPercentage));
     } else {
         showProgressBar = false;
-        progressPercentage = 0;
     }
-
     if (objective.estado === 'Completado') {
-        progressPercentage = 100;
+        detailedProgressPercentage = 100;
         showProgressBar = true;
     } else if (objective.estado === 'Pendiente') {
         showProgressBar = hasQuantitativeValues;
     }
-
-    const lastUpdated = objective.updatedAt ? new Date(objective.updatedAt).toLocaleDateString() : 'N/A';
     const statusClassName = `status-${objective.estado?.toLowerCase().replace(/\s/g, '')}`;
+    const lastUpdatedDetailed = objective.updatedAt ? new Date(objective.updatedAt).toLocaleDateString() : 'N/A'; // Para la tarjeta detallada
 
     return (
         <div className={styles.objetivoCard}>
@@ -103,40 +133,35 @@ function ObjetivoCard({ objective }) {
                 <div className={styles.cardHeaderContent}>
                     <h3 className={styles.cardTitle}>{objective.nombre}</h3>
                     <div className={styles.categoryBadge}>
-                        <span className={styles.categoryBadgeIcon}>{getCategoryIcon(objective.tipo_objetivo)}</span>
+                        <span className={styles.categoryBadgeIcon}>{getCategoryIconOriginal(objective.tipo_objetivo)}</span>
                         <span className={styles.categoryBadgeName}>{objective.tipo_objetivo}</span>
                     </div>
                 </div>
-
-                {objective.descripcion && (
-                    <p className={styles.cardDescription}>{objective.descripcion}</p>
-                )}
-
+                {objective.descripcion && <p className={styles.cardDescription}>{objective.descripcion}</p>}
                 {showProgressBar && (
                     <div className={styles.progressContainer}>
                         <div className={styles.progressHeader}>
                             <span className={styles.progressLabel}>Progreso</span>
-                            <span className={styles.progressPercentage}>{Math.round(progressPercentage)}%</span>
+                            <span className={styles.progressPercentage}>{Math.round(detailedProgressPercentage)}%</span>
                         </div>
                         <div className={styles.progressBar}>
                             <div
                                 className={`${styles.progressFill} ${
-                                    progressPercentage < 33 ? styles.progressFillLow :
-                                    progressPercentage < 66 ? styles.progressFillMedium :
+                                    detailedProgressPercentage < 33 ? styles.progressFillLow :
+                                    detailedProgressPercentage < 66 ? styles.progressFillMedium :
                                     styles.progressFillHigh
                                 }`}
-                                style={{ width: `${Math.max(0, Math.min(100,progressPercentage))}%` }}
+                                style={{ width: `${Math.max(0, Math.min(100,detailedProgressPercentage))}%` }}
                             ></div>
                         </div>
                     </div>
                 )}
-
                 {showProgressBar && hasQuantitativeValues && (
                     <div className={styles.progressValues}>
                         <div className={styles.progressValueBox}>
                             <div className={styles.progressValueLabel}>Actual:</div>
                             <div className={styles.progressValueNumber}>
-                                {isNaN(currentValue) ? (initialValueStr !== null && typeof initialValueStr !== 'undefined' && !isNaN(parseFloat(initialValueStr)) ? parseFloat(initialValueStr).toLocaleString() : 'N/A') : currentValue.toLocaleString()} {objective.unidad_medida || ''}
+                                {isNaN(currentValue) ? (initialValue !== null && typeof initialValue !== 'undefined' && !isNaN(parseFloat(initialValue)) ? parseFloat(initialValue).toLocaleString() : 'N/A') : currentValue.toLocaleString()} {objective.unidad_medida || ''}
                             </div>
                         </div>
                         <div className={styles.progressValueBox}>
@@ -147,11 +172,10 @@ function ObjetivoCard({ objective }) {
                         </div>
                     </div>
                 )}
-
                 <div className={styles.progressDate}>
-                    <MdCalendarToday className={styles.dataIcon} />
+                    <FaCalendarAlt className={styles.dataIcon} />
                     <span className={styles.dataLabel}>Actualizado:</span>
-                    <span className={styles.dataValue}>{lastUpdated}</span>
+                    <span className={styles.dataValue}>{lastUpdatedDetailed}</span>
                 </div>
                 <div className={`${styles.cardStatus} ${styles[statusClassName]}`}>
                     {objective.estado}
@@ -164,15 +188,15 @@ function ObjetivoCard({ objective }) {
                         onClick={() => navigate(`/objectives/edit/${objective.id_objetivo}`)}
                         aria-label={`Editar objetivo ${objective.nombre}`}
                     >
-                        <MdEdit className={styles.buttonIcon} />
+                        <FaEdit className={styles.buttonIcon} />
                         Editar
                     </button>
                     <button
                         className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`}
-                        onClick={() => navigate(`/objectives/${objective.id_objetivo}`)}
+                        onClick={handleCardClick}
                         aria-label={`Ver detalles del objetivo ${objective.nombre}`}
                     >
-                        <MdOutlineRemoveRedEye className={styles.buttonIcon} />
+                        <FaEye className={styles.buttonIcon} />
                         Detalles
                     </button>
                 </div>
