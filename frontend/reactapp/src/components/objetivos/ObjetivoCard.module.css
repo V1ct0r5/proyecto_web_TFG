@@ -233,12 +233,6 @@
     border-color: var(--muted-foreground);
 }
 
-/* Estilo específico para botones pequeños */
-.buttonSmall {
-    /* Los estilos generales de .button ya lo hacen más grande,
-       pero si necesitas un tamaño más específico para "small" aquí, ajústalo. */
-}
-
 .buttonIcon {
     font-size: 1.1rem; /* AUMENTO: Iconos de botón más grandes */
 }
