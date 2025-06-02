@@ -1,34 +1,55 @@
 const db = require("../config/database");
 
 const transactionMiddleware = async (req, res, next) => {
-    // Solo aplicar este middleware en entorno de test
     if (process.env.NODE_ENV !== "test") {
         return next();
     }
 
     let transaction;
     try {
-        // Iniciar una nueva transacción
-        transaction = await db.sequelize.transaction(); // Adjuntar la transacción al objeto request
+        transaction = await db.sequelize.transaction();
         req.transaction = transaction;
-        console.log("[Transaction Middleware] Transaction started for request."); // Continuar con la cadena de middlewares/rutas
+
+        res.on('finish', async () => {
+            if (transaction && !transaction.finished) {
+                // Es crucial que res.locals_error sea establecido por un manejador de errores
+                // si un error ocurre antes de que se envíe la respuesta pero el status es < 400.
+                if (res.statusCode < 400 && !res.locals_error) {
+                    try {
+                        await transaction.commit();
+                    } catch (commitError) {
+                        console.error("[Transaction Middleware] Error committing transaction:", commitError, "for request:", req.path);
+                        if (!transaction.finished) {
+                            try {
+                                await transaction.rollback();
+                            } catch (finalRollbackError) {
+                                console.error("[Transaction Middleware] Error rolling back after commit error for request:", req.path, finalRollbackError);
+                            }
+                        }
+                    }
+                } else {
+                    try {
+                        await transaction.rollback();
+                    } catch (rollbackError) {
+                        console.error("[Transaction Middleware] Error rolling back transaction:", rollbackError, "for request:", req.path);
+                    }
+                }
+            }
+        });
 
         next();
-    } catch (error) {
-        console.error(
-            "[Transaction Middleware] Error starting transaction:",
-            error
-        ); // Si falla al iniciar la transacción, pasar el error al manejador de errores
-        next(error);
-    } finally {
-    // Importante: La transacción debe ser revertida o confirmada.
-    // En los tests, queremos revertir SIEMPRE para aislamiento.
-    // Esto se haría en el `afterEach` del test, NO en el middleware aquí directamente,
-    // ya que `next()` es asíncrono y el middleware no espera a que la respuesta termine.
-    // La lógica de commit/rollback DEBE ESTAR EN EL TEST `afterEach`.
-    // Este middleware solo INICIA y ADJUNTA la transacción.
-    // La lógica de rollback en afterEach en los tests ya está correcta.
-    }
-    };
 
-    module.exports = transactionMiddleware;
+    } catch (error) {
+        console.error("[Transaction Middleware] Error starting transaction:", error, "for request:", req.path);
+        if (transaction && !transaction.finished) {
+            try {
+                await transaction.rollback();
+            } catch (rollbackError) {
+                console.error("[Transaction Middleware] Error rolling back transaction after start error:", rollbackError, "for request:", req.path);
+            }
+        }
+        next(error);
+    }
+};
+
+module.exports = transactionMiddleware;
