@@ -1,36 +1,109 @@
 /* frontend/reactapp/src/components/dashboard/RecentObjectivesList.module.css */
-.listContainer { /* Similar al .listSection del placeholder */
+.listContainer {
     display: flex;
     flex-direction: column;
     height: 100%;
 }
-.listTitle {
-    font-size: 1.1rem; font-weight: 600; margin: 0 0 1rem 0;
-    color: var(--heading-color);
+
+.list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
 }
-.list { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+
 .listItem {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.8rem 0.2rem;
-    border-bottom: 1px solid var(--border-light, #f0f0f0);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: var(--card-background, #ffffff);
+    border: 1px solid var(--border-ultralight, #f0f0f0);
+    border-radius: var(--radius-md, 8px);
+    margin-bottom: 0.75rem; /* Espacio entre tarjetas */
+    box-shadow: var(--shadow-xs, 0 1px 2px rgba(0,0,0,0.03));
 }
-.listItem:last-child { border-bottom: none; }
-.objectiveInfo { display: flex; flex-direction: column; gap: 0.1rem; }
+
+.listItem:last-child {
+    margin-bottom: 0;
+}
+
+.objectiveIcon {
+    font-size: 1.5rem;
+    color: var(--primary-color, #6f42c1);
+    padding: 0.3rem;
+    border-radius: var(--radius-sm, 4px);
+    background-color: var(--primary-soft-bg, #e9e3f5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.objectiveInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex-grow: 1;
+    min-width: 0; /* Para correcto funcionamiento de text-overflow */
+}
+
 .objectiveNameLink {
-    font-weight: 500; color: var(--link-color); text-decoration: none;
+    font-weight: 600;
+    color: var(--link-color);
+    text-decoration: none;
     font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.objectiveNameLink:hover { text-decoration: underline; color: var(--link-hover-color); }
-.lastUpdate { font-size: 0.75rem; color: var(--muted-foreground); }
-.objectiveActions { display: flex; align-items: center; gap: 0.75rem; }
+.objectiveNameLink:hover {
+    text-decoration: underline;
+    color: var(--link-hover-color);
+}
+
+.lastUpdate {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+}
+
+.objectiveActions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
 .progressPercent {
-    font-weight: 600; font-size: 0.9rem; color: var(--primary-color);
-    min-width: 35px; text-align: right;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    min-width: 35px;
+    text-align: right;
 }
-.detailsButton { /* Estilos para el botón de flecha */
-    color: var(--primary-color) !important; 
+
+.detailsButton {
+    color: var(--primary-color) !important;
     padding: 0.2rem !important;
 }
-.detailsButton:hover { color: var(--primary-hover) !important; }
-.viewAllButtonContainer { margin-top: 1rem; text-align: center; }
-.noData { color: var(--muted-foreground); font-style: italic; padding: 1rem 0; }
+.detailsButton:hover {
+    color: var(--primary-hover) !important;
+    background-color: var(--primary-soft-bg, #e9e3f5) !important;
+}
+
+.viewAllButtonContainer {
+    margin-top: auto; /* Empuja al final del contenedor flex */
+    padding-top: 1rem; /* Espacio sobre el botón */
+    text-align: center;
+}
+
+.noData {
+    color: var(--muted-foreground);
+    font-style: italic;
+    padding: 1rem 0;
+    text-align: center;
+    flex-grow: 1; /* Para centrar dentro de un contenedor flex */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
