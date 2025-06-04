@@ -199,7 +199,6 @@ function DashboardPage() {
                 </StatsCard>
 
                 <StatsCard
-                    icon={<FaClock />}
                     title="PRÓXIMOS A VENCER"
                     value={summaryData.dueSoonCount.toString()}
                     valueDescription="objetivos"
@@ -209,7 +208,6 @@ function DashboardPage() {
                 />
 
                 <StatsCard
-                    icon={<FaChartPie />}
                     title="CATEGORÍAS"
                     details={
                         summaryData.categoryDistribution?.length
