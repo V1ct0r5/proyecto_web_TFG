@@ -1,23 +1,35 @@
 /* frontend/reactapp/src/components/dashboard/StatsCard.module.css */
 .statsCard {
-    background-color: #ffffff;
-    border-radius: 8px; 
-    padding: 1rem;
-    box-shadow: none; /* Mantenemos sin sombra para el look plano */
-    border: 1px solid #e0e0e0; /* AÑADIDO BORDE DIFERENCIADO (gris claro) */
-    /* Puedes usar una variable CSS si la tienes: border: 1px solid var(--border-light, #e0e0e0); */
+    background-color: var(--card);
+    border-radius: var(--radius-md, 8px);
+    padding: 1.25rem 1rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border); /* Usando la variable de borde principal del tema */
     display: flex;
     flex-direction: column;
     justify-content: flex-start; 
     min-height: 160px; 
     text-align: left;
     position: relative; 
+    transition: all 0.2s ease-in-out;
+}
+
+.statsCard:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .iconWrapper {
-    font-size: 2.5rem; 
-    color: #333333;   
+    font-size: 1.8rem;
+    color: var(--primary); 
     margin-bottom: 0.75rem;
+    background-color: color-mix(in srgb, var(--primary) 15%, transparent);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .contentWrapper {
@@ -28,45 +40,45 @@
 
 .title {
     font-size: 0.8rem;
-    font-weight: 600;
-    color: #555555;
-    margin: 0 0 0.5rem 0;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    margin: 0 0 0.35rem 0;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .value {
-    font-size: 2.25rem; 
+    font-size: 2rem;
     font-weight: 700;
-    color: #000000;
+    color: var(--foreground);
     line-height: 1.1;
     margin: 0 0 0.25rem 0;
 }
 
 .valueDescription { 
     font-size: 0.8rem;
-    color: #555555;
-    margin-top: -0.25rem;
+    color: var(--muted-foreground);
+    margin-top: 0;
     margin-bottom: 0.5rem;
     display: block;
 }
 
-.details { 
-    font-size: 0.85rem;
-    color: #333333;
-    margin-top: 0.1rem;
-    line-height: 1.3;
+.details { /* Usado para texto adicional como "Activos: X, Completados: Y" */
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    margin-top: 0.25rem;
+    line-height: 1.4;
 }
 
 .childrenContainer { 
-    margin-top: 0.5rem; 
-    margin-bottom: 0.5rem;
-    flex-grow: 1; 
+    margin-top: auto; /* Empuja el contenido de children hacia abajo si hay espacio */
+    padding-top: 0.5rem; /* Espacio antes del contenido children */
 }
 
 .link {
     font-size: 0.8rem;
     font-weight: 600;
-    color: #000000; 
+    color: var(--primary);
     text-decoration: none;
     margin-top: auto; 
     padding-top: 0.75rem;
@@ -76,6 +88,40 @@
 }
 
 .link:hover {
-    text-decoration: underline;
-    color: #333333;
+    /* text-decoration: underline; */ /* El subrayado puede ser opcional */
+    color: var(--primary-hover);
+}
+
+/* Estilos para los detalles dentro de StatsCard (ej. Activos, Completados) */
+.statsDetailText { 
+    font-size: 0.8rem; 
+    color: var(--muted-foreground); 
+    margin: 0.1rem 0 0 0; 
+    line-height: 1.3;
+}
+.statsDetailTextSmall { /* Si necesitas un texto aún más pequeño */
+    font-size: 0.7rem; 
+    color: var(--muted-foreground); 
+    margin-top: 0.2rem; 
+    line-height: 1.2;
+}
+.categoryListInCard { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 0.4rem; 
+    margin-top: 0.5rem; 
+}
+.categoryChip { 
+    font-size: 0.7rem; 
+    padding: 0.2rem 0.5rem; 
+    border-radius: var(--radius-full, 9999px);
+    color: var(--primary-foreground);
+    background-color: var(--primary);
+    font-weight: 500; 
+    text-transform: capitalize;
+}
+.categoryChipMore { 
+    font-size: 0.7rem; 
+    padding: 0.2rem 0.3rem; 
+    color: var(--muted-foreground); 
 }
