@@ -88,7 +88,7 @@ const CategoryDonutChart = ({ data }) => {
     };
 
     return (
-        <div style={{ height: '120px', width: '100%', position: 'relative' }}>
+        <div style={{ height: "100%", width: "100%", position: 'relative', minHeight: "250px" }}>
             <Doughnut data={processedChartData} options={options} />
         </div>
     );
