@@ -16,7 +16,7 @@ const getHeaderTitle = (pathname) => {
             return 'Mis Objetivos';
         case '/analisis':
             return 'Análisis de Progreso';
-        case '/perfil':
+        case '/profile':
             return 'Mi Perfil';
         case '/configuracion':
             return 'Configuración';
