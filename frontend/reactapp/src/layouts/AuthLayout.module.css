@@ -1,18 +1,15 @@
-/* Estilos para el layout de las páginas de autenticación (Login, Registro) */
-
-/* Contenedor principal de la página de autenticación */
+/* frontend/reactapp/src/layouts/AuthLayout.module.css */
 .authPage {
     display: grid;
-    grid-template-rows: auto 1fr; /* Fila para header (opcional) y contenido principal */
+    grid-template-rows: auto 1fr; 
     grid-template-areas:
-        "header"        /* Área opcional para un header si se incluye en este grid */
-        "main-content"; /* Área para el contenido principal del formulario */
-    padding: 0; /* Sin padding en el contenedor de página completo */
+        "header"        
+        "main-content"; 
+    padding: 0; 
     box-sizing: border-box;
-    /* Considerar min-height: 100vh; si este layout es el nivel más alto y debe ocupar toda la pantalla */
+    min-height: 100vh; /* Asegurar que ocupe toda la altura */
 }
 
-/* Área de contenido principal donde se renderiza el formulario */
 .mainContentArea {
     grid-area: main-content;
     display: flex;
@@ -25,59 +22,60 @@
     padding: 1.5rem 0.8rem;
     background-color: var(--background);
     position: relative;
+    transition: background-color 0.3s ease; /* Añadido para suavizar cambio de tema */
 }
 
-/* Estilos para el título del formulario (usado en LoginPage y RegistroPage) */
 .formTitle {
     text-align: center;
     margin-bottom: 1.5rem;
-    margin-top: 0; /* Evitar margen superior si está al inicio del .mainContentArea */
-    color: var(--foreground, #333); /* Usar variable CSS si está definida, sino fallback */
+    margin-top: 0;
+    color: var(--foreground); /* Confiar en la variable del tema */
     font-size: 1.8rem;
 }
 
-/* Estilo para el párrafo de pie de formulario (usado en LoginPage y RegistroPage) */
 .formFooter {
     text-align: center;
     margin-top: 1rem;
     font-size: 0.9rem;
-    color: var(--muted-foreground, #555); /* Usar variable CSS o fallback */
+    color: var(--muted-foreground); /* Confiar en la variable del tema */
 }
 
-/* Estilo para los enlaces dentro del pie de formulario (usado en LoginPage y RegistroPage) */
 .formLink {
-    color: var(--primary, #2563eb); /* Usar variable CSS o fallback */
+    color: var(--primary); /* Confiar en la variable del tema */
     text-decoration: none;
     font-weight: 500;
-    transition: text-decoration 0.2s ease;
+    transition: color 0.2s ease; /* Transición para el color del enlace */
 }
 
 .formLink:hover {
     text-decoration: underline;
+    color: var(--primary-hover); /* Usar variable para hover si existe */
 }
 
-/* Estilos para el botón de cancelar (opcional, para este layout) */
+/* Estilos para un posible botón de cancelar a nivel de layout (ej. un 'X' para cerrar) */
+/* Si los botones de 'Cancelar' están DENTRO de los formularios y usan el componente <Button>, 
+   estos estilos podrían no ser necesarios aquí o ser para un caso de uso diferente. */
 .cancelButton {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background-color: var(--destructive, #dc3545); /* Color para acciones destructivas o de cancelación */
-    color: var(--destructive-foreground, #fff); /* Color de texto para el botón destructivo */
+    background-color: var(--destructive); 
+    color: var(--destructive-foreground); 
     padding: 0.5rem 1rem;
     border: none;
-    border-radius: var(--radius, 0.25rem); /* Usar variable de radio de borde global */
+    border-radius: var(--radius); 
     cursor: pointer;
-    font-size: var(--font-size-md, 1rem); /* Usar variable de tamaño de fuente global */
+    font-size: 1rem; /* Confirmar si una variable como --font-size-sm o --font-size-md es más apropiada */
     transition: background-color 0.3s ease;
-    z-index: 10; /* Asegura que esté por encima de otros elementos si es necesario */
+    z-index: 10; 
 }
 
 .cancelButton:hover {
-    background-color: var(--destructive-hover, #c82333); /* Tono más oscuro para hover */
+    background-color: var(--destructive-hover, color-mix(in srgb, var(--destructive) 80%, black)); /* Usar variable si existe, sino derivar */
 }
 
 .cancelButton:disabled {
-    background-color: var(--muted, #6c757d); /* Color para estado deshabilitado */
-    color: var(--muted-foreground, #ccc);
+    background-color: var(--muted); 
+    color: var(--muted-foreground);
     cursor: not-allowed;
 }
