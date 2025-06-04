@@ -291,15 +291,15 @@ function AnalysisPage() {
             </div>
 
             <section className={styles.statsRow}>
-                <StatsCard title="Objetivos Totales" value={summaryStats.totalObjectives.toString()} icon={<FaClipboardList />}><p className={styles.statsDetailText}>Activos: {summaryStats.activeObjectives}</p><p className={styles.statsDetailText}>Completados: {summaryStats.completedObjectives}</p></StatsCard>
-                <StatsCard title="Progreso Promedio" value={`${Math.round(summaryStats.averageProgress)}%`} icon={<FaChartLine />} />
-                <StatsCard title="Categorías" value={summaryStats.categoryCount.toString()} icon={<FaLayerGroup />}>
+                <StatsCard title="Objetivos Totales" value={summaryStats.totalObjectives.toString()} ><p className={styles.statsDetailText}>Activos: {summaryStats.activeObjectives}</p><p className={styles.statsDetailText}>Completados: {summaryStats.completedObjectives}</p></StatsCard>
+                <StatsCard title="Progreso Promedio" value={`${Math.round(summaryStats.averageProgress)}%`} />
+                <StatsCard title="Categorías" value={summaryStats.categoryCount.toString()}>
                     <div className={styles.categoryListInCard}>
                         {summaryStats.categories.slice(0, 3).map((cat, index) => (<span key={cat.name} className={styles.categoryChip} style={{ backgroundColor: getCategoryColor(cat.name, index, summaryStats.categories) }}>{cat.name}</span>))}
                         {summaryStats.categories.length > 3 && <span className={styles.categoryChipMore}>...y {summaryStats.categories.length - 3} más</span>}
                     </div>
                 </StatsCard>
-                <StatsCard title="Tendencia" value={summaryStats.trend?.text} icon={renderTrendIcon()}><p className={styles.statsDetailTextSmall}>Basado en el progreso de los últimos 30 días</p></StatsCard>
+                <StatsCard title="Tendencia" value={summaryStats.trend?.text} ><p className={styles.statsDetailTextSmall}>Basado en el progreso de los últimos 30 días</p></StatsCard>
             </section>
 
             <div className={styles.tabsContainer}>
