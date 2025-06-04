@@ -3,7 +3,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    background-color: var(--background, #f4f7f9);
+    background-color: var(--background); /* Eliminado fallback, confiar en index.css */
     height: 100%;
     overflow: hidden;
     box-sizing: border-box;
@@ -20,9 +20,10 @@
     text-align: center;
     height: 100%;
     box-sizing: border-box;
+    color: var(--muted-foreground); /* Añadido color base para el texto dentro */
 }
 .dashboardErrorState .errorMessageText {
-    color: var(--destructive, #dc3545);
+    color: var(--destructive); /* Eliminado fallback */
     margin-bottom: 1.5rem;
     font-size: 1.1rem;
 }
@@ -51,15 +52,22 @@
 
 .objectivesPreviewWrapper,
 .activityFeedWrapper {
-    background-color: var(--card-background, #ffffff);
-    border-radius: var(--radius-lg, 12px);
-    border: 1px solid var(--border-light, #e9ecef);
+    background-color: var(--card); /* MODIFICADO: Usar --card y quitar fallback */
+    border-radius: var(--radius-lg); /* Quitar fallback si --radius-lg está en index.css */
+    border: 1px solid var(--border);  /* MODIFICADO: Usar --border y quitar fallback */
     padding: 1.25rem 1.5rem;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     min-height: 0;
-    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03));
+    box-shadow: var(--shadow-sm); /* Quitar fallback si --shadow-sm está en index.css */
+}
+
+.sectionTitle { /* Estilo añadido para los títulos H3 dentro de los wrappers */
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0 0 1rem 0; /* Espacio debajo del título de sección */
 }
 
 .statusList {
@@ -78,12 +86,12 @@
 
 .statusName {
     flex-grow: 1;
-    color: var(--muted-foreground, #555555);
+    color: var(--muted-foreground); /* Eliminado fallback */
 }
 
 .statusCount {
     font-weight: 600;
-    color: var(--foreground, #000000);
+    color: var(--foreground); /* Eliminado fallback */
     min-width: 20px;
     text-align: right;
 }
@@ -97,13 +105,14 @@
 .partialErrorText {
     margin-top: 1rem;
     padding: 0.75rem;
-    background-color: var(--warning-background-soft, #fff3cd);
-    color: var(--warning-foreground-strong, #856404);
-    border: 1px solid var(--warning-border, #ffeeba);
+    /* Usar variables para los colores de advertencia que ya definiste en index.css */
+    background-color: var(--warning-background-soft, color-mix(in srgb, var(--warning) 15%, transparent)); 
+    color: var(--warning-foreground-strong, var(--warning-foreground)); 
+    border: 1px solid var(--warning-border, var(--warning)); 
     border-radius: var(--radius-md, 6px);
     font-size: 0.9rem;
     text-align: center;
 }
-.partialErrorText button {
+.partialErrorText button { /* Los botones deberían heredar de Button.module.css */
     margin-left: 0.5rem;
 }
