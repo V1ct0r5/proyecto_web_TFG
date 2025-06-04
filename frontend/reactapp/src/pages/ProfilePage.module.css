@@ -1,0 +1,291 @@
+/* frontend/reactapp/src/pages/ProfilePage.module.css */
+.profilePageContainer {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem; 
+}
+
+.centeredStatus {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    text-align: center;
+    color: var(--muted-foreground);
+}
+
+.errorText {
+    color: var(--destructive);
+}
+
+/* Profile Header Section */
+.profileHeader {
+    background-color: var(--card);
+    padding: 1.5rem 2rem;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: var(--shadow-md);
+    flex-wrap: wrap;
+}
+
+.avatarContainer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem; 
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary-soft-bg, color-mix(in srgb, var(--primary) 15%, transparent)); /* Fallback dinámico */
+    box-shadow: var(--shadow-md);
+}
+
+.avatarPlaceholder {
+    font-size: 120px;
+    color: var(--muted);
+    border: 4px solid var(--border-ultralight, var(--border)); /* Fallback a --border si --border-ultralight no existe */
+    border-radius: 50%;
+    padding: 5px; /* Considerar si este padding es ideal para todos los iconos */
+    background-color: var(--background);
+}
+
+/* Para .avatarEditButton y .avatarUploadButton, idealmente usarías props del componente Button,
+  ej. <Button size="small" variant="outline"> o clases específicas que no requieran !important.
+  Si el componente Button no lo permite, considera extenderlo.
+  Si DEBEN ser overrides aquí, intenta aumentar la especificidad:
+  .avatarContainer > :global(button.tu-clase-del-componente-button) { ... }
+  Por ahora, se deja como estaba, pero se recomienda evitar !important.
+*/
+.avatarEditButton,
+.avatarUploadButton {
+    font-size: 0.8rem !important; 
+    padding: 0.4rem 0.8rem !important;
+    width: auto; 
+    max-width: 150px;
+    text-align: center;
+}
+
+.avatarUploadButton svg {
+    margin-right: 0.4rem;
+}
+
+.userInfoMain {
+    flex-grow: 1;
+}
+
+.userNameStatus {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.userName {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--foreground);
+    margin: 0;
+    word-break: break-word;
+}
+
+.statusBadge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+}
+
+.statusActivo { 
+    background-color: var(--success-soft-bg, color-mix(in srgb, var(--success) 15%, transparent)); 
+    color: var(--success-strong-text, var(--success-foreground)); /* Fallback a foreground del success */
+}
+.statusIcon {
+    font-size: 0.9em; /* Relativo al font-size del .statusBadge */
+}
+
+.userInfoDetail {
+    font-size: 0.9rem;
+    color: var(--muted-foreground);
+    margin: 0.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    word-break: break-all;
+}
+
+.profileActions {
+    margin-left: auto; 
+    align-self: flex-start;
+}
+
+/* Profile Content Grid */
+.profileContentGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 992px) { 
+    .profileContentGrid {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); /* Ajustado ratio ligeramente */
+    }
+}
+
+.profileCard {
+    background-color: var(--card);
+    border-radius: var(--radius-md); /* Usar --radius-md o --radius-lg consistentemente para tarjetas */
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    height: fit-content;
+}
+
+.cardTitle {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0 0 0.5rem 0;
+}
+
+.cardSubtitle {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    margin-bottom: 1.5rem;
+}
+
+.personalInfoHeader {
+    margin-bottom: 1.5rem;
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+}
+
+@media (min-width: 640px) {
+    .infoGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .infoItemWide {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Estilos para labels y valores si no se usa FormGroup o para overrides */
+.infoItem > label, /* Asumiendo que FormGroup usa <label> directamente dentro de .infoItem */
+.infoItemWide > label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.infoItem > p,
+.infoItemWide > p {
+    font-size: 0.95rem;
+    color: var(--foreground);
+    word-break: break-word;
+    margin: 0; /* Resetear margen de párrafos si es necesario */
+}
+
+/* Si infoValue es una clase específica en el <p> dentro de .infoItem */
+.infoValue a {
+    color: var(--primary);
+    text-decoration: none;
+}
+.infoValue a:hover {
+    text-decoration: underline;
+}
+.bioText { /* Para el <p> que contiene la biografía en modo vista */
+    line-height: 1.6;
+    white-space: pre-wrap; /* Preservar saltos de línea y espacios */
+}
+
+/* Estilos para el textarea de la biografía en modo edición */
+/* Es preferible que el componente Input con type="textarea" herede de Input.module.css */
+.bioTextarea {
+    /* Hereda de Input.module.css si se usa el componente Input type="textarea" */
+    /* Si es un <textarea> nativo, aplicar estilos base de input aquí: */
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    background-color: var(--input-bg, var(--card)); /* Usar --input-bg o --card como fondo */
+    color: var(--foreground);
+    min-height: 100px;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.6;
+}
+.bioTextarea:focus { /* Estilos de foco si es un textarea nativo */
+    outline: none;
+    border-color: var(--ring);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 25%, transparent);
+}
+
+
+.formErrorMessage {
+    color: var(--destructive);
+    font-size: 0.85rem;
+    margin-top: 1rem;
+    text-align: left;
+}
+
+.editFormActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-light, var(--border)); /* Fallback a --border */
+}
+
+/* Right Column */
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Stats Card Specifics */
+.statsList {
+    list-style: none;
+    padding: 0;
+    margin: 0; /* Resetear margen de ul */
+}
+.statsList li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border-ultralight, var(--border)); /* Fallback */
+}
+.statsList li:last-child {
+    border-bottom: none;
+}
+.statValue {
+    font-weight: 600;
+}
+.statCompleted { color: var(--success); }
+.statInProgress { color: var(--primary); } /* Considerar un color "info" o "warning" si el primario se usa mucho */
+.statSuccessRate { color: var(--primary); } /* Ídem anterior */
