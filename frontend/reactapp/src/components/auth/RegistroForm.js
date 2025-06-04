@@ -124,10 +124,10 @@ function RegistroForm() {
                 <Input
                     type="password"
                     id="register-password"
-                    placeholder="Mínimo 6 caracteres" // Ajustar si las reglas de backend son más estrictas
+                    placeholder="Mínimo 8 caracteres" // Ajustar si las reglas de backend son más estrictas
                     {...register("password", {
                         required: "La contraseña es obligatoria.",
-                        minLength: { value: 6, message: "La contraseña debe tener al menos 6 caracteres." },
+                        minLength: { value: 8, message: "La contraseña debe tener al menos 8 caracteres." },
                         // Las validaciones de complejidad (mayúsculas, etc.) se omiten aquí,
                         // asumiendo que el backend las maneja. Si se añaden, deben ser consistentes.
                     })}
