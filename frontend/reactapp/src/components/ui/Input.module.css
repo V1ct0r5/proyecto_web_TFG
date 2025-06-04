@@ -1,75 +1,127 @@
-/* Estilos para los componentes Input, Select y Textarea */
+/* frontend/reactapp/src/components/ui/Input.module.css */
 
 /* Estilos base aplicables a input, select y textarea */
 .input,
 .select,
 .textarea {
-    display: block; /* Ocupa todo el ancho disponible en su contenedor */
-    width: 100%;
-    padding: 0.5rem 0.75rem; /* Padding interno */
-    border: 1px solid #d1d5db; /* Borde por defecto */
-    border-radius: 0.375rem; /* Radio de borde */
-    font-size: 1rem; /* Tamaño de fuente */
-    line-height: 1.5;
-    color: #495057; /* Color de texto */
-    background-color: #fff; /* Fondo blanco */
-    background-clip: padding-box; /* Asegura que el fondo se extienda bajo el padding */
-    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Transición para bordes y sombra */
-    box-sizing: border-box;
-     height: calc(1rem * 1.5 + 0.5rem * 2 + 1px * 2); /* line-height * font-size + padding-top + padding-bottom + border-top + border-bottom */
-     min-height: auto; /* Reset min-height para inputs y selects */
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.8rem; /* Padding interno ajustado */
+  border: 1px solid var(--border); /* Usa la variable de borde del tema */
+  border-radius: var(--radius-sm, 0.375rem); /* Variable de radio de borde, con fallback */
+  font-size: 0.95rem; /* Tamaño de fuente para inputs */
+  line-height: 1.5;
+  color: var(--foreground); /* Color de texto del tema */
+  /* Considera usar una variable específica como var(--input-background) o var(--card) si var(--background) no da suficiente contraste */
+  background-color: var(--background); 
+  background-clip: padding-box;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out; /* Transición para el fondo también */
+  box-sizing: border-box;
 }
 
-/* Estilos específicos para textarea */
+.input,
+.select {
+   /* Altura mínima aproximada: (font-size * line-height) + (padding-top + padding-bottom) + (border-top + border-bottom) */
+  min-height: calc(0.95rem * 1.5 + 0.6rem * 2 + 2px); 
+}
+
 .textarea {
-    min-height: 100px; /* Altura mínima para el textarea */
-    resize: vertical; /* Permite redimensionar solo verticalmente */
-     height: auto; /* Deja que la altura se ajuste al contenido o min-height */
+  min-height: 100px; /* Altura mínima para textarea */
+  resize: vertical; /* Permite redimensionar solo verticalmente */
+  line-height: 1.6; /* Un poco más de espacio para texto largo */
 }
 
 /* Estilos para placeholders */
 .input::placeholder,
 .textarea::placeholder {
-    color: #a0a0a0; /* Color del texto del placeholder */
-    opacity: 1; /* Asegura que la opacidad sea completa */
+  color: var(--muted-foreground); /* Usa la variable para texto "muted" */
+  opacity: 0.8; /* Un poco más sutil si se desea */
 }
 
 /* Estilo específico para la opción por defecto de un select (placeholder visual) */
-.select option[value=""]:first-child {
-    color: #a0a0a0;
-    font-style: italic;
+.select option {
+  background-color: var(--background); /* Fondo de las opciones del select */
+  color: var(--foreground); /* Texto de las opciones del select */
 }
+.select option[value=""]:first-child { /* Para el placeholder visual del select */
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
 
 /* Estilos al enfocar (focus) */
 .input:focus,
 .select:focus,
 .textarea:focus {
-    outline: none; /* Elimina el outline por defecto del navegador */
-    border-color: #3b82f6; /* Color de borde al enfocar */
-    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25); /* Sombra de enfoque */
+  outline: none;
+  border-color: var(--ring); /* Usa la variable --ring para el borde de foco */
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 25%, transparent); /* Sombra de enfoque usando --ring */
 }
 
 /* Estilos para el estado deshabilitado */
 .input:disabled,
 .select:disabled,
 .textarea:disabled {
-    background-color: #e9ecef;
-    opacity: 1;
-    cursor: not-allowed; /* Cursor de no permitido */
-    color: #666;
+  background-color: var(--muted); /* Usa la variable --muted para el fondo */
+  opacity: 0.7; /* Opacidad para indicar estado deshabilitado */
+  cursor: not-allowed;
+  color: var(--muted-foreground); /* Usa la variable para texto "muted" */
+  border-color: var(--border); /* Mantener un borde visible */
 }
 
 /* Estilos para el estado de error */
-.input.error,
+.input.error, 
 .textarea.error,
 .select.error {
-    border-color: #ef4444;
+  border-color: var(--destructive) !important; /* Priorizar borde de error con color destructivo */
 }
 
-/* Estilos al enfocar en estado de error */
 .input.error:focus,
 .textarea.error:focus,
 .select.error:focus {
-    border-color: #ef4444;
-    box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25);
+  border-color: var(--destructive) !important;
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--destructive) 25%, transparent) !important; /* Sombra de enfoque con color destructivo */
+}
+
+/* Contenedor para input + icono de acción */
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputWrapper > .input,
+.inputWrapper > .select,
+.inputWrapper > .textarea {
+  flex-grow: 1;
+  /* Si el icono de acción se superpone al texto, añade padding-right al input.
+     El valor dependerá del tamaño del botón de acción. ej: 2.5rem o 3rem */
+  /* padding-right: 2.8rem;  Ajustar según sea necesario */
+}
+
+/* Estilos para el botón de acción (ej. icono de ojo para mostrar/ocultar contraseña) */
+.actionIconButton {
+  position: absolute; /* Se superpone dentro del área del inputWrapper, a la derecha */
+  right: 0.5rem; 
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 0.35rem; /* Padding para el área clicable del botón */
+  cursor: pointer;
+  color: var(--muted-foreground); /* Color del icono */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem; /* Tamaño del icono visual */
+  line-height: 0; /* Evitar que el line-height del icono afecte el tamaño del botón */
+}
+
+.actionIconButton:hover {
+  color: var(--foreground); /* Color del icono al pasar el ratón */
+}
+
+.actionIconButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
