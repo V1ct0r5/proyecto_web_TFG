@@ -48,7 +48,7 @@ const Sidebar = () => {
                     <FaChartBar className={styles.icon} /> Análisis
                 </NavLink>
                 <NavLink
-                    to="/perfil"
+                    to="/profile"
                     className={({ isActive }) =>
                         isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
                     }
@@ -56,7 +56,7 @@ const Sidebar = () => {
                     <FaUser className={styles.icon} /> Mi Perfil
                 </NavLink>
                 <NavLink
-                    to="/configuracion"
+                    to="/settings"
                     className={({ isActive }) =>
                         isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
                     }
