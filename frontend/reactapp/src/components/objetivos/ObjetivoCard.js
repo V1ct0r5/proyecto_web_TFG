@@ -2,40 +2,35 @@ import React from 'react';
 import styles from './ObjetivoCard.module.css';
 import { useNavigate } from 'react-router-dom';
 import {
-    FaChartLine,
-    FaArrowRight,
-    FaRegDotCircle,
-    FaHeartbeat,
-    FaPiggyBank,
-    FaUserGraduate,
-    FaUsers,
-    FaBriefcase,
-    FaStar,
-    FaEdit,
-    FaEye,
-    FaCalendarAlt
+    FaChartLine, FaArrowRight, FaRegDotCircle, FaHeartbeat, FaPiggyBank,
+    FaUserGraduate, FaUsers, FaBriefcase, FaStar, FaEdit, FaEye, FaCalendarAlt
 } from 'react-icons/fa';
+import { formatDateByPreference } from '../../utils/dateUtils';
+import { useSettings } from '../../context/SettingsContext';
 
-const getObjectiveTypeIcon = (category) => {
+const getCategoryIcon = (category, isListItem = false) => {
+    const iconProps = isListItem ? { className: styles.listItemTypeIcon } : {};
     switch (category) {
-        case 'Salud': return <FaHeartbeat className={styles.listItemTypeIcon} />;
-        case 'Finanzas': return <FaPiggyBank className={styles.listItemTypeIcon} />;
-        case 'Desarrollo personal': return <FaUserGraduate className={styles.listItemTypeIcon} />;
-        case 'Relaciones': return <FaUsers className={styles.listItemTypeIcon} />;
-        case 'Carrera profesional': return <FaBriefcase className={styles.listItemTypeIcon} />;
-        default: return <FaRegDotCircle className={styles.listItemTypeIcon} />;
+        case 'Salud': return <FaHeartbeat {...iconProps} />;
+        case 'Finanzas': return <FaPiggyBank {...iconProps} />;
+        case 'Desarrollo personal': return <FaUserGraduate {...iconProps} />;
+        case 'Relaciones': return <FaUsers {...iconProps} />;
+        case 'Carrera profesional': return <FaBriefcase {...iconProps} />;
+        default: return isListItem ? <FaRegDotCircle {...iconProps} /> : <FaStar {...iconProps} />;
     }
 };
 
 function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }) {
+    const { settings } = useSettings();
     const navigate = useNavigate();
 
+    // Usar el progreso calculado que viene del objetivo, asumiendo que es la fuente autorizada.
     const progressPercentage = objective.progreso_calculado !== undefined && objective.progreso_calculado !== null
         ? Math.round(objective.progreso_calculado)
         : 0;
 
     const lastUpdated = objective.updatedAt
-        ? new Date(objective.updatedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric', year: 'numeric' })
+        ? formatDateByPreference(objective.updatedAt, settings.dateFormat, settings.language)
         : 'N/A';
 
     const handleCardClick = () => {
@@ -43,7 +38,7 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
     };
 
     if (isListItemStyle) {
-        const objectiveTypeIcon = getObjectiveTypeIcon(objective.tipo_objetivo);
+        const objectiveTypeIcon = getCategoryIcon(objective.tipo_objetivo, true);
         return (
             <div
                 className={styles.objetivoCardListItemStyle}
@@ -66,7 +61,7 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
                 </div>
                 <button
                     className={styles.listItemArrowButton}
-                    onClick={(e) => { e.stopPropagation(); handleCardClick();}}
+                    onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
                     aria-label={`Ver detalles de ${objective.nombre}`}
                 >
                     <FaArrowRight />
@@ -75,21 +70,11 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
         );
     }
 
-    // Renderizado de la tarjeta detallada original
-    const getCategoryIconOriginal = (category) => {
-        switch (category) {
-            case 'Salud': return <FaHeartbeat />;
-            case 'Finanzas': return <FaPiggyBank />;
-            case 'Desarrollo personal': return <FaUserGraduate />;
-            case 'Relaciones': return <FaUsers />;
-            case 'Carrera profesional': return <FaBriefcase />;
-            default: return <FaStar />;
-        }
-    };
-
+    // Renderizado de la tarjeta detallada
     let showProgressBar = false;
     let initialValue = NaN, targetValue = NaN, currentValue = NaN;
     let hasQuantitativeValues = false;
+
     const isPotentiallyQuantitative =
         objective.valor_inicial_numerico !== null && typeof objective.valor_inicial_numerico !== 'undefined' &&
         objective.valor_cuantitativo !== null && typeof objective.valor_cuantitativo !== 'undefined';
@@ -99,33 +84,27 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
         targetValue = parseFloat(objective.valor_cuantitativo);
         currentValue = (objective.valor_actual !== null && typeof objective.valor_actual !== 'undefined' && !isNaN(parseFloat(objective.valor_actual)))
             ? parseFloat(objective.valor_actual)
-            : initialValue;
-        if (!isNaN(initialValue) && !isNaN(targetValue) && !isNaN(currentValue)) hasQuantitativeValues = true;
+            : initialValue; // Si valor_actual no es numérico, usar initial.
+        if (!isNaN(initialValue) && !isNaN(targetValue) && !isNaN(currentValue)) {
+            hasQuantitativeValues = true;
+        }
+    }
+    
+    // Determinar si se muestra la barra de progreso basado en el estado o si es cuantitativo
+    if (objective.estado === 'Completado') {
+        showProgressBar = true; 
+        // progressPercentage ya es 100 si el estado es Completado y viene así del backend,
+        // o se puede forzar aquí si es necesario: progressPercentage = 100;
+    } else if (hasQuantitativeValues) {
+        showProgressBar = true;
+    } else if (objective.tipo_objetivo_secundario === 'Cualitativo' && objective.estado === 'En progreso') {
+        // Para objetivos cualitativos "En progreso" podrías querer mostrar una barra genérica o nada.
+        // Si se asume que progreso_calculado ya maneja esto (ej. 50% para En Progreso cualitativo), no se necesita lógica extra.
+        showProgressBar = true; // O basado en si progreso_calculado > 0
     }
 
-    let detailedProgressPercentage = 0;
-    if (hasQuantitativeValues) {
-        showProgressBar = true;
-        if (initialValue === targetValue) {
-            detailedProgressPercentage = (objective.es_menor_mejor ? currentValue <= targetValue : currentValue >= targetValue) ? 100 : 0;
-        } else {
-            let totalRangeEffective = objective.es_menor_mejor ? initialValue - targetValue : targetValue - initialValue;
-            let progressMadeEffective = objective.es_menor_mejor ? initialValue - currentValue : currentValue - initialValue;
-            if (totalRangeEffective <= 0) detailedProgressPercentage = (objective.es_menor_mejor ? currentValue <= targetValue : currentValue >= targetValue) ? 100 : 0;
-            else detailedProgressPercentage = (progressMadeEffective / totalRangeEffective) * 100;
-        }
-        detailedProgressPercentage = Math.max(0, Math.min(100, detailedProgressPercentage));
-    } else {
-        showProgressBar = false;
-    }
-    if (objective.estado === 'Completado') {
-        detailedProgressPercentage = 100;
-        showProgressBar = true;
-    } else if (objective.estado === 'Pendiente') {
-        showProgressBar = hasQuantitativeValues;
-    }
+
     const statusClassName = `status-${objective.estado?.toLowerCase().replace(/\s/g, '')}`;
-    const lastUpdatedDetailed = objective.updatedAt ? new Date(objective.updatedAt).toLocaleDateString() : 'N/A'; // Para la tarjeta detallada
 
     return (
         <div className={styles.objetivoCard}>
@@ -133,49 +112,52 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
                 <div className={styles.cardHeaderContent}>
                     <h3 className={styles.cardTitle}>{objective.nombre}</h3>
                     <div className={styles.categoryBadge}>
-                        <span className={styles.categoryBadgeIcon}>{getCategoryIconOriginal(objective.tipo_objetivo)}</span>
+                        <span className={styles.categoryBadgeIcon}>{getCategoryIcon(objective.tipo_objetivo)}</span>
                         <span className={styles.categoryBadgeName}>{objective.tipo_objetivo}</span>
                     </div>
                 </div>
                 {objective.descripcion && <p className={styles.cardDescription}>{objective.descripcion}</p>}
+                
                 {showProgressBar && (
                     <div className={styles.progressContainer}>
                         <div className={styles.progressHeader}>
                             <span className={styles.progressLabel}>Progreso</span>
-                            <span className={styles.progressPercentage}>{Math.round(detailedProgressPercentage)}%</span>
+                            <span className={styles.progressPercentage}>{progressPercentage}%</span>
                         </div>
                         <div className={styles.progressBar}>
                             <div
                                 className={`${styles.progressFill} ${
-                                    detailedProgressPercentage < 33 ? styles.progressFillLow :
-                                    detailedProgressPercentage < 66 ? styles.progressFillMedium :
+                                    progressPercentage < 33 ? styles.progressFillLow :
+                                    progressPercentage < 66 ? styles.progressFillMedium :
                                     styles.progressFillHigh
                                 }`}
-                                style={{ width: `${Math.max(0, Math.min(100,detailedProgressPercentage))}%` }}
+                                style={{ width: `${progressPercentage}%` }} // Usar progressPercentage consistentemente
                             ></div>
                         </div>
                     </div>
                 )}
-                {showProgressBar && hasQuantitativeValues && (
+
+                {showProgressBar && hasQuantitativeValues && ( // Solo mostrar valores si es cuantitativo
                     <div className={styles.progressValues}>
                         <div className={styles.progressValueBox}>
                             <div className={styles.progressValueLabel}>Actual:</div>
                             <div className={styles.progressValueNumber}>
-                                {isNaN(currentValue) ? (initialValue !== null && typeof initialValue !== 'undefined' && !isNaN(parseFloat(initialValue)) ? parseFloat(initialValue).toLocaleString() : 'N/A') : currentValue.toLocaleString()} {objective.unidad_medida || ''}
+                                {isNaN(currentValue) ? (initialValue !== null && typeof initialValue !== 'undefined' && !isNaN(parseFloat(initialValue)) ? parseFloat(initialValue).toLocaleString(settings.language) : 'N/A') : currentValue.toLocaleString(settings.language)} {objective.unidad_medida || ''}
                             </div>
                         </div>
                         <div className={styles.progressValueBox}>
                             <div className={styles.progressValueLabel}>Meta:</div>
                             <div className={styles.progressValueNumber}>
-                                {isNaN(targetValue) ? 'N/A' : targetValue.toLocaleString()} {objective.unidad_medida || ''}
+                                {isNaN(targetValue) ? 'N/A' : targetValue.toLocaleString(settings.language)} {objective.unidad_medida || ''}
                             </div>
                         </div>
                     </div>
                 )}
+
                 <div className={styles.progressDate}>
                     <FaCalendarAlt className={styles.dataIcon} />
                     <span className={styles.dataLabel}>Actualizado:</span>
-                    <span className={styles.dataValue}>{lastUpdatedDetailed}</span>
+                    <span className={styles.dataValue}>{lastUpdated}</span> {/* Usar lastUpdated consistentemente */}
                 </div>
                 <div className={`${styles.cardStatus} ${styles[statusClassName]}`}>
                     {objective.estado}
