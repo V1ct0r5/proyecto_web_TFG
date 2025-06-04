@@ -24,12 +24,13 @@ export const useSettings = () => {
 const defaultSettings = {
     themePreference: 'system', // 'light', 'dark', 'system'
     language: 'es',
-    dateFormat: 'dd/MM/yyyy', // Asegúrate que este formato sea compatible con tu dateUtils
+    dateFormat: 'DD/MM/YYYY',
     emailNotifications: true,
     pushNotifications: false,
-    profileVisibility: 'public', // 'public', 'private', 'friends' (ejemplos)
+    profileVisibility: 'public',
     showStatistics: true,
     allowAnalysis: true,
+    // weeklySummary y objectiveReminders fueron eliminados según tu petición
 };
 
 export const SettingsProvider = ({ children }) => {
@@ -49,120 +50,86 @@ export const SettingsProvider = ({ children }) => {
         
         root.setAttribute('data-theme', themeToApply);
         localStorage.setItem('app-theme', themeToApply); // Guardar el tema resuelto
+        // console.log(`SettingsContext: Tema aplicado y guardado en localStorage: ${themeToApply}`);
     }, []);
 
     const loadUserSettings = useCallback(async () => {
         if (isAuthenticated && user?.id) {
             setIsLoadingSettings(true);
-            setIsApplyingTheme(true); // Indicar que estamos intentando aplicar un tema basado en configuración cargada
             try {
                 const response = await apiService.getUserSettings();
                 if (response && response.preferences) {
+                    // Fusionar con defaults para asegurar que todos los campos existan
                     const mergedSettings = { ...defaultSettings, ...response.preferences };
                     setSettings(mergedSettings);
                     applyThemeToDocument(mergedSettings.themePreference);
                 } else {
-                    // Si no hay preferencias guardadas, usar los defaults y aplicar el tema por defecto
                     setSettings(defaultSettings);
                     applyThemeToDocument(defaultSettings.themePreference);
                 }
             } catch (error) {
                 console.error("SettingsContext: Error al cargar la configuración del usuario:", error);
-                toast.error("No se pudo cargar tu configuración. Se usarán los valores por defecto.");
+                toast.error("No se pudo cargar tu configuración guardada. Se usarán los valores por defecto.");
                 setSettings(defaultSettings);
-                applyThemeToDocument(defaultSettings.themePreference);
+                applyThemeToDocument(defaultSettings.themePreference); // Aplicar tema por defecto en caso de error
             } finally {
                 setIsLoadingSettings(false);
                 setIsApplyingTheme(false);
             }
         } else if (!isAuthenticated) {
             // Usuario NO autenticado o cerrando sesión
-            setIsLoadingSettings(true); // Puede haber un breve momento de "carga" para aplicar tema por defecto
-            setIsApplyingTheme(true);
-            
             setSettings(defaultSettings); // Resetear a los defaults del código
-            // Para páginas de login/registro, podrías optar por un tema fijo (ej. 'light')
-            // o respetar el último tema conocido/del sistema si no hay uno fijo.
-            // La implementación actual (useEffect inicial) ya maneja el localStorage/system pref.
-            // Aquí, si forzamos 'light', se podría hacer, pero el useEffect inicial ya puso algo.
-            // Tal vez aplicar el tema por defecto de 'defaultSettings' si el usuario cierra sesión.
-            const themeForUnauthenticated = defaultSettings.themePreference; // O 'light' directamente si se prefiere
-            applyThemeToDocument(themeForUnauthenticated);
-            
+            applyThemeToDocument('light'); // Forzar tema claro para páginas de login/registro
             setIsLoadingSettings(false);
             setIsApplyingTheme(false);
         }
     }, [isAuthenticated, user, applyThemeToDocument]);
 
-    // Efecto para aplicar el tema guardado en localStorage O el del sistema ANTES de que AuthContext cargue
+    // Efecto para cargar el tema desde localStorage al inicio de la aplicación (antes de Auth y Settings)
     useEffect(() => {
-        const root = document.documentElement;
         const savedTheme = localStorage.getItem('app-theme');
-        let initialThemeToApply = 'light'; // Fallback muy genérico
-
+        const root = document.documentElement;
+        setIsApplyingTheme(true);
         if (savedTheme) {
-            initialThemeToApply = savedTheme;
-        } else { // Si no hay tema guardado, usar el de defaultSettings o el del sistema
-            if (defaultSettings.themePreference === 'system') {
-                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                initialThemeToApply = systemPrefersDark ? 'dark' : 'light';
-            } else {
-                initialThemeToApply = defaultSettings.themePreference; // ej. 'light' o 'dark' si está en defaults
-            }
+            root.setAttribute('data-theme', savedTheme);
+        } else {
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            root.setAttribute('data-theme', systemPrefersDark ? 'dark' : 'light');
         }
-        root.setAttribute('data-theme', initialThemeToApply);
-        localStorage.setItem('app-theme', initialThemeToApply); // Guardar el tema resuelto inicial
-        
-        // No es estrictamente necesario setIsApplyingTheme aquí si App.js tiene su propio loader inicial
-        // pero si se usa para coordinar, está bien.
-        // El setTimeout ayuda a que el DOM se actualice antes de quitar el loader en App.js
-        const timer = setTimeout(() => setIsApplyingTheme(false), 50);
+        // Pequeño delay para el primer renderizado del tema, luego loadUserSettings puede tomar el control
+        const timer = setTimeout(() => setIsApplyingTheme(false), 50); 
         return () => clearTimeout(timer);
-    }, []); // Solo se ejecuta una vez al montar el Provider
+    }, []);
 
-    // Cargar configuración del usuario cuando el estado de autenticación cambie o el usuario cambie.
+    // Cargar configuración del usuario cuando el estado de autenticación cambie
     useEffect(() => {
         loadUserSettings();
-    }, [loadUserSettings]); // la dependencia en loadUserSettings es correcta.
+    }, [loadUserSettings]); // Se ejecuta cuando isAuthenticated o user cambian gracias a la dependencia en useCallback
 
     const updateSettings = useCallback(async (settingsToUpdate) => {
         if (!isAuthenticated) {
             toast.error("Debes iniciar sesión para guardar la configuración.");
             throw new Error("Usuario no autenticado");
         }
-        
-        // Guardar el estado actual para posible reversión
-        const previousSettings = { ...settings }; 
-
         try {
-            const newSettings = { ...settings, ...settingsToUpdate };
-            setSettings(newSettings); // Actualización optimista para la UI
-            applyThemeToDocument(newSettings.themePreference); // Aplicar tema inmediatamente
+            const currentSettingsWithPayload = { ...settings, ...settingsToUpdate };
+            setSettings(currentSettingsWithPayload); // Actualización optimista para la UI
+            applyThemeToDocument(currentSettingsWithPayload.themePreference); // Aplicar tema inmediatamente
 
             await apiService.updateUserSettings(settingsToUpdate); // Enviar solo los cambios al backend
-            
-            // Opcional: si el backend devuelve el objeto de configuración completo y actualizado, usarlo:
-            // const savedSettingsFromBackend = await apiService.updateUserSettings(settingsToUpdate);
-            // if (savedSettingsFromBackend) {
-            //     const fullyMerged = { ...defaultSettings, ...savedSettingsFromBackend.preferences };
-            //     setSettings(fullyMerged);
-            //     applyThemeToDocument(fullyMerged.themePreference);
-            // }
-            toast.success("Configuración guardada con éxito.");
+
+            // Opcional: Recargar desde el backend para asegurar consistencia total,
+            // o confiar en que la respuesta del API (si la hubiera) confirme los datos.
+            // loadUserSettings(); // Esto podría causar un parpadeo si el API tarda.
             return true;
         } catch (error) {
             console.error("SettingsContext: Error al guardar la configuración:", error);
-            toast.error(error.response?.data?.message || error.message || "Error al guardar la configuración.");
-            
+            toast.error(error.message || "Error al guardar la configuración. Por favor, inténtalo de nuevo.");
             // Revertir al estado anterior si el guardado falla
-            setSettings(previousSettings);
-            applyThemeToDocument(previousSettings.themePreference);
-            // Opcionalmente, en lugar de revertir al estado optimista anterior, recargar desde el servidor:
-            // await loadUserSettings(); // Esto asegura la consistencia con el servidor pero puede ser más lento
-            
+            loadUserSettings(); // Recargar las configuraciones desde el servidor para revertir el cambio optimista
             throw error;
         }
-    }, [isAuthenticated, settings, applyThemeToDocument /*, loadUserSettings si se usa para revertir */]);
+    }, [isAuthenticated, settings, loadUserSettings, applyThemeToDocument]);
 
     const contextValue = useMemo(() => ({
         settings,
