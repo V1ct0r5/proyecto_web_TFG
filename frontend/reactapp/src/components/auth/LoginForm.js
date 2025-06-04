@@ -123,6 +123,7 @@ function LoginForm() {
                         required: "La contraseña es obligatoria.",
                         // Validación de longitud mínima usualmente se maneja en el registro o backend
                     })}
+                    autoComplete="current-password"
                     disabled={isSubmitting}
                     isError={!!errors.password}
                     aria-invalid={errors.password ? "true" : "false"}
