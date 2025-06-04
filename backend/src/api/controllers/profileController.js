@@ -1,9 +1,7 @@
-// backend/src/api/controllers/profileController.js
 const profileService = require('../services/profileService');
 const AppError = require('../../utils/AppError');
 // const { validationResult } = require('express-validator'); // Descomenta si añades validadores
 
-// Tus funciones existentes:
 exports.getProfileDetails = async (req, res, next) => {
     try {
         const userId = req.user.id;
@@ -62,41 +60,30 @@ exports.updateProfileDetails = async (req, res, next) => {
 };
 
 exports.uploadAvatar = async (req, res, next) => {
-    console.log('[Controller DEBUG] uploadAvatar INICIADO. req.file:', req.file);
     try {
         const userId = req.user.id;
         if (!req.file) {
-            console.error('[Controller DEBUG] req.file NO EXISTE en el controlador.');
             return next(new AppError('No se seleccionó ningún archivo para subir.', 400));
         }
-
-        console.log('[Controller DEBUG] Archivo recibido:', req.file.filename, 'Path:', req.file.path);
 
         // Construir la URL pública del avatar
         const relativePath = `/uploads/avatars/${req.file.filename}`;
         
         // Determinar la URL base del backend
-        // Priorizar variable de entorno, sino construirla desde la petición
         const baseUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
         
-        // CORRECCIÓN AQUÍ: Asegurar que no haya doble '/' si BACKEND_URL ya tiene una al final
-        // y que relativePath siempre empiece con una.
         const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         const cleanRelativePath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
 
-        const avatarUrl = `${cleanBaseUrl}${cleanRelativePath}`; // Plantilla literal correcta
+        const avatarUrl = `${cleanBaseUrl}${cleanRelativePath}`;
         
-        console.log('[Controller DEBUG] URL de avatar generada:', avatarUrl);
-
         const updatedUser = await profileService.updateAvatarUrl(userId, avatarUrl, req.file.path);
-        console.log('[Controller DEBUG] Usuario actualizado por el servicio:', updatedUser);
 
         res.status(200).json({
             message: 'Foto de perfil actualizada con éxito.',
             avatarUrl: updatedUser.avatarUrl 
         });
     } catch (error) {
-        console.error('[Controller DEBUG] Error en uploadAvatar:', error);
         next(error);
     }
 };
