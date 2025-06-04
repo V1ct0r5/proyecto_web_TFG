@@ -24,6 +24,47 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    telefono: {
+      type: DataTypes.STRING(25), // Corregido: sin espacio extra
+      allowNull: true,
+    },
+    biografia: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    ubicacion: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    avatar_url: {
+      type: DataTypes.STRING(2048), // URL puede ser larga
+      allowNull: true,
+    },
+    theme_preference: {
+      type: DataTypes.ENUM('light', 'dark', 'system'),
+      allowNull: false,
+      defaultValue: 'system',
+    },
+    language_preference: {
+      type: DataTypes.ENUM('es', 'en'),
+      allowNull: false,
+      defaultValue: 'es',
+    },
+    date_format_preference: {
+      type: DataTypes.ENUM('DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'),
+      allowNull: false,
+      defaultValue: 'DD/MM/YYYY',
+    },
+    email_notifications: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    push_notifications: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
   }, {
     tableName: 'Usuarios',
     timestamps: true,
@@ -32,14 +73,19 @@ module.exports = (sequelize) => {
 
   Usuario.associate = (models) => {
     Usuario.hasMany(models.Objetivo, {
-        foreignKey: 'id_usuario', // Clave foránea en la tabla 'objectives'
-        as: 'objetivos',          // Alias para incluir objetivos con el usuario
-        onDelete: 'CASCADE'       // Eliminar objetivos del usuario si el usuario es eliminado
+        foreignKey: 'id_usuario', 
+        as: 'objetivos',         
+        onDelete: 'CASCADE'      
     });
     Usuario.hasMany(models.Progress, {
-        foreignKey: 'id_usuario', // Clave foránea en la tabla 'progress'
-        as: 'progresos',          // Alias para incluir progresos con el usuario
-        onDelete: 'CASCADE'       // Eliminar progresos del usuario si el usuario es eliminado
+        foreignKey: 'id_usuario', 
+        as: 'progresos',         
+        onDelete: 'CASCADE'      
+    });
+    Usuario.hasMany(models.ActivityLog, { // Asociación añadida
+      foreignKey: 'id_usuario',
+      as: 'activityLogs',
+      onDelete: 'CASCADE'
     });
   };
 
