@@ -1,8 +1,5 @@
-// backend/src/api/controllers/profileController.js
 const profileService = require('../services/profileService');
 const AppError = require('../../utils/AppError');
-const path = require('path'); // Asegúrate de importar 'path'
-
 // const { validationResult } = require('express-validator'); // Descomenta si añades validadores
 
 exports.getProfileDetails = async (req, res, next) => {
@@ -45,6 +42,10 @@ exports.getProfileAchievements = async (req, res, next) => {
 };
 
 exports.updateProfileDetails = async (req, res, next) => {
+    // const errors = validationResult(req);
+    // if (!errors.isEmpty()) {
+    //     return res.status(400).json({ errors: errors.array() });
+    // }
     try {
         const userId = req.user.id;
         if (!userId) {
@@ -65,37 +66,17 @@ exports.uploadAvatar = async (req, res, next) => {
             return next(new AppError('No se seleccionó ningún archivo para subir.', 400));
         }
 
-        // --- INICIO DE MODIFICACIÓN PARA REFORZAR SEGURIDAD ---
-        // Aunque uploadMiddleware.js genera un nombre seguro (ej. user-${id}-avatar-${sufijo}.${ext}),
-        // aplicamos path.basename() como una capa adicional de sanitización para asegurarnos
-        // de que solo el componente final del nombre de archivo se utiliza.
-        // Esto previene que cualquier posible carácter de ruta ('/' o '\') inesperado en req.file.filename
-        // (aunque no debería haberlo si el middleware funciona bien) afecte la construcción de relativePath.
-        const safeFilenameComponent = path.basename(req.file.filename);
-
-        // Adicionalmente, una comprobación explícita contra '..' en el componente de nombre de archivo.
-        // De nuevo, esto debería ser redundante si uploadMiddleware es correcto, pero no hace daño.
-        if (safeFilenameComponent.includes('..')) {
-            console.warn(`[ProfileController] Intento de Path Traversal detectado en nombre de archivo (ya procesado por basename): ${safeFilenameComponent}`);
-            // Considerar limpiar el archivo subido si se detecta un intento así.
-            // Por ahora, simplemente denegamos la operación.
-            // await fs.promises.unlink(req.file.path).catch(e => console.error("Error eliminando archivo sospechoso:", e));
-            return next(new AppError('Nombre de archivo para avatar inválido.', 400));
-        }
-        // --- FIN DE MODIFICACIÓN PARA REFORZAR SEGURIDAD ---
-
-        const relativePath = `/uploads/avatars/${safeFilenameComponent}`; // Usar el nombre de archivo sanitizado
+        // Construir la URL pública del avatar
+        const relativePath = `/uploads/avatars/${req.file.filename}`;
         
+        // Determinar la URL base del backend
         const baseUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
         
         const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-        // relativePath ya debería empezar con '/'
-        const avatarUrl = `${cleanBaseUrl}${relativePath}`;
+        const cleanRelativePath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+
+        const avatarUrl = `${cleanBaseUrl}${cleanRelativePath}`;
         
-        // req.file.path es la ruta temporal del NUEVO archivo subido, gestionada por Multer.
-        // La vulnerabilidad de Path Traversal que Snyk probablemente señaló
-        // se aborda principalmente en profileService.updateAvatarUrl al manejar
-        // la eliminación del AVATAR ANTIGUO.
         const updatedUser = await profileService.updateAvatarUrl(userId, avatarUrl, req.file.path);
 
         res.status(200).json({
@@ -103,14 +84,6 @@ exports.uploadAvatar = async (req, res, next) => {
             avatarUrl: updatedUser.avatarUrl 
         });
     } catch (error) {
-        // Si hay un error y se subió un archivo temporal, Multer usualmente no lo limpia
-        // si el error ocurre después de que Multer haya terminado. Considerar limpieza aquí o en el servicio.
-        // Sin embargo, si el error es por 'Nombre de archivo inválido', ya no se llama al servicio.
-        if (req.file && req.file.path && error.message !== 'Nombre de archivo inválido.') {
-            // fs.promises.unlink(req.file.path).catch(e => console.error("Error eliminando archivo temporal tras fallo en uploadAvatar:", e));
-            // Comentado para evitar introducir un nuevo fs.unlink aquí sin la misma lógica de seguridad que se aplica en el servicio.
-            // La limpieza de archivos temporales de Multer en caso de error post-subida es un tema complejo.
-        }
         next(error);
     }
 };
