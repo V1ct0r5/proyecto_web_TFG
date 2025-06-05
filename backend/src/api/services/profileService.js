@@ -1,38 +1,34 @@
+// backend/src/services/profileService.js
 const db = require('../../config/database');
-const { Usuario, Objetivo, Progress, ActivityLog } = db.sequelize.models; // Importa los modelos que necesites
+const { Usuario, Objetivo, Progress, ActivityLog } = db.sequelize.models;
 const { Op } = require('sequelize');
 const AppError = require('../../utils/AppError');
-const { _calculateProgress } = require('./objectivesService'); // Asumiendo que exportas _calculateProgress
+const { _calculateProgress } = require('./objectivesService');
 const fs = require('fs').promises;
 const path = require('path');
+
+// Definir la ruta base absoluta y segura para el directorio de subidas de avatares
+// Asegúrate de que esta ruta coincida con la configuración de tu uploadMiddleware y la estructura de tu proyecto.
+// Si profileService.js está en backend/src/api/services/
+// y los avatares están en backend/public/uploads/avatars/
+const UPLOAD_DIR_ABSOLUTE = path.resolve(__dirname, '../../../../public/uploads/avatars');
 
 exports.fetchUserProfile = async (userId) => {
     try {
         const user = await Usuario.findByPk(userId, {
             attributes: [
-                'id',
-                'nombre_usuario',
-                'correo_electronico',
-                'createdAt',
-                'telefono',
-                'ubicacion',
-                'biografia',
-                'avatar_url'
+                'id', 'nombre_usuario', 'correo_electronico', 'createdAt',
+                'telefono', 'ubicacion', 'biografia', 'avatar_url'
             ]
         });
         if (!user) {
             throw new AppError('Perfil de usuario no encontrado.', 404);
         }
         return {
-            id: user.id,
-            name: user.nombre_usuario,
-            email: user.correo_electronico,
-            memberSince: user.createdAt,
-            status: 'Activo', // Esto podría venir de otro campo o lógica
-            location: user.ubicacion || null,
-            phone: user.telefono || null,
-            bio: user.biografia || '',
-            avatarUrl: user.avatar_url || null,
+            id: user.id, name: user.nombre_usuario, email: user.correo_electronico,
+            memberSince: user.createdAt, status: 'Activo', // Esto podría venir de otro campo o lógica
+            location: user.ubicacion || null, phone: user.telefono || null,
+            bio: user.biografia || '', avatarUrl: user.avatar_url || null,
         };
     } catch (error) {
         if (error instanceof AppError) throw error;
@@ -58,7 +54,6 @@ exports.fetchUserStats = async (userId) => {
         let averageProgress = 0;
         if (quantitativeObjectives.length > 0) {
             const totalProgressSum = quantitativeObjectives.reduce((sum, obj) => {
-                // En un caso real, importa o reimplementa _calculateProgress de forma robusta.
                 const progress = (typeof _calculateProgress === 'function') 
                     ? _calculateProgress(obj) 
                     : (parseFloat(obj.valor_actual || 0) / parseFloat(obj.valor_cuantitativo || 1) * 100 || 0);
@@ -70,10 +65,7 @@ exports.fetchUserStats = async (userId) => {
         const successRate = totalObjectives > 0 ? Math.round((completed / totalObjectives) * 100) : 0;
 
         return {
-            totalObjectives,
-            completed,
-            inProgress,
-            successRate,
+            totalObjectives, completed, inProgress, successRate,
             // averageProgress: averageProgress, // Descomenta si lo necesitas
         };
     } catch (error) {
@@ -93,11 +85,6 @@ exports.fetchUserAchievements = async (userId) => {
         if (completedObjectives >= 10) {
             achievements.push({ id: 'ach2_completed_10', text: '10 Objetivos Completados' });
         }
-        // Ejemplo para racha (requeriría lógica más compleja)
-        // const streak = await calculateStreak(userId);
-        // if (streak >= 7) {
-        //   achievements.push({ id: 'ach3_streak_7', text: `Racha de ${streak} días` });
-        // }
         return achievements; 
     } catch (error) {
         if (error instanceof AppError) throw error;
@@ -113,6 +100,8 @@ exports.updateUserProfile = async (userId, profileData) => {
         }
 
         const allowedUpdates = {};
+        // Asegúrate que 'avatar_url' no se pueda actualizar directamente por aquí,
+        // ya que tiene su propio flujo en updateAvatarUrl.
         const updatableFields = ['nombre_usuario', 'correo_electronico', 'telefono', 'sitio_web', 'biografia', 'ubicacion'];
         
         updatableFields.forEach(field => {
@@ -122,16 +111,11 @@ exports.updateUserProfile = async (userId, profileData) => {
         });
 
         await user.update(allowedUpdates);
-        return {
-            id: user.id,
-            name: user.nombre_usuario,
-            email: user.correo_electronico,
-            memberSince: user.createdAt,
-            status: 'Activo', 
-            location: user.ubicacion,
-            phone: user.telefono,
-            website: user.sitio_web,
-            bio: user.biografia,
+        return { // Devolver los campos actualizados y relevantes
+            id: user.id, name: user.nombre_usuario, email: user.correo_electronico,
+            memberSince: user.createdAt, status: 'Activo', 
+            location: user.ubicacion, phone: user.telefono,
+            website: user.sitio_web, bio: user.biografia,
             avatarUrl: user.avatar_url,
         };
     } catch (error) {
@@ -145,9 +129,12 @@ exports.updateUserProfile = async (userId, profileData) => {
 };
 
 exports.updateAvatarUrl = async (userId, newAvatarUrl, newAvatarDiskPath) => {
+    // newAvatarDiskPath es la ruta temporal del archivo nuevo subido por multer
+    // newAvatarUrl es la URL pública que se guardará en la BD para el nuevo avatar
     try {
         const user = await Usuario.findByPk(userId);
         if (!user) {
+            // Si el usuario no existe, eliminar el archivo recién subido para no dejar huérfanos
             if (newAvatarDiskPath) {
                 await fs.unlink(newAvatarDiskPath).catch(e => console.error("Error eliminando archivo huérfano (usuario no encontrado):", e.message));
             }
@@ -156,29 +143,55 @@ exports.updateAvatarUrl = async (userId, newAvatarUrl, newAvatarDiskPath) => {
 
         const oldAvatarUrl = user.avatar_url;
 
+        // Actualizar la URL del avatar en el objeto usuario y guardar en la BD
         user.avatar_url = newAvatarUrl;
         await user.save();
 
+        // Si había una URL de avatar antigua y es diferente de la nueva, intentar eliminar el archivo antiguo del disco
         if (oldAvatarUrl && oldAvatarUrl !== newAvatarUrl) {
             try {
+                // Solo intentar eliminar si la URL antigua parece ser un archivo local gestionado por nosotros
                 if (oldAvatarUrl.includes('/uploads/avatars/')) {
-                    const oldFileName = oldAvatarUrl.substring(oldAvatarUrl.lastIndexOf('/') + 1);
-                    const oldAvatarFullPath = path.resolve(__dirname, '../../../public/uploads/avatars', oldFileName);
-                    
-                    if (await fs.stat(oldAvatarFullPath).then(() => true).catch(() => false)) {
-                        await fs.unlink(oldAvatarFullPath);
+                    let oldFileName = oldAvatarUrl.substring(oldAvatarUrl.lastIndexOf('/') + 1);
+
+                    // --- INICIO DE CORRECCIÓN PARA PATH TRAVERSAL ---
+                    // 1. Sanitizar oldFileName para obtener solo el nombre del archivo base.
+                    //    Esto previene que caracteres como '../' en oldFileName afecten la ruta.
+                    oldFileName = path.basename(oldFileName);
+
+                    // 2. Construir la ruta completa al archivo antiguo usando path.join (más seguro para segmentos)
+                    //    y el directorio base absoluto y seguro.
+                    const oldAvatarFullPath = path.join(UPLOAD_DIR_ABSOLUTE, oldFileName);
+
+                    // 3. Verificar que la ruta construida esté realmente dentro del directorio de subidas permitido.
+                    //    Esto es una capa crucial de seguridad.
+                    if (oldAvatarFullPath.startsWith(UPLOAD_DIR_ABSOLUTE + path.sep)) {
+                        if (await fs.stat(oldAvatarFullPath).then(() => true).catch(() => false)) {
+                            await fs.unlink(oldAvatarFullPath);
+                            console.log(`[Service] Avatar antiguo eliminado del disco: ${oldAvatarFullPath}`);
+                        } else {
+                            console.warn(`[Service] Archivo de avatar antiguo no encontrado en disco para eliminar: ${oldAvatarFullPath}`);
+                        }
                     } else {
-                        // Opcional: Loggear si el archivo antiguo no se encontró, pero no es un error crítico.
-                        // console.warn(`[Service] Archivo de avatar antiguo no encontrado en disco para eliminar: ${oldAvatarFullPath}`);
+                        // Si la ruta resuelta está fuera del directorio esperado, es un intento de Path Traversal.
+                        console.error(`[Service] Intento de acceso fuera del directorio permitido al intentar eliminar avatar antiguo: ${oldAvatarFullPath}. Operación denegada.`);
+                        // No se lanza un error para no interrumpir el flujo de actualización del avatar,
+                        // pero se registra el intento malicioso o el error de configuración.
                     }
+                    // --- FIN DE CORRECCIÓN PARA PATH TRAVERSAL ---
+                } else {
+                     console.warn(`[Service] URL de avatar antiguo no sigue el patrón esperado para eliminación gestionada localmente: ${oldAvatarUrl}`);
                 }
             } catch (e) {
-                // No detener el proceso principal si falla la eliminación del archivo antiguo, pero sí loggearlo si se configura un logger.
-                // console.error("[Service] Error eliminando avatar antiguo del sistema de archivos:", e.message);
+                // No detener el proceso principal si falla la eliminación del archivo antiguo, pero sí loggearlo.
+                console.error("[Service] Error eliminando avatar antiguo del sistema de archivos:", e.message);
             }
         }
-        return { avatarUrl: user.avatar_url };
+        // Devolver solo la nueva URL del avatar, ya que el controlador espera un objeto con esta propiedad.
+        return { avatarUrl: user.avatar_url }; 
     } catch (error) {
+        // Si hubo un error al actualizar la BD (después de que el archivo ya se subió a una ruta temporal),
+        // intentar eliminar el archivo nuevo para no dejarlo huérfano.
         if (newAvatarDiskPath) {
              await fs.unlink(newAvatarDiskPath).catch(e => console.error("[Service] Error eliminando archivo subido (newAvatarDiskPath) tras fallo de BD:", e.message));
         }
