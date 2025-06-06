@@ -7,6 +7,16 @@ import {
 } from 'react-icons/fa';
 import { formatDateByPreference } from '../../utils/dateUtils';
 import { useSettings } from '../../context/SettingsContext';
+import { useTranslation } from 'react-i18next';
+
+// El mapeo de categorías a claves de traducción
+const categoryKeyMap = {
+    'Salud': 'categories.health',
+    'Finanzas': 'categories.finance',
+    'Desarrollo personal': 'categories.personalDevelopment',
+    'Relaciones': 'categories.relationships',
+    'Carrera profesional': 'categories.career',
+};
 
 const getCategoryIcon = (category, isListItem = false) => {
     const iconProps = isListItem ? { className: styles.listItemTypeIcon } : {};
@@ -23,6 +33,16 @@ const getCategoryIcon = (category, isListItem = false) => {
 function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }) {
     const { settings } = useSettings();
     const navigate = useNavigate();
+    const { t } = useTranslation();
+
+    // Traducir categoría y estado
+    const translatedCategory = categoryKeyMap[objective.tipo_objetivo] 
+        ? t(categoryKeyMap[objective.tipo_objetivo]) 
+        : (objective.tipo_objetivo || t('categories.other'));
+
+    const statusKey = objective.estado?.toLowerCase().replace(/\s/g, '') || 'pending';
+    const translatedStatus = t(`status.${statusKey}`, objective.estado);
+
 
     // Usar el progreso calculado que viene del objetivo, asumiendo que es la fuente autorizada.
     const progressPercentage = objective.progreso_calculado !== undefined && objective.progreso_calculado !== null
@@ -46,23 +66,23 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
                 role="button"
                 tabIndex="0"
                 onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
-                aria-label={`Ver detalles del objetivo ${objective.nombre}`}
+                aria-label={t('objectiveCard.viewDetailsAria', { name: objective.nombre })}
             >
                 <div className={styles.listItemIconContainer}>
                     {objectiveTypeIcon}
                 </div>
                 <div className={styles.listItemDetails}>
                     <h4 className={styles.listItemTitle}>{objective.nombre}</h4>
-                    <p className={styles.listItemUpdateDate}>Actualizado: {lastUpdated}</p>
+                    <p className={styles.listItemUpdateDate}>{t('objectiveCard.updated', { date: lastUpdated })}</p>
                 </div>
                 <div className={styles.listItemProgress}>
-                    <span className={styles.listItemProgressText}>Progreso</span>
+                    <span className={styles.listItemProgressText}>{t('common.progress')}</span>
                     <span className={styles.listItemProgressPercentage}>{progressPercentage}%</span>
                 </div>
                 <button
                     className={styles.listItemArrowButton}
                     onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
-                    aria-label={`Ver detalles de ${objective.nombre}`}
+                    aria-label={t('objectiveCard.viewDetailsAria', { name: objective.nombre })}
                 >
                     <FaArrowRight />
                 </button>
@@ -113,7 +133,7 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
                     <h3 className={styles.cardTitle}>{objective.nombre}</h3>
                     <div className={styles.categoryBadge}>
                         <span className={styles.categoryBadgeIcon}>{getCategoryIcon(objective.tipo_objetivo)}</span>
-                        <span className={styles.categoryBadgeName}>{objective.tipo_objetivo}</span>
+                        <span className={styles.categoryBadgeName}>{translatedCategory}</span>
                     </div>
                 </div>
                 {objective.descripcion && <p className={styles.cardDescription}>{objective.descripcion}</p>}
@@ -121,7 +141,7 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
                 {showProgressBar && (
                     <div className={styles.progressContainer}>
                         <div className={styles.progressHeader}>
-                            <span className={styles.progressLabel}>Progreso</span>
+                            <span className={styles.progressLabel}>{t('common.progress')}</span>
                             <span className={styles.progressPercentage}>{progressPercentage}%</span>
                         </div>
                         <div className={styles.progressBar}>
@@ -140,13 +160,13 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
                 {showProgressBar && hasQuantitativeValues && ( // Solo mostrar valores si es cuantitativo
                     <div className={styles.progressValues}>
                         <div className={styles.progressValueBox}>
-                            <div className={styles.progressValueLabel}>Actual:</div>
+                            <div className={styles.progressValueLabel}>{t('objectiveCard.current')}</div>
                             <div className={styles.progressValueNumber}>
                                 {isNaN(currentValue) ? (initialValue !== null && typeof initialValue !== 'undefined' && !isNaN(parseFloat(initialValue)) ? parseFloat(initialValue).toLocaleString(settings.language) : 'N/A') : currentValue.toLocaleString(settings.language)} {objective.unidad_medida || ''}
                             </div>
                         </div>
                         <div className={styles.progressValueBox}>
-                            <div className={styles.progressValueLabel}>Meta:</div>
+                            <div className={styles.progressValueLabel}>{t('objectiveCard.target')}</div>
                             <div className={styles.progressValueNumber}>
                                 {isNaN(targetValue) ? 'N/A' : targetValue.toLocaleString(settings.language)} {objective.unidad_medida || ''}
                             </div>
@@ -156,11 +176,11 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
 
                 <div className={styles.progressDate}>
                     <FaCalendarAlt className={styles.dataIcon} />
-                    <span className={styles.dataLabel}>Actualizado:</span>
+                    <span className={styles.dataLabel}>{t('common.updatedLabel')}</span>
                     <span className={styles.dataValue}>{lastUpdated}</span> {/* Usar lastUpdated consistentemente */}
                 </div>
                 <div className={`${styles.cardStatus} ${styles[statusClassName]}`}>
-                    {objective.estado}
+                    {translatedStatus}
                 </div>
             </div>
             <div className={styles.cardFooter}>
@@ -168,18 +188,18 @@ function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveDeleted }
                     <button
                         className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`}
                         onClick={() => navigate(`/objectives/edit/${objective.id_objetivo}`)}
-                        aria-label={`Editar objetivo ${objective.nombre}`}
+                        aria-label={t('objectiveCard.viewDetailsAria', { name: objective.nombre })}
                     >
                         <FaEdit className={styles.buttonIcon} />
-                        Editar
+                        {t('common.edit')}
                     </button>
                     <button
                         className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`}
                         onClick={handleCardClick}
-                        aria-label={`Ver detalles del objetivo ${objective.nombre}`}
+                        aria-label={t('objectiveCard.viewDetailsAria', { name: objective.nombre })}
                     >
                         <FaEye className={styles.buttonIcon} />
-                        Detalles
+                        {t('common.details')}
                     </button>
                 </div>
             </div>

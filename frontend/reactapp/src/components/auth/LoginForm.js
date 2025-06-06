@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 import api from "../../services/apiService";
 import { useAuth } from "../../context/AuthContext";
@@ -9,23 +10,23 @@ import Input from "../ui/Input";
 import Button from "../ui/Button";
 import FormGroup from "../ui/FormGroup";
 import LoadingSpinner from "../ui/LoadingSpinner";
-// import styles from './LoginForm.module.css'; // Activar si se añaden estilos específicos del módulo
 
 function LoginForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { t } = useTranslation();
 
     const {
         register,
         handleSubmit,
         formState: { errors },
-        setError // Para establecer errores provenientes del servidor en campos específicos
+        setError
     } = useForm({
-        mode: "onBlur" // Validar al perder el foco para mejorar UX tras el primer intento de envío
+        mode: "onBlur"
     });
 
     const navigate = useNavigate();
     const location = useLocation();
-    const { login: contextLogin } = useAuth(); // Renombrar para claridad y evitar colisión
+    const { login: contextLogin } = useAuth();
 
     const onSubmit = async (data) => {
         setIsSubmitting(true);
@@ -37,42 +38,36 @@ function LoginForm() {
 
             if (responseData.token && responseData.usuario) {
                 contextLogin(responseData.token, responseData.usuario);
-                toast.success(`¡Bienvenido de nuevo, ${responseData.usuario.nombre_usuario}!`);
+                toast.success(t('loginForm.welcomeBack', { user: responseData.usuario.nombre_usuario }));
 
                 const from = location.state?.from?.pathname;
-                // Validar que 'from' no sea una ruta de autenticación o la raíz para evitar bucles/redirecciones no deseadas
                 const fromIsValidRedirect = from && from !== '/login' && from !== '/register' && from !== '/';
 
                 if (fromIsValidRedirect) {
                     navigate(from, { replace: true });
-                } else if (responseData.hasObjectives === false) { // Redirigir a crear objetivo si es un usuario nuevo sin objetivos
+                } else if (responseData.hasObjectives === false) {
                     navigate("/objectives", { replace: true });
-                    toast.info("¡Comencemos creando tu primer objetivo!");
+                    toast.info(t('loginForm.createFirstObjective'));
                 } else {
                     navigate("/dashboard", { replace: true });
                 }
             } else {
-                // Manejo de respuestas exitosas (2xx) pero inesperadas del servidor (sin token/usuario)
-                toast.error("Respuesta inesperada del servidor al iniciar sesión. Inténtalo de nuevo.");
+                toast.error(t('loginForm.errors.unexpectedResponse'));
             }
         } catch (error) {
-            // apiService ya debería haber formateado el error y mostrado un toast genérico si es 401/403 no login
-            const displayMessage = error.data?.message || error.message || "Error al iniciar sesión. Verifica tus credenciales.";
-            if (error.status !== 401 && error.status !== 403) { // Evitar doble toast si apiService ya mostró uno por 401/403 de sesión expirada
+            const displayMessage = error.data?.message || error.message || t('loginForm.errors.defaultLoginError');
+            if (error.status !== 401 && error.status !== 403) {
                 toast.error(displayMessage);
             }
             
-            // Marcar campos como erróneos en el formulario si el backend devuelve errores específicos
-            if (error.status === 401 || error.status === 400) { // Errores comunes para credenciales incorrectas
+            if (error.status === 401 || error.status === 400) {
                 if (typeof setError === 'function') {
-                    setError("email", { type: "server", message: " " }); // Mensaje vacío para el campo, el toast general ya informa
-                    setError("password", { type: "server", message: "Credenciales incorrectas." });
+                    setError("email", { type: "server", message: " " });
+                    setError("password", { type: "server", message: t('loginForm.errors.incorrectCredentials') });
                 }
             } else if (error.data?.errors && Array.isArray(error.data.errors) && typeof setError === 'function') {
-                // Mapeo de errores de validación del backend a campos del formulario
                 error.data.errors.forEach(err => {
                     const fieldName = err.path || err.param || (err.field ? err.field.toLowerCase() : null);
-                    // Mapeo específico si el nombre del campo del backend difiere del nombre en react-hook-form
                     const reactHookFormField = fieldName === 'correo_electronico' ? 'email' : fieldName;
                     if (reactHookFormField) {
                         setError(reactHookFormField, { type: "server", message: err.msg || err.message });
@@ -87,7 +82,7 @@ function LoginForm() {
     return (
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <FormGroup
-                label="Correo Electrónico"
+                label={t('common.emailLabel')}
                 htmlFor="login-email"
                 required
                 error={errors.email?.message}
@@ -95,12 +90,12 @@ function LoginForm() {
                 <Input
                     type="email"
                     id="login-email"
-                    placeholder="tu@email.com"
+                    placeholder={t('common.emailPlaceholder')}
                     {...register("email", {
-                        required: "El correo electrónico es obligatorio.",
+                        required: t('formValidation.emailRequired'),
                         pattern: {
                             value: /^\S+@\S+\.\S+$/i,
-                            message: "Formato de correo electrónico no válido.",
+                            message: t('formValidation.emailInvalid'),
                         },
                     })}
                     disabled={isSubmitting}
@@ -110,7 +105,7 @@ function LoginForm() {
             </FormGroup>
 
             <FormGroup
-                label="Contraseña"
+                label={t('common.passwordLabel')}
                 htmlFor="login-password"
                 required
                 error={errors.password?.message}
@@ -118,10 +113,9 @@ function LoginForm() {
                 <Input
                     type="password"
                     id="login-password"
-                    placeholder="Tu contraseña"
+                    placeholder={t('common.passwordPlaceholder')}
                     {...register("password", {
-                        required: "La contraseña es obligatoria.",
-                        // Validación de longitud mínima usualmente se maneja en el registro o backend
+                        required: t('formValidation.passwordRequired'),
                     })}
                     autoComplete="current-password"
                     disabled={isSubmitting}
@@ -131,7 +125,7 @@ function LoginForm() {
             </FormGroup>
 
             <Button type="submit" disabled={isSubmitting} variant="primary" className="full-width-button">
-                {isSubmitting ? <LoadingSpinner size="small" color="white" /> : "Iniciar sesión"}
+                {isSubmitting ? <LoadingSpinner size="small" color="white" /> : t('loginForm.submitButton')}
             </Button>
         </form>
     );

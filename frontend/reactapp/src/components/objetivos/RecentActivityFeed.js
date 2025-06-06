@@ -1,7 +1,8 @@
 import React from 'react';
 import styles from './RecentActivityFeed.module.css';
 import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 // Importa iconos para representar diferentes tipos de actividad
 import {
     FaPlusCircle,
@@ -26,8 +27,13 @@ const activityIcons = {
 };
 
 const RecentActivityFeed = ({ activities }) => {
+    const { t, i18n } = useTranslation();
+
+    const dateFnsLocales = { es: es, en: enUS };
+    const currentLocale = dateFnsLocales[i18n.language] || enUS;
+
     if (!activities || activities.length === 0) {
-        return <p className={styles.noData}>No hay actividad reciente.</p>;
+        return <p className={styles.noData}>{t('activityFeed.noRecentActivity')}</p>;
     }
 
     return (
@@ -41,7 +47,7 @@ const RecentActivityFeed = ({ activities }) => {
                         <div className={styles.activityContent}>
                             <p className={styles.activityDescription}>{act.description}</p>
                             <span className={styles.activityTime}>
-                                Hace {formatDistanceToNow(new Date(act.timestamp), { addSuffix: false, locale: es })}
+                                {t('activityFeed.ago', { distance: formatDistanceToNow(new Date(act.timestamp), { addSuffix: false, locale: currentLocale }) })}
                             </span>
                         </div>
                     </li>

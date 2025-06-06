@@ -6,31 +6,23 @@ import styles from './UpdateProgressPage.module.css';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Button from '../components/ui/Button';
 import { format, parseISO, isValid } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 const determineNewStatusLogic = (currentValueNum, targetValueStr, initialValueStr, currentStatus, isLowerBetter, tipoObjetivo) => {
     const numericTarget = Number(targetValueStr);
     const numericInitial = Number(initialValueStr);
-    const isEffectivelyQuantitative =
-        typeof tipoObjetivo === 'string' &&
-        initialValueStr !== null && typeof initialValueStr !== 'undefined' && !isNaN(numericInitial) &&
-        targetValueStr !== null && typeof targetValueStr !== 'undefined' && !isNaN(numericTarget);
+    const isEffectivelyQuantitative = !isNaN(numericInitial) && !isNaN(numericTarget);
 
-    if (!isEffectivelyQuantitative || isNaN(currentValueNum)) {
-        return currentStatus;
-    }
+    if (!isEffectivelyQuantitative || isNaN(currentValueNum)) return currentStatus;
+
     let newCalculatedStatus = currentStatus;
-    if (isLowerBetter) {
-        if (currentValueNum <= numericTarget) newCalculatedStatus = 'Completado';
-    } else {
-        if (currentValueNum >= numericTarget) newCalculatedStatus = 'Completado';
-    }
-    if (newCalculatedStatus !== 'Completado') {
-        if (currentStatus === 'Pendiente') {
-            if (currentValueNum !== numericInitial) newCalculatedStatus = 'En progreso';
-        } else if (currentStatus === 'Completado') {
-            newCalculatedStatus = 'En progreso';
-        }
+    if (isLowerBetter ? (currentValueNum <= numericTarget) : (currentValueNum >= numericTarget)) {
+        newCalculatedStatus = 'Completado';
+    } else if (currentStatus === 'Pendiente' && currentValueNum !== numericInitial) {
+        newCalculatedStatus = 'En progreso';
+    } else if (currentStatus === 'Completado') {
+        newCalculatedStatus = 'En progreso';
     }
     return newCalculatedStatus;
 };
@@ -38,6 +30,7 @@ const determineNewStatusLogic = (currentValueNum, targetValueStr, initialValueSt
 function UpdateProgressPage() {
     const { id: objectiveId } = useParams();
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
     const [goalData, setGoalData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -45,20 +38,21 @@ function UpdateProgressPage() {
     const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const dateFnsLocales = { es: es, en: enUS };
+    const currentLocale = dateFnsLocales[i18n.language] || enUS;
+
     const fetchGoalDetails = useCallback(async () => {
         setLoading(true); setError(null);
         try {
             const data = await apiService.getObjectiveById(objectiveId);
             setGoalData(data);
-            const initialDisplayValue = (data.valor_actual !== null && data.valor_actual !== undefined)
-                ? String(data.valor_actual)
-                : (data.valor_inicial_numerico !== null && data.valor_inicial_numerico !== undefined) ? String(data.valor_inicial_numerico) : '';
+            const initialDisplayValue = (data.valor_actual != null) ? String(data.valor_actual) : (data.valor_inicial_numerico != null) ? String(data.valor_inicial_numerico) : '';
             setNewProgressValue(initialDisplayValue);
         } catch (err) {
-            setError("No se pudo cargar el objetivo. Por favor, inténtalo de nuevo más tarde.");
-            toast.error("Error al cargar el objetivo.");
+            setError(t('errors.objectiveLoadError'));
+            toast.error(t('toast.objectiveLoadDetailsError'));
         } finally { setLoading(false); }
-    }, [objectiveId]);
+    }, [objectiveId, t]);
 
     useEffect(() => { if (objectiveId) fetchGoalDetails(); }, [objectiveId, fetchGoalDetails]);
 
@@ -70,141 +64,95 @@ function UpdateProgressPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true); setError(null);
-        if (!goalData) {
-            toast.error("No se han cargado los datos del objetivo.");
-            setIsSubmitting(false); return;
-        }
-        if (newProgressValue.trim() === '') {
-            toast.error("Por favor, introduce un valor numérico para el progreso.");
-            setIsSubmitting(false); return;
-        }
+        if (!goalData) { toast.error(t('toast.progressUpdate.noDataLoadedError')); setIsSubmitting(false); return; }
+        if (newProgressValue.trim() === '') { toast.error(t('toast.progressUpdate.valueRequiredError')); setIsSubmitting(false); return; }
         const valueToUpdate = parseFloat(newProgressValue);
-        if (isNaN(valueToUpdate)) {
-            toast.error("Por favor, introduce un valor numérico válido para el progreso.");
-            setIsSubmitting(false); return;
-        }
+        if (isNaN(valueToUpdate)) { toast.error(t('toast.progressUpdate.invalidValueError')); setIsSubmitting(false); return; }
 
-        const calculatedNewStatus = determineNewStatusLogic(
-            valueToUpdate, goalData.valor_cuantitativo, goalData.valor_inicial_numerico,
-            goalData.estado, goalData.es_menor_mejor, goalData.tipo_objetivo
-        );
-
-        const payload = {
-            estado: calculatedNewStatus,
-            progressData: {
-                valor_actual: valueToUpdate,
-                comentarios: notes.trim() === '' ? null : notes.trim()
-            }
-        };
+        const calculatedNewStatus = determineNewStatusLogic(valueToUpdate, goalData.valor_cuantitativo, goalData.valor_inicial_numerico, goalData.estado, goalData.es_menor_mejor, goalData.tipo_objetivo);
+        const payload = { estado: calculatedNewStatus, progressData: { valor_actual: valueToUpdate, comentarios: notes.trim() === '' ? null : notes.trim() } };
 
         try {
             await apiService.updateObjective(objectiveId, payload);
-            toast.success("Progreso actualizado con éxito.");
+            toast.success(t('toast.progressUpdate.success'));
             navigate(`/objectives/${objectiveId}`);
         } catch (err) {
-            const errorMessage = err.response?.data?.validationErrors?.[0]?.msg || err.response?.data?.message || err.message || "Error desconocido al actualizar";
-            setError(`Error al actualizar el progreso: ${errorMessage}`);
-            toast.error(`Error al actualizar el progreso: ${errorMessage}`);
+            const errorMessage = err.response?.data?.message || err.message || t('toast.progressUpdate.unknownUpdateError');
+            setError(`${t('toast.objectiveCreateErrorPrefix')} ${errorMessage}`);
+            toast.error(`${t('toast.objectiveCreateErrorPrefix')} ${errorMessage}`);
         } finally { setIsSubmitting(false); }
     };
-
+    
     const progressPercentage = useMemo(() => {
         if (!goalData) return 0;
         const initial = Number(goalData.valor_inicial_numerico || 0);
-        const targetStr = goalData.valor_cuantitativo;
-        const target = (targetStr !== null && targetStr !== undefined && !isNaN(Number(targetStr))) ? Number(targetStr) : NaN;
+        const target = Number(goalData.valor_cuantitativo);
+        if (isNaN(target)) return 0;
         const isLower = goalData.es_menor_mejor;
-        const current = newProgressValue !== '' && !isNaN(parseFloat(newProgressValue))
-            ? parseFloat(newProgressValue)
-            : (goalData.valor_actual !== null && goalData.valor_actual !== undefined && !isNaN(Number(goalData.valor_actual))) ? Number(goalData.valor_actual) : initial;
-        if (isNaN(initial) || isNaN(target) || isNaN(current)) return 0;
+        const current = newProgressValue !== '' && !isNaN(parseFloat(newProgressValue)) ? parseFloat(newProgressValue) : Number(goalData.valor_actual ?? initial);
+        if (isNaN(initial) || isNaN(current)) return 0;
         if (initial === target) return (isLower ? current <= target : current >= target) ? 100 : 0;
-        let prog = 0;
-        if (isLower) {
-            if (initial <= target) return (current <= target) ? 100 : 0; // Already better or at target
-            const range = initial - target;
-            prog = range === 0 ? ((initial - current) <=0 ? 100 : 0) : ((initial - current) / range) * 100;
-        } else {
-            if (initial >= target) return (current >= target) ? 100 : 0; // Already better or at target
-            const range = target - initial;
-            prog = range === 0 ? ((current - initial) >=0 ? 100 : 0) : ((current - initial) / range) * 100;
-        }
+        let prog = isLower ? ((initial - current) / (initial - target)) * 100 : ((current - initial) / (target - initial)) * 100;
         return Math.max(0, Math.min(100, prog));
     }, [goalData, newProgressValue]);
 
     const lastUpdateDate = useMemo(() => {
-        let mostRecentDateString = goalData?.updatedAt;
-        if (goalData?.historial_progreso && goalData.historial_progreso.length > 0) {
-            const lastProgressEntry = goalData.historial_progreso[goalData.historial_progreso.length - 1];
-            if (lastProgressEntry?.updatedAt) mostRecentDateString = lastProgressEntry.updatedAt;
-            else if (lastProgressEntry?.date) mostRecentDateString = lastProgressEntry.date;
-        }
-        if (!mostRecentDateString || !isValid(parseISO(mostRecentDateString))) mostRecentDateString = goalData?.createdAt;
-        if (mostRecentDateString && isValid(parseISO(mostRecentDateString))) return format(parseISO(mostRecentDateString), 'd/M/yyyy HH:mm', { locale: es });
-        return 'N/A';
-    }, [goalData]);
+        const dateStr = goalData?.updatedAt || goalData?.createdAt;
+        if (dateStr && isValid(parseISO(dateStr))) return format(parseISO(dateStr), 'd/M/yyyy HH:mm', { locale: currentLocale });
+        return t('common.notAvailable');
+    }, [goalData, currentLocale]);
 
     const displayCurrentValue = useMemo(() => {
         if (!goalData) return '0.0';
-        let valueToShow;
-        if (newProgressValue !== '' && !isNaN(parseFloat(newProgressValue))) valueToShow = parseFloat(newProgressValue);
-        else if (goalData.valor_actual !== null && goalData.valor_actual !== undefined && !isNaN(Number(goalData.valor_actual))) valueToShow = Number(goalData.valor_actual);
-        else valueToShow = Number(goalData.valor_inicial_numerico || 0);
+        let valueToShow = newProgressValue !== '' && !isNaN(parseFloat(newProgressValue)) ? parseFloat(newProgressValue) : Number(goalData.valor_actual ?? goalData.valor_inicial_numerico ?? 0);
         return valueToShow.toFixed(1);
     }, [newProgressValue, goalData]);
+    
+    if (loading) return (<div className={styles.updateProgressPage}><LoadingSpinner size='large' text={t('loaders.loadingObjectiveForEdit')}/></div>);
+    if (error && !goalData) return (<div className={`${styles.updateProgressPage} ${styles.updateProgressPageError}`}><p>{error}</p><Button onClick={() => navigate('/')}>{t('common.backToDashboard')}</Button></div>);
+    if (!goalData) return (<div className={styles.updateProgressPage}><p>{t('errors.objectiveNotFound')}</p><Button onClick={() => navigate('/')}>{t('common.backToDashboard')}</Button></div>);
 
-    if (loading) return (<div className={styles.updateProgressPage}><LoadingSpinner size='large' text='Cargando objetivo para actualización...'/></div>);
-    if (error && !goalData) return (<div className={`${styles.updateProgressPage} ${styles.updateProgressPageError}`}><p>{error}</p><Button onClick={() => navigate('/')}>Volver al Dashboard</Button></div>);
-    if (!goalData) return (<div className={styles.updateProgressPage}><p>No se encontró el objetivo para actualizar o no se pudo cargar.</p><Button onClick={() => navigate('/')}>Volver al Dashboard</Button></div>);
+    const isQuantitative = goalData.valor_cuantitativo != null && !isNaN(Number(goalData.valor_cuantitativo));
 
-    const isQuantitative = (
-        (goalData.valor_cuantitativo !== null && goalData.valor_cuantitativo !== undefined && !isNaN(Number(goalData.valor_cuantitativo))) &&
-        (goalData.valor_inicial_numerico !== null && goalData.valor_inicial_numerico !== undefined && !isNaN(Number(goalData.valor_inicial_numerico)))
-    );
-
-    if (!isQuantitative) return ( <div className={`${styles.updateProgressPage} ${styles.nonQuantitativeMessage}`}><h2 className={styles.nonQuantitativeMessageTitle}>Actualizar Progreso: {goalData.nombre}</h2><p className={styles.nonQuantitativeMessageText}>Este objetivo no es cuantitativo y no se puede actualizar su progreso numéricamente.</p><p className={styles.nonQuantitativeMessageText}>Por favor, edita el objetivo para cambiar su estado (Pendiente, En progreso, Completado).</p><div className={styles.nonQuantitativeMessageActions}><Button onClick={() => navigate(`/objectives/${objectiveId}`)} variant="secondary">Volver al Objetivo</Button><Button onClick={() => navigate(`/objectives/edit/${objectiveId}`)}>Editar Objetivo</Button></div></div>);
+    if (!isQuantitative) return ( <div className={`${styles.updateProgressPage} ${styles.nonQuantitativeMessage}`}><h2 className={styles.nonQuantitativeMessageTitle}>{t('updateProgressPage.title', { name: goalData.nombre })}</h2><p className={styles.nonQuantitativeMessageText}>{t('updateProgressPage.notQuantitative')}</p><p className={styles.nonQuantitativeMessageText}>{t('updateProgressPage.notQuantitativeSuggestion')}</p><div className={styles.nonQuantitativeMessageActions}><Button onClick={() => navigate(`/objectives/${objectiveId}`)} variant="secondary">{t('updateProgressPage.backToObjective')}</Button><Button onClick={() => navigate(`/objectives/edit/${objectiveId}`)}>{t('common.edit')}</Button></div></div>);
 
     return (
         <div className={styles.updateProgressPage}>
             <div className={styles.updateProgressCard}>
                 <div className={styles.updateProgressHeader}>
                     <h1 className={styles.goalTitle}>{goalData.nombre}</h1>
-                    <p className={styles.goalDescription}>{goalData.descripcion || 'Sin descripción.'}</p>
+                    <p className={styles.goalDescription}>{goalData.descripcion || t('common.noDescription')}</p>
                 </div>
                 <div className={styles.progressSection}>
-                    <h2 className={styles.sectionHeading}>Progreso (cómo se verá con el nuevo valor)</h2>
+                    <h2 className={styles.sectionHeading}>{t('updateProgressPage.progressPreviewTitle')}</h2>
                     <div className={styles.progressBarContainer}>
-                        <div className={styles.progressBarHeader}>
-                            <span className={styles.progressBarLabel}>Progreso</span>
-                            <span className={styles.progressBarPercentage}>{Math.round(progressPercentage)}%</span>
-                        </div>
-                        <div className={styles.progressBar}>
-                            <div className={`${styles.progressBarFill} ${progressPercentage < 33 ? styles.progressFillLow : progressPercentage < 66 ? styles.progressFillMedium : styles.progressFillHigh}`} style={{ width: `${progressPercentage}%` }}></div>
-                        </div>
+                        <div className={styles.progressBarHeader}><span className={styles.progressBarLabel}>{t('updateProgressPage.progressLabel')}</span><span className={styles.progressBarPercentage}>{Math.round(progressPercentage)}%</span></div>
+                        <div className={styles.progressBar}><div className={`${styles.progressBarFill} ${progressPercentage < 33 ? styles.progressFillLow : progressPercentage < 66 ? styles.progressFillMedium : styles.progressFillHigh}`} style={{ width: `${progressPercentage}%` }}></div></div>
                     </div>
                     <div className={styles.progressDetails}>
-                        <div className={styles.detailItem}><span className={styles.detailLabel}>Valor (Nuevo)</span><span className={styles.detailValue}>{displayCurrentValue} {goalData.unidad_medida || ''}</span></div>
-                        <div className={styles.detailItem}><span className={styles.detailLabel}>Valor Objetivo</span><span className={styles.detailValue}>{Number(goalData.valor_cuantitativo || 0).toFixed(goalData.unidad_medida?.toLowerCase() === '%' ? 0 : 1)} {goalData.unidad_medida || ''}</span></div>
+                        <div className={styles.detailItem}><span className={styles.detailLabel}>{t('updateProgressPage.newValueLabel')}</span><span className={styles.detailValue}>{displayCurrentValue} {goalData.unidad_medida || ''}</span></div>
+                        <div className={styles.detailItem}><span className={styles.detailLabel}>{t('updateProgressPage.targetValueLabel')}</span><span className={styles.detailValue}>{Number(goalData.valor_cuantitativo || 0).toFixed(goalData.unidad_medida?.toLowerCase() === '%' ? 0 : 1)} {goalData.unidad_medida || ''}</span></div>
                     </div>
-                    <p className={styles.lastUpdateInfo}>Última actualización del objetivo: <span className={styles.lastUpdateDate}>{lastUpdateDate}</span></p>
+                    <p className={styles.lastUpdateInfo}>{t('updateProgressPage.lastUpdateInfo')}<span className={styles.lastUpdateDate}>{lastUpdateDate}</span></p>
                 </div>
                 <form onSubmit={handleSubmit} className={styles.updateForm}>
                     <div className={styles.formGroup}>
-                        <label htmlFor="newProgressValue" className={styles.formLabel}>Nuevo Valor de Progreso</label>
-                        <input type="text" id="newProgressValue" inputMode="decimal" className={styles.formInput} value={newProgressValue} onChange={handleValueChange} placeholder={`Introduce el nuevo valor en ${goalData.unidad_medida || 'unidades'}`} autoFocus />
+                        <label htmlFor="newProgressValue" className={styles.formLabel}>{t('updateProgressPage.newProgressValueLabel')}</label>
+                        <input type="text" id="newProgressValue" inputMode="decimal" className={styles.formInput} value={newProgressValue} onChange={handleValueChange} placeholder={t('updateProgressPage.newProgressValuePlaceholder', { unit: goalData.unidad_medida || 'unidades' })} autoFocus />
                     </div>
                     <div className={styles.formGroup}>
-                        <label htmlFor="notes" className={styles.formLabel}>Notas sobre este Avance (Opcional)</label>
-                        <textarea id="notes" className={styles.formTextarea} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Añade notas sobre este avance..." rows="4"></textarea>
+                        <label htmlFor="notes" className={styles.formLabel}>{t('updateProgressPage.notesLabel')}</label>
+                        <textarea id="notes" className={styles.formTextarea} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('updateProgressPage.notesPlaceholder')} rows="4"></textarea>
                     </div>
                     {error && goalData && <p className={styles.formErrorMessage}>{error}</p>}
                     <div className={styles.formActions}>
-                        <Button type="button" onClick={() => navigate(`/objectives/${objectiveId}`)} variant="secondary" disabled={isSubmitting}>Cancelar</Button>
-                        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Guardando...' : 'Guardar Progreso'}</Button>
+                        <Button type="button" onClick={() => navigate(`/objectives/${objectiveId}`)} variant="secondary" disabled={isSubmitting}>{t('common.cancel')}</Button>
+                        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? t('common.saving') : t('updateProgressPage.saveButton')}</Button>
                     </div>
                 </form>
             </div>
         </div>
     );
 }
+
 export default UpdateProgressPage;

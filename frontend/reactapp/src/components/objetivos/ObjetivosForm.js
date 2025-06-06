@@ -7,15 +7,17 @@ import objetivosStyles from "./ObjetivosForm.module.css";
 import DatePicker from '../ui/DatePicker/DatePicker';
 import { format, isValid, parseISO } from 'date-fns';
 import { toast } from 'react-toastify';
+import { useTranslation } from "react-i18next";
 
 function ObjetivosForm({ 
     initialData = null, 
     onSubmit: handleFormSubmit, 
-    buttonText = "Crear Objetivo", 
+    buttonText, // Quitado valor por defecto para que lo gestione el componente
     isFirstObjective = false, 
     isEditMode = false, 
     onCancel 
 }) {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
 
     const {
@@ -44,11 +46,26 @@ function ObjetivosForm({
 
     const fechaInicioValue = watch("fechaInicio");
     const valorMetaValue = watch("valorMeta"); // Usado para mostrar condicionalmente el checkbox 'es_menor_mejor'
-
-    const tipoObjetivoOptions = [
-        "Salud", "Finanzas", "Desarrollo personal",
-        "Relaciones", "Carrera profesional", "Otros",
-    ];
+    
+    // Mapeo de valores de backend/formulario a claves de traducción
+    const tipoObjetivoKeyMap = {
+        "Salud": "health",
+        "Finanzas": "finance",
+        "Desarrollo personal": "personalDevelopment",
+        "Relaciones": "relationships",
+        "Carrera profesional": "career",
+        "Otros": "other",
+    };
+    const tipoObjetivoOptions = Object.values(tipoObjetivoKeyMap);
+    
+    const statusKeyMap = {
+        "Pendiente": "pending",
+        "En progreso": "inProgress",
+        "Completado": "completed",
+        "Archivado": "archived",
+        "Fallido": "failed",
+    };
+    const statusOptions = Object.values(statusKeyMap);
 
     useEffect(() => {
         const defaultFormValues = {
@@ -135,9 +152,11 @@ function ObjetivosForm({
         } else {
             // Comportamiento por defecto si no hay onCancel: resetear y notificar
             reset(); // Resetea a los defaultValues que consideran initialData o vacío
-            toast.info("Formulario limpiado.");
+            toast.info(t('objectivesForm.formCleared'));
         }
     };
+    
+    const finalButtonText = buttonText || (isEditMode ? t('objectivesForm.updateButton') : t('objectivesForm.createButton'));
 
     const buttonContainerClass = [objetivosStyles.buttonContainer];
     if (isEditMode || !isFirstObjective) {
@@ -150,83 +169,83 @@ function ObjetivosForm({
         <div className={objetivosStyles.formContainer}>
             <form onSubmit={handleSubmit(onSubmitInternal)} noValidate>
                 <div className={objetivosStyles.formGroupContainer}>
-                    <FormGroup label="Nombre del objetivo" htmlFor="nombre" required={true} error={errors.nombre?.message}>
+                    <FormGroup label={t('objectivesForm.nameLabel')} htmlFor="nombre" required={true} error={errors.nombre?.message}>
                         <Input
-                            type="text" id="nombre" placeholder="Ej. Correr 5km diarios"
+                            type="text" id="nombre" placeholder={t('objectivesForm.namePlaceholder')}
                             {...register("nombre", {
-                                required: "El nombre es obligatorio",
-                                minLength: { value: 3, message: "El nombre debe tener al menos 3 caracteres" },
+                                required: t('formValidation.nameRequired'),
+                                minLength: { value: 3, message: t('formValidation.nameMinLength', { count: 3 }) },
                             })}
                             disabled={loading} isError={!!errors.nombre}
                         />
                     </FormGroup>
-                    <FormGroup label="Descripción" htmlFor="descripcion" error={errors.descripcion?.message}>
+                    <FormGroup label={t('objectivesForm.descriptionLabel')} htmlFor="descripcion" error={errors.descripcion?.message}>
                         <Input
-                            type="textarea" id="descripcion" placeholder="Describe los detalles de tu objetivo"
+                            type="textarea" id="descripcion" placeholder={t('objectivesForm.descriptionPlaceholder')}
                             {...register("descripcion")}
                             disabled={loading} isError={!!errors.descripcion}
                         />
                     </FormGroup>
-                    <FormGroup label="Tipo de objetivo" htmlFor="tipoObjetivo" required={true} error={errors.tipoObjetivo?.message}>
+                    <FormGroup label={t('objectivesForm.typeLabel')} htmlFor="tipoObjetivo" required={true} error={errors.tipoObjetivo?.message}>
                         <Input
                             type="select" id="tipoObjetivo"
                             {...register("tipoObjetivo", {
-                                required: "El tipo de objetivo es obligatorio",
-                                validate: (value) => value !== "" || "El tipo de objetivo es obligatorio",
+                                required: t('formValidation.typeRequired'),
+                                validate: (value) => value !== "" || t('formValidation.typeRequired'),
                             })}
                             disabled={loading} isError={!!errors.tipoObjetivo}
                         >
-                            <option value="" disabled>Selecciona un tipo</option>
-                            {tipoObjetivoOptions.map((option, index) => (
-                                <option key={index} value={option}>{option}</option>
+                            <option value="" disabled>{t('objectivesForm.selectType')}</option>
+                            {Object.entries(tipoObjetivoKeyMap).map(([key, value]) => (
+                                <option key={value} value={key}>{t(`categories.${value}`)}</option>
                             ))}
                         </Input>
                     </FormGroup>
 
                     <div className={objetivosStyles.formGrid}>
                         {!isEditMode && (
-                            <FormGroup label="Valor inicial" htmlFor="valorInicial" required={true} error={errors.valorInicial?.message}>
+                            <FormGroup label={t('objectivesForm.initialValueLabel')} htmlFor="valorInicial" required={true} error={errors.valorInicial?.message}>
                                 <Input
                                     type="number" id="valorInicial" step="any" placeholder="Ej. 78"
                                     {...register("valorInicial", {
                                         valueAsNumber: true,
-                                        required: "El valor inicial es obligatorio.",
-                                        min: { value: 0, message: "El valor inicial debe ser positivo o cero." },
-                                        validate: (value) => value === '' || value === null || (!isNaN(value) && isFinite(value)) || "Debe ser un número válido",
+                                        required: t('formValidation.initialValueRequired'),
+                                        min: { value: 0, message: t('formValidation.initialValuePositive') },
+                                        validate: (value) => value === '' || value === null || (!isNaN(value) && isFinite(value)) || t('formValidation.mustBeNumber'),
                                     })}
                                     disabled={loading} isError={!!errors.valorInicial}
                                 />
                             </FormGroup>
                         )}
                         {isEditMode && (
-                            <FormGroup label="Valor actual" htmlFor="valorActual" required={true} error={errors.valorActual?.message}>
+                            <FormGroup label={t('objectivesForm.currentValueLabel')} htmlFor="valorActual" required={true} error={errors.valorActual?.message}>
                                 <Input
                                     type="number" id="valorActual" step="any" placeholder="Ej. 79"
                                     {...register("valorActual", {
                                         valueAsNumber: true,
-                                        required: "El valor actual es obligatorio.",
-                                        min: { value: 0, message: "El valor debe ser positivo o cero." },
-                                        validate: (value) => value === '' || value === null || (!isNaN(value) && isFinite(value)) || "Debe ser un número válido",
+                                        required: t('formValidation.currentValueRequired'),
+                                        min: { value: 0, message: t('formValidation.valuePositive') },
+                                        validate: (value) => value === '' || value === null || (!isNaN(value) && isFinite(value)) || t('formValidation.mustBeNumber'),
                                     })}
                                     disabled={loading} isError={!!errors.valorActual}
                                 />
                             </FormGroup>
                         )}
-                        <FormGroup label="Valor meta" htmlFor="valorMeta" required={true} error={errors.valorMeta?.message}>
+                        <FormGroup label={t('objectivesForm.targetValueLabel')} htmlFor="valorMeta" required={true} error={errors.valorMeta?.message}>
                             <Input
                                 type="number" id="valorMeta" step="any" placeholder="Ej. 81"
                                 {...register("valorMeta", {
                                     valueAsNumber: true,
-                                    min: { value: 0, message: "El valor meta debe ser positivo o cero." },
-                                    required: "El valor meta es obligatorio.",
-                                    validate: (value) => value === '' || value === null || (!isNaN(value) && isFinite(value)) || "Debe ser un número válido y no negativo",
+                                    min: { value: 0, message: t('formValidation.targetValuePositive') },
+                                    required: t('formValidation.targetValueRequired'),
+                                    validate: (value) => value === '' || value === null || (!isNaN(value) && isFinite(value)) || t('formValidation.mustBeValidNonNegativeNumber'),
                                 })}
                                 disabled={loading} isError={!!errors.valorMeta}
                             />
                         </FormGroup>
-                        <FormGroup label="Unidad de medida" htmlFor="unidadMedida" error={errors.unidadMedida?.message}>
+                        <FormGroup label={t('objectivesForm.unitLabel')} htmlFor="unidadMedida" error={errors.unidadMedida?.message}>
                             <Input
-                                type="text" id="unidadMedida" placeholder="Ej. kilómetros"
+                                type="text" id="unidadMedida" placeholder={t('objectivesForm.unitPlaceholder')}
                                 {...register("unidadMedida")}
                                 disabled={loading} isError={!!errors.unidadMedida}
                             />
@@ -235,7 +254,7 @@ function ObjetivosForm({
                             <FormGroup htmlFor="es_menor_mejor">
                                 <label className={objetivosStyles.checkboxLabel}>
                                     <input type="checkbox" id="es_menor_mejor" {...register("es_menor_mejor")} disabled={loading} />
-                                    <span>Un valor más bajo es mejor (ej. tiempo, coste)</span>
+                                    <span>{t('objectivesForm.lowerIsBetter')}</span>
                                 </label>
                                 {errors.es_menor_mejor && (<p className={objetivosStyles.errorText}>{errors.es_menor_mejor.message}</p>)}
                             </FormGroup>
@@ -243,36 +262,36 @@ function ObjetivosForm({
                     </div>
 
                     <div className={objetivosStyles.dateFieldsGrid}>
-                        <FormGroup label="Fecha de inicio" htmlFor="fechaInicio" error={errors.fechaInicio?.message}>
+                        <FormGroup label={t('objectivesForm.startDateLabel')} htmlFor="fechaInicio" error={errors.fechaInicio?.message}>
                             <Controller
                                 name="fechaInicio" control={control}
-                                rules={{ validate: (value) => !value || isValid(value) || "Fecha de inicio inválida" }}
+                                rules={{ validate: (value) => !value || isValid(value) || t('formValidation.invalidStartDate') }}
                                 render={({ field }) => (
                                     <DatePicker
                                         {...field} selected={field.value}
                                         onChange={(date) => setValue('fechaInicio', date, { shouldValidate: true, shouldDirty: true })}
-                                        placeholder="Selecciona una fecha" disabled={loading} isError={!!errors.fechaInicio}
+                                        placeholder={t('common.selectDate')} disabled={loading} isError={!!errors.fechaInicio}
                                     />
                                 )}
                             />
                         </FormGroup>
-                        <FormGroup label="Fecha de finalización" htmlFor="fechaFin" required={true} error={errors.fechaFin?.message}>
+                        <FormGroup label={t('objectivesForm.endDateLabel')} htmlFor="fechaFin" required={true} error={errors.fechaFin?.message}>
                             <Controller
                                 name="fechaFin" control={control}
                                 rules={{
-                                    required: "La fecha de fin es obligatoria",
+                                    required: t('formValidation.endDateRequired'),
                                     validate: (value) => {
-                                        if (!value) return "La fecha de fin es obligatoria";
-                                        if (!isValid(value)) return "Fecha de fin inválida";
+                                        if (!value) return t('formValidation.endDateRequired');
+                                        if (!isValid(value)) return t('formValidation.invalidEndDate');
                                         const endDate = value;
                                         const startDate = watch("fechaInicio");
                                         if (startDate && isValid(startDate) && endDate < startDate) {
-                                            return "La fecha de fin debe ser posterior a la fecha de inicio";
+                                            return t('formValidation.endDateAfterStart');
                                         }
                                         if (!isEditMode) {
                                             const today = new Date(); today.setHours(0,0,0,0);
                                             const selectedEndDate = new Date(endDate); selectedEndDate.setHours(0,0,0,0);
-                                            if (selectedEndDate < today) return "La fecha de fin no puede ser en el pasado.";
+                                            if (selectedEndDate < today) return t('formValidation.endDateNotInPast');
                                         }
                                         return true;
                                     },
@@ -281,7 +300,7 @@ function ObjetivosForm({
                                     <DatePicker
                                         {...field} selected={field.value}
                                         onChange={(date) => setValue('fechaFin', date, { shouldValidate: true, shouldDirty: true })}
-                                        placeholder="Selecciona una fecha" disabled={loading} isError={!!errors.fechaFin}
+                                        placeholder={t('common.selectDate')} disabled={loading} isError={!!errors.fechaFin}
                                         minDate={fechaInicioValue && isValid(fechaInicioValue) ? fechaInicioValue : null}
                                     />
                                 )}
@@ -289,10 +308,10 @@ function ObjetivosForm({
                         </FormGroup>
                     </div>
                     {isEditMode && (
-                        <FormGroup label="Estado" htmlFor="estado" required={true} error={errors.estado?.message}>
-                            <Input type="select" id="estado" {...register("estado", { required: "El estado es obligatorio" })} disabled={loading} isError={!!errors.estado}>
-                                {['Pendiente', 'En progreso', 'Completado', 'Archivado', 'Fallido'].map((option) => (
-                                    <option key={option} value={option}>{option}</option>
+                        <FormGroup label={t('common.status')} htmlFor="estado" required={true} error={errors.estado?.message}>
+                            <Input type="select" id="estado" {...register("estado", { required: t('formValidation.statusRequired') })} disabled={loading} isError={!!errors.estado}>
+                                {Object.entries(statusKeyMap).map(([key, value]) => (
+                                    <option key={value} value={key}>{t(`status.${value}`)}</option>
                                 ))}
                             </Input>
                         </FormGroup>
@@ -300,11 +319,11 @@ function ObjetivosForm({
                     <div className={buttonContainerClass.join(' ').trim()}>
                         {(isEditMode || !isFirstObjective) && (
                             <Button type="button" onClick={handleCancelClick} disabled={loading} variant="secondary" >
-                                Cancelar
+                                {t('common.cancel')}
                             </Button>
                         )}
                         <Button type="submit" disabled={loading} variant="primary">
-                            {loading ? (isEditMode ? "Actualizando..." : "Creando...") : buttonText}
+                            {loading ? (isEditMode ? t('common.updating') : t('common.creating')) : finalButtonText}
                         </Button>
                     </div>
                 </div>

@@ -1,18 +1,20 @@
 import React from "react";
-import LoginForm from "../components/auth/LoginForm"; // Importa el componente del formulario de login
-import { Link } from "react-router-dom"; // Importa Link para la navegación interna
+import LoginForm from "../components/auth/LoginForm";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
-// Página de inicio de sesión
 function LoginPage() {
+    const { t } = useTranslation();
+
     return (
         <div className="page-centered-content">
             <div className="formContainer">
-                <h1 className="formTitle">Iniciar sesión</h1>
+                <h1 className="formTitle">{t('loginPage.title')}</h1>
                 <LoginForm />
                 <p className="formFooter">
-                    ¿No tienes una cuenta?{" "}
-                    <Link to="/register" className="formLink"> {/* Link a la página de registro */}
-                        Regístrate
+                    {t('loginPage.prompt')}{" "}
+                    <Link to="/register" className="formLink">
+                        {t('loginPage.registerLink')}
                     </Link>
                 </p>
             </div>

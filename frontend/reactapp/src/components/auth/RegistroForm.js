@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { toast } from 'react-toastify';
+import { useTranslation } from "react-i18next";
 
 import api from "../../services/apiService";
 import { useAuth } from "../../context/AuthContext";
@@ -9,25 +10,24 @@ import FormGroup from "../ui/FormGroup";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import LoadingSpinner from "../ui/LoadingSpinner";
-// import styles from './RegistroForm.module.css'; // Descomentar si se crean estilos específicos
 
 function RegistroForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+    const { t } = useTranslation();
     const navigate = useNavigate();
-    const { login: contextLogin } = useAuth(); // Renombrado para evitar colisión con alguna función 'login' local si existiera
+    const { login: contextLogin } = useAuth();
 
     const {
         register,
         handleSubmit,
         formState: { errors },
         watch,
-        setError // Para establecer errores provenientes del servidor en campos específicos
+        setError
     } = useForm({
-        mode: "onBlur" // Valida los campos cuando pierden el foco, después del primer intento de submit
+        mode: "onBlur"
     });
 
-    const watchedPassword = watch("password", ""); // Observar el valor del campo 'password'
+    const watchedPassword = watch("password", "");
 
     const onSubmit = async (data) => {
         setIsSubmitting(true);
@@ -37,44 +37,39 @@ function RegistroForm() {
                 nombre_usuario: data.username,
                 correo_electronico: data.email,
                 contrasena: data.password,
-                // confirmar_contrasena no se envía al backend
+                confirmar_contrasena: data.confirmPassword
             });
 
-            toast.success("¡Registro completado con éxito! Iniciando sesión...");
+            toast.success(t('registroForm.success'));
 
-            // Verificar que la respuesta del backend contenga la información necesaria
             if (responseData && responseData.token && responseData.id && responseData.nombre_usuario && responseData.correo_electronico) {
                 const userForContext = {
                     id: responseData.id,
                     nombre_usuario: responseData.nombre_usuario,
                     correo_electronico: responseData.correo_electronico,
-                    // Considerar añadir otros campos del usuario que el AuthContext espere
                 };
                 contextLogin(responseData.token, userForContext);
-                navigate("/dashboard", { replace: true }); // Redirigir al dashboard principal
+                navigate("/dashboard", { replace: true });
             } else {
-                toast.error("Registro exitoso, pero hubo un problema al iniciar sesión automáticamente. Por favor, intenta iniciar sesión manualmente.");
-                navigate("/login"); // Fallback a la página de login
+                toast.error(t('registroForm.errors.autoLoginFailed'));
+                navigate("/login");
             }
 
         } catch (error) {
-            // Asumimos que apiService ya ha formateado 'error' para tener error.data y error.status
-            const displayMessage = error.data?.message || error.message || "Error durante el registro. Por favor, inténtalo de nuevo.";
+            const displayMessage = error.data?.message || error.message || t('registroForm.errors.defaultRegisterError');
             toast.error(displayMessage);
 
-            // Mapear errores de validación del backend a campos específicos del formulario
             if (error.data && error.data.errors && Array.isArray(error.data.errors)) {
                 error.data.errors.forEach(err => {
-                    const fieldName = err.param || err.path; // 'param' es común en express-validator
-                    // Mapeo de nombres de campo del backend a los del frontend
+                    const fieldName = err.param || err.path;
                     const clientFieldName = fieldName === 'nombre_usuario' ? 'username' :
                                            fieldName === 'correo_electronico' ? 'email' :
                                            fieldName === 'contrasena' ? 'password' : fieldName;
                     if (clientFieldName && typeof setError === 'function') {
-                        setError(clientFieldName, { type: "server", message: err.msg || "Error del servidor" });
+                        setError(clientFieldName, { type: "server", message: err.msg || t('common.serverError') });
                     }
                 });
-            } else if (error.status === 409) { // Conflicto (ej. email o username ya existen)
+            } else if (error.status === 409) {
                 if (displayMessage.toLowerCase().includes('correo') || displayMessage.toLowerCase().includes('email')) {
                    if (typeof setError === 'function') setError("email", { type: "server", message: displayMessage });
                 } else if (displayMessage.toLowerCase().includes('nombre de usuario') || displayMessage.toLowerCase().includes('username')) {
@@ -87,17 +82,17 @@ function RegistroForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} noValidate> {/* className={styles.registroForm} si se usa */}
-            <FormGroup label="Nombre de Usuario" htmlFor="register-username" required error={errors.username?.message}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <FormGroup label={t('common.usernameLabel')} htmlFor="register-username" required error={errors.username?.message}>
                 <Input
                     type="text"
                     id="register-username"
-                    placeholder="Tu nombre de usuario"
+                    placeholder={t('common.usernamePlaceholder')}
                     {...register("username", {
-                        required: "El nombre de usuario es obligatorio.",
-                        minLength: { value: 3, message: "Mínimo 3 caracteres." },
-                        maxLength: { value: 50, message: "Máximo 50 caracteres." },
-                        pattern: { value: /^[a-zA-Z0-9_.-]+$/, message: "Solo letras, números, y los caracteres . _ -" }
+                        required: t('formValidation.usernameRequired'),
+                        minLength: { value: 3, message: t('formValidation.minLength', { count: 3 }) },
+                        maxLength: { value: 50, message: t('formValidation.maxLength', { count: 50 }) },
+                        pattern: { value: /^[a-zA-Z0-9_.-]+$/, message: t('formValidation.usernamePattern') }
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.username}
@@ -105,14 +100,14 @@ function RegistroForm() {
                 />
             </FormGroup>
 
-            <FormGroup label="Correo Electrónico" htmlFor="register-email" required error={errors.email?.message}>
+            <FormGroup label={t('common.emailLabel')} htmlFor="register-email" required error={errors.email?.message}>
                 <Input
                     type="email"
                     id="register-email"
-                    placeholder="tu.email@ejemplo.com"
+                    placeholder={t('common.emailPlaceholderExample')}
                     {...register("email", {
-                        required: "El correo electrónico es obligatorio.",
-                        pattern: { value: /^\S+@\S+\.\S+$/i, message: "Formato de correo electrónico no válido." },
+                        required: t('formValidation.emailRequired'),
+                        pattern: { value: /^\S+@\S+\.\S+$/i, message: t('formValidation.emailInvalid') },
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.email}
@@ -120,16 +115,15 @@ function RegistroForm() {
                 />
             </FormGroup>
 
-            <FormGroup label="Contraseña" htmlFor="register-password" required error={errors.password?.message}>
+            <FormGroup label={t('common.passwordLabel')} htmlFor="register-password" required error={errors.password?.message}>
                 <Input
                     type="password"
                     id="register-password"
-                    placeholder="Mínimo 8 caracteres" // Ajustar si las reglas de backend son más estrictas
+                    placeholder={t('common.passwordPlaceholderMinLength', { count: 8 })}
+                    autoComplete="new-password"
                     {...register("password", {
-                        required: "La contraseña es obligatoria.",
-                        minLength: { value: 8, message: "La contraseña debe tener al menos 8 caracteres." },
-                        // Las validaciones de complejidad (mayúsculas, etc.) se omiten aquí,
-                        // asumiendo que el backend las maneja. Si se añaden, deben ser consistentes.
+                        required: t('formValidation.passwordRequired'),
+                        minLength: { value: 8, message: t('formValidation.passwordMinLength', { count: 8 }) },
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.password}
@@ -137,14 +131,15 @@ function RegistroForm() {
                 />
             </FormGroup>
 
-            <FormGroup label="Confirmar Contraseña" htmlFor="register-confirmPassword" required error={errors.confirmPassword?.message}>
+            <FormGroup label={t('common.confirmPasswordLabel')} htmlFor="register-confirmPassword" required error={errors.confirmPassword?.message}>
                 <Input
                     type="password"
                     id="register-confirmPassword"
-                    placeholder="Repite tu contraseña"
+                    autoComplete="new-password"
+                    placeholder={t('common.confirmPasswordPlaceholder')}
                     {...register("confirmPassword", {
-                        required: "Por favor, confirma tu contraseña.",
-                        validate: value => value === watchedPassword || "Las contraseñas no coinciden.",
+                        required: t('formValidation.confirmPasswordRequired'),
+                        validate: value => value === watchedPassword || t('formValidation.passwordsDoNotMatch'),
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.confirmPassword}
@@ -152,8 +147,8 @@ function RegistroForm() {
                 />
             </FormGroup>
 
-            <Button type="submit" disabled={isSubmitting} variant="primary" className="full-width-button"> {/* Asumiendo variantes y clase global/de botón */}
-                {isSubmitting ? <LoadingSpinner size="small" color="white" /> : 'Crear cuenta'}
+            <Button type="submit" disabled={isSubmitting} variant="primary" className="full-width-button">
+                {isSubmitting ? <LoadingSpinner size="small" color="white" /> : t('registroForm.submitButton')}
             </Button>
         </form>
     );

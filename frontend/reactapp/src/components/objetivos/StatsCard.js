@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from './StatsCard.module.css';
 import { FaArrowRight } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 
 const StatsCard = ({
     title,
@@ -10,10 +11,11 @@ const StatsCard = ({
     details,
     linkTo,
     icon,
-    linkText = "Ver detalles",
+    linkText,
     children,
     decimalPlacesToShow,
 }) => {
+    const { t } = useTranslation();
     let displayValue = value;
 
     if (typeof value === 'number' && decimalPlacesToShow !== undefined && decimalPlacesToShow !== null) {
@@ -41,7 +43,7 @@ const StatsCard = ({
 
             {linkTo && (
                 <Link to={linkTo} className={styles.link}>
-                    {linkText} <FaArrowRight size="0.8em" />
+                    {linkText || t('statsCard.viewDetails')} <FaArrowRight size="0.8em" />
                 </Link>
             )}
         </div>

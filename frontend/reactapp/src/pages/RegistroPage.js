@@ -1,19 +1,19 @@
 import React from "react";
-import RegistrationForm from "../components/auth/RegistroForm"; // Importa el componente del formulario de registro
-import { Link } from "react-router-dom"; // Importa Link para la navegación interna
-// import styles from "../layouts/AuthLayout.module.css"; // Importa estilos de layout si se usan directamente
+import RegistrationForm from "../components/auth/RegistroForm";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
-// Página de registro de usuario
 function RegistrationPage() {
+    const { t } = useTranslation();
     return (
         <div className="page-centered-content">
             <div className="formContainer">
-                <h1 className="formTitle">Crea tu cuenta</h1>
+                <h1 className="formTitle">{t('registroPage.title')}</h1>
                 <RegistrationForm />
                 <p className="formFooter">
-                    ¿Ya tienes una cuenta?{" "}
+                    {t('registroPage.prompt')}{" "}
                     <Link to="/login" className="formLink">
-                        Iniciar sesión
+                        {t('registroPage.loginLink')}
                     </Link>
                 </p>
             </div>

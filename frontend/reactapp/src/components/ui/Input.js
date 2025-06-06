@@ -1,6 +1,6 @@
-// frontend/reactapp/src/components/ui/Input.js
 import React, { forwardRef } from 'react';
 import styles from './Input.module.css';
+import { useTranslation } from 'react-i18next';
 
 const Input = forwardRef(({
     type = 'text',
@@ -11,14 +11,15 @@ const Input = forwardRef(({
     onBlur,
     disabled,
     isError,
-    children,        // Para <select>
-    className,       // Clases CSS adicionales para el input/select/textarea en sí
-    wrapperClassName = '', // Clases CSS adicionales para el div contenedor
-    actionIcon,          // Prop para el icono de acción
-    onActionClick,       // Prop para el manejador de clic del icono de acción
-    actionIconAriaLabel, // NUEVA PROP: para el aria-label del botón de acción
-    ...rest              // Props restantes
+    children,
+    className,
+    wrapperClassName = '',
+    actionIcon,
+    onActionClick,
+    actionIconAriaLabel,
+    ...rest
 }, ref) => {
+    const { t } = useTranslation();
 
     let elementClass = styles.input;
     let elementType = 'input';
@@ -33,7 +34,7 @@ const Input = forwardRef(({
     }
 
     const finalInputClassName = `${elementClass} ${isError ? styles.error : ''} ${className || ''}`.trim();
-    const finalWrapperClassName = `${styles.inputWrapper} ${wrapperClassName || ''}`.trim(); // Asegúrate que styles.inputWrapper exista
+    const finalWrapperClassName = `${styles.inputWrapper} ${wrapperClassName || ''}`.trim();
 
     const inputElement = () => {
         if (elementType === 'textarea') {
@@ -92,8 +93,8 @@ const Input = forwardRef(({
                 <button
                     type="button"
                     onClick={onActionClick}
-                    className={styles.actionIconButton} // Asegúrate que styles.actionIconButton exista
-                    aria-label={actionIconAriaLabel || "Realizar acción del input"} // Usar la nueva prop o un fallback
+                    className={styles.actionIconButton}
+                    aria-label={actionIconAriaLabel || t('input.defaultActionAriaLabel')}
                     disabled={disabled}
                 >
                     {actionIcon}

@@ -1,0 +1,550 @@
+{
+  "common": {
+    "objective_one": "1 objective",
+    "objective_other": "{{count}} objectives",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "you@email.com",
+    "emailPlaceholderExample": "your.email@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Your password",
+    "passwordPlaceholderMinLength": "Minimum {{count}} characters",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Your username",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Repeat your password",
+    "serverError": "Server error",
+    "progress": "Progress",
+    "updatedLabel": "Updated:",
+    "edit": "Edit",
+    "details": "Details",
+    "selectDate": "Select a date",
+    "status": "Status",
+    "cancel": "Cancel",
+    "updating": "Updating...",
+    "creating": "Creating...",
+    "confirm": "Confirm",
+    "appName": "GoalMaster",
+    "userFallback": "User",
+    "retry": "Retry",
+    "retryLoad": "Retry Load",
+    "errorPrefix": "Error: {{error}}",
+    "updateErrorPrefix": "There was an error while updating: {{error}}",
+    "notAvailable": "N/A",
+    "completed": "Completed",
+    "perDay": "/day",
+    "noDescription": "No description.",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "backToDashboard": "Back to Dashboard",
+    "backToMyObjectives": "Back to my objectives"
+  },
+  "formValidation": {
+    "emailRequired": "Email is required.",
+    "emailInvalid": "Invalid email format.",
+    "passwordRequired": "Password is required.",
+    "passwordMinLength": "Password must be at least {{count}} characters long.",
+    "usernameRequired": "Username is required.",
+    "usernamePattern": "Only letters, numbers, and the characters . _ - are allowed.",
+    "minLength": "Minimum {{count}} characters.",
+    "maxLength": "Maximum {{count}} characters.",
+    "confirmPasswordRequired": "Please confirm your password.",
+    "passwordsDoNotMatch": "Passwords do not match.",
+    "nameRequired": "Name is required.",
+    "nameMinLength": "Name must have at least {{count}} characters.",
+    "typeRequired": "Objective type is required.",
+    "initialValueRequired": "Initial value is required.",
+    "initialValuePositive": "Initial value must be positive or zero.",
+    "mustBeNumber": "Must be a valid number.",
+    "currentValueRequired": "Current value is required.",
+    "valuePositive": "Value must be positive or zero.",
+    "targetValueRequired": "Target value is required.",
+    "targetValuePositive": "Target value must be positive or zero.",
+    "mustBeValidNonNegativeNumber": "Must be a valid, non-negative number.",
+    "invalidStartDate": "Invalid start date.",
+    "endDateRequired": "End date is required.",
+    "invalidEndDate": "Invalid end date.",
+    "endDateAfterStart": "End date must be after the start date.",
+    "endDateNotInPast": "End date cannot be in the past.",
+    "statusRequired": "Status is required.",
+    "allPasswordFieldsRequired": "All password fields are required."
+  },
+  "loaders": {
+    "initializing": "Initializing application...",
+    "loadingSettings": "Loading settings...",
+    "applyingTheme": "Applying theme...",
+    "sessionEnded": "Your session has ended. Redirecting to login...",
+    "loading": "Loading...",
+    "verifyingSession": "Verifying session...",
+    "loadingSimple": "Loading...",
+    "loadingTab": "Loading {{tab}}...",
+    "preparingForm": "Preparing form...",
+    "loadingDashboard": "Loading your Dashboard...",
+    "loadingObjectiveForEdit": "Loading objective for editing...",
+    "loadingDetails": "Loading objective details...",
+    "loadingObjectives": "Loading your objectives...",
+    "loadingProfile": "Loading profile..."
+  },
+  "toast": {
+    "logoutSuccess": "Logged out successfully.",
+    "logoutError": "Error communicating with the server to log out. Logging out locally.",
+    "summaryLoadError": "Could not load initial summary statistics.",
+    "analysisLoadError": "Could not load analysis data.",
+    "objectiveCreateSuccess": "New objective created successfully!",
+    "objectiveCreateErrorPrefix": "Error creating objective:",
+    "objectiveCreateCancel": "Objective creation canceled.",
+    "sessionExpiredOrUnauthorized": "Your session has expired or you are not authorized.",
+    "welcomeCreateFirst": "Welcome! It looks like you don't have any objectives yet. Let's create the first one.",
+    "recentObjectivesLoadError": "Could not load recent objectives.",
+    "recentActivityLoadError": "Could not load recent activity.",
+    "dashboardLoadError": "Could not load dashboard data.",
+    "objectiveLoadForEditError": "Error loading objective for editing.",
+    "objectiveUpdateError": "Error updating objective.",
+    "objectiveDeleteSuccess": "Objective deleted successfully.",
+    "objectiveDeleteError": "Error deleting objective: {{error}}",
+    "objectiveLoadDetailsError": "Error loading objective details.",
+    "noObjectivesYet": "You don't have any objectives yet. Let's create the first one!",
+    "avatarUpload": {
+      "fileTooLarge": "File is too large. Maximum 2MB.",
+      "invalidFormat": "Invalid file format. Only JPG, PNG, GIF.",
+      "selectFirst": "Please, select a file first.",
+      "updateSuccess": "Profile picture updated successfully.",
+      "updateError": "Error uploading profile picture."
+    },
+    "profileUpdateSuccess": "Profile updated successfully!",
+    "profileUpdateError": "Error updating profile: {{error}}",
+    "sessionExpired": "Your session has expired due to inactivity. You will be logged out.",
+    "settingsLoadError": "Could not load your saved settings. Default values will be used.",
+    "loginRequiredForSettings": "You must be logged in to save settings.",
+    "settingsSaveSuccess": "General settings saved successfully.",
+    "settingsSaveError": "Error saving settings. Please try again.",
+    "passwordUpdated": "Password updated successfully.",
+    "passwordUpdateError": "Error changing password.",
+    "exportSuccess": "Your data export has begun.",
+    "exportError": "Error exporting data.",
+    "accountDeleted": "Your account has been deleted. You will be redirected.",
+    "deleteAccountError": "Error deleting account.",
+    "progressUpdate": {
+      "success": "Progress updated successfully.",
+      "noDataLoadedError": "Objective data has not been loaded.",
+      "valueRequiredError": "Please enter a numeric value for the progress.",
+      "invalidValueError": "Please enter a valid numeric value for the progress.",
+      "unknownUpdateError": "Unknown error while updating"
+    }
+  },
+  "errors": {
+    "objectiveNotFound": "Objective not found.",
+    "objectiveLoadError": "Could not load the objective. Please try again later.",
+    "objectivesLoadError": "Error loading objectives. Please try again later.",
+    "profileLoadError": "Profile data not found or failed to load.",
+    "notAuthenticated": "User not authenticated"
+  },
+  "pageTitles": {
+    "dashboard": "Dashboard",
+    "createObjective": "Create New Objective",
+    "myObjectives": "My Objectives",
+    "analysis": "Progress Analysis",
+    "profile": "My Profile",
+    "settings": "Settings",
+    "objectiveDetails": "Objective Details",
+    "editObjective": "Edit Objective",
+    "updateProgress": "Update Progress",
+    "analysisTrends": "Analysis & Trends",
+    "registro": "Create your account"
+  },
+  "header": {
+    "greeting": "Hello, {{name}}!",
+    "logoutAriaLabel": "Log out",
+    "logoutButton": "Log Out"
+  },
+  "loginForm": {
+    "submitButton": "Login",
+    "welcomeBack": "Welcome back, {{user}}!",
+    "createFirstObjective": "Let's start by creating your first objective!",
+    "errors": {
+      "unexpectedResponse": "Unexpected server response when logging in. Please try again.",
+      "defaultLoginError": "Error logging in. Check your credentials.",
+      "incorrectCredentials": "Incorrect credentials."
+    }
+  },
+  "registroForm": {
+    "submitButton": "Create account",
+    "success": "Registration successful! Logging you in...",
+    "errors": {
+      "autoLoginFailed": "Registration successful, but there was a problem logging you in automatically. Please try to log in manually.",
+      "defaultRegisterError": "Error during registration. Please try again."
+    }
+  },
+  "confirmationDialog": {
+    "defaultTitle": "Confirm Action",
+    "defaultMessage": "Are you sure you want to perform this action?",
+    "deleteObjective": "Are you sure you want to delete this objective?"
+  },
+  "charts": {
+    "averageProgressLabel": "Average Progress (%)",
+    "averageProgressAxis": "Average Progress (%)",
+    "noAverageCategoryProgressData": "No average category progress data available.",
+    "distributionByCategoryLabel": "Distribution by Category",
+    "noCategoryData": "No category data to display.",
+    "completed": "Completed",
+    "remaining": "Remaining",
+    "percentage": "Percentage",
+    "status": "Status",
+    "percentageAxis": "Percentage (%)",
+    "noMonthlyProgressData": "No monthly progress data to display.",
+    "progressAxis": "Progress (%)",
+    "monthAxis": "Month",
+    "objectiveProgressLabel": "Objective Progress (%)",
+    "noObjectiveProgressData": "No objective progress data to display.",
+    "objectiveStatusLabel": "Objective Status",
+    "noStatusData": "No status data to display.",
+    "progressLabelWithUnit": "Progress {{unit}}",
+    "notEnoughDataForChart": "Not enough data to display progress evolution (at least 2 points required)."
+  },
+  "analysis": {
+    "trends": {
+      "stable": "Stable"
+    },
+    "timePeriods": {
+      "1month": "Last month",
+      "3months": "Last 3 months",
+      "6months": "Last 6 months",
+      "1year": "Last year",
+      "all": "Since the beginning"
+    },
+    "chartTitles": {
+      "categoryDistribution": "Distribution by Category",
+      "categoryDistributionSubtitle": "Number of objectives per category",
+      "objectiveStatus": "Objective Status",
+      "objectiveStatusSubtitle": "Ratio between completed and pending objectives",
+      "monthlyProgress": "Monthly Progress",
+      "monthlyProgressSubtitle": "Progress trend by category in recent months",
+      "categoryAverageProgress": "Average Progress by Category",
+      "categoryAverageProgressSubtitle": "Completion level in each category",
+      "objectiveProgress": "Progress by Objective",
+      "objectiveProgressSubtitle": "Completion level of each individual objective",
+      "topProgress": "Top Progress Objectives",
+      "lowProgress": "Low Progress Objectives"
+    },
+    "noDetailedObjectives": "No detailed objectives by category to display.",
+    "noDataMessages": {
+      "topProgress": "No objectives with significant progress.",
+      "lowProgress": "All objectives have good progress or no data is available."
+    },
+    "selectTabPrompt": "Select a tab to see the analysis.",
+    "tabs": {
+      "general": "General View",
+      "byCategory": "By Category",
+      "byObjective": "By Objective"
+    },
+    "stats": {
+      "totalObjectives": "Total Objectives",
+      "active": "Active",
+      "completed": "Completed",
+      "averageProgress": "Average Progress",
+      "categories": "Categories",
+      "moreCategories": "...and {{count}} more",
+      "trend": "Trend",
+      "trendSubtitle": "Based on the last 30 days' progress"
+    }
+  },
+  "createGoalPage": {
+    "title": {
+      "new": "Create a New Objective",
+      "first": "Create Your First Objective"
+    }
+  },
+  "status": {
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "archived": "Archived",
+    "failed": "Failed",
+    "notStarted": "Not Started"
+  },
+  "dashboard": {
+    "createFirstPrompt": "Create your first objective to get started.",
+    "noStatusBreakdown": "No status breakdown available",
+    "partialError": "Some dashboard data could not be loaded. The information displayed may be incomplete.",
+    "stats": {
+      "totalObjectives": "Total Objectives",
+      "viewAllObjectives": "View all objectives",
+      "noObjectives": "You don't have any objectives yet.",
+      "averageProgress": "Average Progress",
+      "dueSoon": "DUE SOON",
+      "objectives": "objectives",
+      "dueSoonDetails": "In the next 7 days",
+      "viewCalendar": "View calendar",
+      "categories": "CATEGORIES",
+      "mainCategory": "Main: {{name}}",
+      "viewCategoryDetails": "View category details",
+      "viewAnalysis": "View Analysis"
+    },
+    "sections": {
+      "keyObjectives": "Key / Recent Objectives",
+      "recentActivity": "Recent Activity"
+    }
+  },
+  "goalDetail": {
+    "overdue": "Overdue",
+    "trends": {
+      "completed": "Completed",
+      "finishedUnmet": "Finished (Unmet)",
+      "upwards": "Upwards",
+      "downwards": "Downwards",
+      "notApplicable": "Not applicable"
+    },
+    "buttons": {
+      "edit": "Edit",
+      "updateProgress": "Update Progress",
+      "delete": "Delete"
+    },
+    "overdueMessage": {
+      "line1": "Attention! This objective is overdue and has not been completed.",
+      "line2": "Days past deadline: {{count}}"
+    },
+    "cards": {
+      "progress": "Progress",
+      "keyData": "Key Data",
+      "progressDistribution": "Progress Distribution",
+      "progressEvolution": "Progress Evolution"
+    },
+    "noData": {
+      "notQuantitative": "This objective is not quantitative or lacks the necessary values to calculate progress.",
+      "noDistributionData": "No quantitative data for distribution.",
+      "notEnoughEvolutionData": "Not enough data to show progress evolution in the selected period (at least 2 points required). You currently have {{count}} points in this range.",
+      "evolutionOnlyQuantitative": "Progress evolution is only available for quantitative objectives."
+    },
+    "dataLabels": {
+      "startDate": "Start Date",
+      "deadline": "Deadline",
+      "daysRemaining": "Days Remaining",
+      "averageRate": "Average Rate",
+      "trend": "Trend",
+      "current": "Current",
+      "target": "Target"
+    },
+    "timeframes": {
+      "7days": "Last 7 days",
+      "30days": "Last Month",
+      "90days": "Last 3 Months",
+      "1year": "Last Year",
+      "allTime": "All time"
+    }
+  },
+  "loginPage": {
+    "title": "Login",
+    "prompt": "Don't have an account?",
+    "registerLink": "Sign up"
+  },
+  "registroPage": {
+    "title": "Create your account",
+    "prompt": "Already have an account?",
+    "loginLink": "Login"
+  },
+  "myObjectives": {
+    "createFirstPrompt": "Create your first objective.",
+    "addNewObjective": "Add New Objective",
+    "searchPlaceholder": "Name or description...",
+    "noResults": "No objectives found matching your search or filters.",
+    "noObjectives": "You haven't created any objectives yet. Get started by adding one!",
+    "viewMore": "View {{count}} more ({{total}} total)",
+    "viewLess": "View less objectives",
+    "labels": {
+      "search": "Search:",
+      "category": "Category:",
+      "sortBy": "Sort by:"
+    },
+    "sort": {
+      "recent": "Most Recent",
+      "oldest": "Oldest",
+      "nameAsc": "Name (A-Z)",
+      "nameDesc": "Name (Z-A)",
+      "progressAsc": "Progress (Low to High)",
+      "progressDesc": "Progress (High to Low)",
+      "dateAsc": "End Date (Soonest)"
+    },
+    "categories": {
+      "all": "All"
+    }
+  },
+  "profilePage": {
+    "editProfile": "Edit Profile",
+    "selectPhoto": "Select Photo",
+    "uploadPhoto": "Upload Photo",
+    "memberSince": "Member since {{date}}",
+    "emailReadonly": "Email address cannot be modified.",
+    "noBio": "You haven't added a biography yet.",
+    "avatarAlt": "Avatar for {{name}}",
+    "avatarPreviewAlt": "Avatar preview",
+    "cards": {
+      "personalInfo": {
+        "title": "Personal Information",
+        "subtitleEdit": "Update your personal and contact information.",
+        "subtitleView": "Here you can see your personal and contact information."
+      },
+      "stats": {
+        "title": "Statistics",
+        "subtitle": "Your progress in GoalMaster",
+        "total": "Total Objectives",
+        "completed": "Completed",
+        "inProgress": "In Progress",
+        "successRate": "Success Rate"
+      }
+    },
+    "labels": {
+      "fullName": "Full name",
+      "email": "Email address",
+      "phone": "Phone",
+      "location": "Location",
+      "bio": "Biography"
+    },
+    "placeholders": {
+      "phone": "e.g., +44 123 456 789",
+      "location": "e.g., London, UK",
+      "bio": "Tell us a little about yourself..."
+    }
+  },
+  "updateProgressPage": {
+    "title": "Update Progress: {{name}}",
+    "notQuantitative": "This objective is not quantitative and its progress cannot be updated numerically.",
+    "notQuantitativeSuggestion": "Please edit the objective to change its status (Pending, In progress, Completed).",
+    "backToObjective": "Back to Objective",
+    "progressPreviewTitle": "Progress (how it will look with the new value)",
+    "progressLabel": "Progress",
+    "newValueLabel": "Value (New)",
+    "targetValueLabel": "Target Value",
+    "lastUpdateInfo": "Last objective update: ",
+    "newProgressValueLabel": "New Progress Value",
+    "newProgressValuePlaceholder": "Enter the new value in {{unit, lowercase}}",
+    "notesLabel": "Notes about this Update (Optional)",
+    "notesPlaceholder": "Add notes about this update...",
+    "saveButton": "Save Progress"
+  },
+  "sidebar": {
+    "newObjective": "New Objective",
+    "dashboard": "Dashboard",
+    "myObjectives": "My Objectives",
+    "analysis": "Analysis",
+    "myProfile": "My Profile",
+    "settings": "Settings"
+  },
+  "settingsPage": {
+    "title": "Settings",
+    "language": "Language",
+    "languageDescription": "Choose the application's interface language.",
+    "theme": "Visual Theme",
+    "themeDescription": "Select your preferred theme.",
+    "accountSettingsTitle": "Account Settings",
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Set how and when you want to receive notifications.",
+      "emailLabel": "Email notifications",
+      "emailDescription": "Receive important updates via email.",
+      "pushLabel": "Push notifications (Browser)",
+      "pushDescription": "Allow real-time notifications in your browser."
+    },
+    "appearance": {
+      "title": "Appearance",
+      "subtitle": "Customize the look and feel of the application.",
+      "themeLabel": "Theme:",
+      "languageLabel": "Language:",
+      "dateFormatLabel": "Date format:"
+    },
+    "saveGeneralButton": "Save Configuration Changes",
+    "password": {
+      "title": "Change Password",
+      "subtitle": "Update your password to keep your account secure.",
+      "currentLabel": "Current password:",
+      "newLabel": "New password:",
+      "confirmLabel": "Confirm new password:",
+      "changeButton": "Change Password",
+      "toggleAria": {
+        "showCurrent": "Show current password",
+        "hideCurrent": "Hide current password",
+        "showNew": "Show new password",
+        "hideNew": "Hide new password",
+        "showConfirm": "Show password confirmation",
+        "hideConfirm": "Hide password confirmation"
+      }
+    },
+    "data": {
+      "title": "Data & Account",
+      "subtitle": "Manage your data and account settings.",
+      "exportLabel": "Export data:",
+      "exportDescription": "Download a copy of all your personal and objective data.",
+      "exportButton": "Export my data",
+      "deleteLabel": "Delete account:",
+      "deleteDescription": "This action is irreversible and will permanently delete all your data.",
+      "deleteButton": "Delete my account",
+      "deleteConfirmation": "Are you ABSOLUTELY sure you want to delete your account? This action is irreversible and will permanently delete all your objectives and data."
+    }
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System Preference"
+  },
+  "language": {
+    "es": "Spanish",
+    "en": "English"
+  },
+  "categoryObjectivesCard": {
+    "noObjectives": "No objectives in this category."
+  },
+  "rankedObjectivesList": {
+    "noData": "No objectives to display."
+  },
+  "recentObjectives": {
+    "updatedAgo": "Upd. {{distance}} ago",
+    "viewAll": "See all objective"
+  },
+  "objectiveCard": {
+    "current": "Current:",
+    "target": "Target:"
+  },
+  "objectivesForm": {
+    "nameLabel": "Objective name",
+    "namePlaceholder": "e.g., Run 5km daily",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe the details of your objective",
+    "unitPlaceholder": "e.g., km, hours, euros, etc.",
+    "typeLabel": "Objective type",
+    "selectType": "Select a type",
+    "initialValueLabel": "Initial value",
+    "targetValueLabel": "Target value",
+    "unitLabel": "Unit of measure",
+    "startDateLabel": "Start date",
+    "endDateLabel": "End date",
+    "createButton": "Create Objective",
+    "currentValueLabel": "Current value",
+    "lowerIsBetter": "A lower value is better",
+    "updateButton": "Update Objective",
+    "formCleared": "Form cleared."
+  },
+  "progressBar": {
+    "excellent": "Excellent progress",
+    "good": "Good progress",
+    "regular": "Regular progress",
+    "poor": "Poor progress",
+    "none": "No progress"
+  },
+  "categories": {
+    "health": "Health",
+    "finance": "Finance",
+    "personalDevelopment": "Personal Development",
+    "relationships": "Relationships",
+    "career": "Career",
+    "other": "Other"
+  },
+  "devErrors": {
+    "useAuthMissingProvider": "useAuth must be used within an AuthProvider",
+    "useSettingsMissingProvider": "useSettings must be used within a SettingsProvider"
+  },
+  "input": {
+    "defaultActionAriaLabel": "Perform input action"
+  },
+  "activityFeed": {
+    "noRecentActivity": "No recent activity.",
+    "ago": "{{distance}} ago"
+  }
+}

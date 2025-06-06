@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './RankedObjectivesList.module.css';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const InlineProgressBar = ({ percentage, color }) => {
     return (
@@ -13,12 +14,14 @@ const InlineProgressBar = ({ percentage, color }) => {
     );
 };
 
-const RankedObjectivesList = ({ title, objectives, noDataMessage = "No hay objetivos para mostrar." }) => {
+const RankedObjectivesList = ({ title, objectives, noDataMessage }) => {
+    const { t } = useTranslation();
+
     if (!objectives || objectives.length === 0) {
         return (
             <div className={styles.rankedListContainer}>
                 <h4 className={styles.listTitle}>{title}</h4>
-                <p className={styles.noDataText}>{noDataMessage}</p>
+                <p className={styles.noDataText}>{noDataMessage || t('rankedObjectivesList.noData')}</p>
             </div>
         );
     }

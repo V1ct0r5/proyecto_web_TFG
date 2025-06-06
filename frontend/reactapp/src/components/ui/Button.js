@@ -1,6 +1,7 @@
 // frontend/reactapp/src/components/ui/Button.js
 import React from 'react';
 import styles from './Button.module.css'; // Asegúrate que la ruta es correcta
+import { useTranslation } from 'react-i18next';
 // Opcional: import LoadingSpinner from './LoadingSpinner'; // Si quieres un spinner dentro del botón
 
 const Button = ({
@@ -16,6 +17,7 @@ const Button = ({
     rightIcon,           // Prop opcional para un icono a la derecha
     ...rest              // Recoge cualquier otra prop estándar de HTML button (ej. aria-label, id)
 }) => {
+    const { t } = useTranslation();
 
     // Construye las clases CSS de forma dinámica
     const buttonClasses = [
@@ -32,13 +34,11 @@ const Button = ({
             className={buttonClasses}
             onClick={onClick}
             disabled={disabled || isLoading} // El botón se deshabilita si su prop 'disabled' es true o si 'isLoading' es true
-            {...rest}                        // Aquí se propagan solo las props HTML válidas restantes
+            {...rest}
         >
             {isLoading ? (
                 <>
-                    {/* Puedes usar un texto o un spinner pequeño */}
-                    {/* <LoadingSpinner size="small" inline /> */}
-                    <span className={styles.loadingText}>Cargando...</span> {/* Necesitarías definir .loadingText en tu CSS */}
+                    <span className={styles.loadingText}>{t('loaders.loadingSimple')}</span>
                 </>
             ) : (
                 <>

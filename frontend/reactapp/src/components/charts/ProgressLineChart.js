@@ -13,8 +13,9 @@ import {
     Filler
 } from 'chart.js';
 import { format, parseISO } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale'; // Importar ambos locales
 import annotationPlugin from 'chartjs-plugin-annotation';
+import { useTranslation } from 'react-i18next';
 
 // Registrar el plugin de anotaciones
 ChartJS.register(annotationPlugin);
@@ -84,9 +85,24 @@ const calculateNiceScale = (minData, maxData, desiredTicks = 5) => {
 
 // Componente de la gráfica de líneas de progreso
 function ProgressLineChart({ progressHistory, unitMeasure, targetValue, isLowerBetter }) {
+    const { t, i18n } = useTranslation();
     const chartRef = React.useRef(null);
     const [chartData, setChartData] = React.useState({ labels: [], datasets: [] });
     const [chartOptions, setChartOptions] = React.useState({});
+
+    // Mapeo de idiomas de i18next a locales de date-fns
+    const dateFnsLocales = {
+        es: es,
+        en: enUS
+    };
+    const currentLocale = dateFnsLocales[i18n.language] || enUS;
+    
+    // Mapeo de idiomas de i18next a formatos de Intl.NumberFormat
+    const numberFormatLocales = {
+        es: 'es-ES',
+        en: 'en-US'
+    };
+    const currentNumberLocale = numberFormatLocales[i18n.language] || 'en-US';
 
     const hasTargetValue = targetValue !== undefined && targetValue !== null && !isNaN(targetValue);
 
@@ -103,7 +119,7 @@ function ProgressLineChart({ progressHistory, unitMeasure, targetValue, isLowerB
         );
 
         const labels = sortedHistory.map(item =>
-            format(parseISO(item.date), 'd/M', { locale: es })
+            format(parseISO(item.date), 'd/M', { locale: currentLocale })
         );
 
         const dataValues = sortedHistory.map(item => item.value);
@@ -146,7 +162,7 @@ function ProgressLineChart({ progressHistory, unitMeasure, targetValue, isLowerB
 
         const datasets = [
             {
-                label: `Progreso ${unitMeasure ? `(${unitMeasure})` : ''}`,
+                label: t('charts.progressLabelWithUnit', { unit: unitMeasure ? `(${unitMeasure})` : '' }),
                 data: dataValues,
                 borderColor: 'rgb(102, 126, 234)',
                 tension: 0.4,
@@ -182,13 +198,13 @@ function ProgressLineChart({ progressHistory, unitMeasure, targetValue, isLowerB
                             let label = context.dataset.label || '';
                             if (label) { label += ': '; }
                             if (context.parsed.y !== null) {
-                                label += new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(context.parsed.y);
+                                label += new Intl.NumberFormat(currentNumberLocale, { maximumFractionDigits: 1 }).format(context.parsed.y);
                                 if (unitMeasure) { label += ` ${unitMeasure}`; }
                             }
                             return label;
                         },
                         title: function(context) {
-                            return format(parseISO(sortedHistory[context[0].dataIndex].date), 'dd MMMM', { locale: es });
+                            return format(parseISO(sortedHistory[context[0].dataIndex].date), 'dd MMMM', { locale: currentLocale });
                         }
                     },
                     displayColors: false,
@@ -230,9 +246,9 @@ function ProgressLineChart({ progressHistory, unitMeasure, targetValue, isLowerB
                         color: 'var(--muted-foreground)',
                         callback: function(value) {
                             if (Math.abs(value) >= 1000) {
-                                return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1, notation: 'compact', compactDisplay: 'short' }).format(value) + ` ${unitMeasure || ''}`;
+                                return new Intl.NumberFormat(currentNumberLocale, { maximumFractionDigits: 1, notation: 'compact', compactDisplay: 'short' }).format(value) + ` ${unitMeasure || ''}`;
                             }
-                            return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value) + ` ${unitMeasure || ''}`;
+                            return new Intl.NumberFormat(currentNumberLocale, { maximumFractionDigits: 1 }).format(value) + ` ${unitMeasure || ''}`;
                         },
                         font: { size: 12 },
                         padding: 10,
@@ -254,7 +270,7 @@ function ProgressLineChart({ progressHistory, unitMeasure, targetValue, isLowerB
         setChartData({ labels, datasets });
         setChartOptions(options);
 
-    }, [progressHistory, unitMeasure, targetValue, isLowerBetter, hasTargetValue]);
+    }, [progressHistory, unitMeasure, targetValue, isLowerBetter, hasTargetValue, t, currentLocale, currentNumberLocale]);
 
 
     React.useEffect(() => {
@@ -281,7 +297,7 @@ function ProgressLineChart({ progressHistory, unitMeasure, targetValue, isLowerB
     if (!chartData.labels || chartData.labels.length === 0) {
         return (
             <div className="h-64 flex items-center justify-center text-gray-500" style={{ color: 'var(--muted-foreground)' }}>
-                No hay datos suficientes para mostrar la evolución del progreso (se requieren al menos 2 puntos).
+                {t('charts.notEnoughDataForChart')}
             </div>
         );
     }

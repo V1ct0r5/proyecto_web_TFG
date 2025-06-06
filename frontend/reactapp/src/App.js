@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegistroPage';
@@ -31,6 +32,7 @@ import { SettingsProvider, useSettings } from './context/SettingsContext';
 function AppContent() {
     const { isAuthenticated, isLoading: isAuthLoading, logout: contextLogout } = useAuth();
     const { isLoadingSettings, isApplyingTheme } = useSettings();
+    const { t } = useTranslation();
     const location = useLocation();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const isLoggingOutRef = useRef(isLoggingOut);
@@ -68,16 +70,16 @@ function AppContent() {
     const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
 
     if ((isAuthLoading || (isAuthenticated && isLoadingSettings) || isApplyingTheme) && !isAuthRoute) {
-        const message = isAuthLoading ? "Inicializando aplicación..." 
-                      : (isLoadingSettings ? "Cargando configuración..." 
-                      : "Aplicando tema...");
+        const message = isAuthLoading ? t('loaders.initializing')
+                      : (isLoadingSettings ? t('loaders.loadingSettings') 
+                      : t('loaders.applyingTheme'));
         return <FullPageLoader message={message} />;
     }
 
     return (
         <div className="App">
             {isLoggingOut && location.pathname !== '/login' && (
-                <FullPageLoader message="Tu sesión ha finalizado. Redirigiendo al login..." />
+                <FullPageLoader message={t('loaders.sessionEnded')} />
             )}
 
             {isAuthenticated && !isAuthRoute && <Sidebar />}
@@ -88,9 +90,9 @@ function AppContent() {
                     <Routes>
                         <Route
                             path="/"
-                            element={isAuthLoading ? <FullPageLoader message="Cargando..." /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)}
+                            element={isAuthLoading ? <FullPageLoader message={t('loaders.loading')} /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)}
                         />
-                        <Route element={isAuthLoading ? <FullPageLoader message="Verificando sesión..." /> : <AuthLayout />}>
+                        <Route element={isAuthLoading ? <FullPageLoader message={t('loaders.verifyingSession')} /> : <AuthLayout />}>
                             <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
                             <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
                         </Route>
@@ -107,7 +109,7 @@ function AppContent() {
                         </Route>
                         <Route
                             path="*"
-                            element={isAuthLoading ? <FullPageLoader message="Cargando..." /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)}
+                            element={isAuthLoading ? <FullPageLoader message={t('loaders.loading')} /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)}
                         />
                     </Routes>
                 </main>

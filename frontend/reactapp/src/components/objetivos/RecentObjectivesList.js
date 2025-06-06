@@ -4,13 +4,18 @@ import styles from './RecentObjectivesList.module.css';
 import Button from '../ui/Button';
 import { FaArrowRight, FaChartLine } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 const RecentObjectivesList = ({ objectives }) => {
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
+    
+    const dateFnsLocales = { es: es, en: enUS };
+    const currentLocale = dateFnsLocales[i18n.language] || enUS;
 
     if (!objectives || objectives.length === 0) {
-        return <p className={styles.noData}>No hay objetivos recientes para mostrar.</p>;
+        return <p className={styles.noData}>{t('recentObjectives.noData')}</p>;
     }
 
     return (
@@ -26,7 +31,7 @@ const RecentObjectivesList = ({ objectives }) => {
                                 {obj.nombre}
                             </Link>
                             <span className={styles.lastUpdate}>
-                                Act. hace {formatDistanceToNow(new Date(obj.updatedAt), { addSuffix: false, locale: es })}
+                                {t('recentObjectives.updatedAgo', { distance: formatDistanceToNow(new Date(obj.updatedAt), { addSuffix: false, locale: currentLocale }) })}
                             </span>
                         </div>
                         <div className={styles.objectiveActions}>
@@ -35,7 +40,7 @@ const RecentObjectivesList = ({ objectives }) => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => navigate(`/objectives/${obj.id_objetivo}`)}
-                                aria-label={`Ver detalles de ${obj.nombre}`}
+                                aria-label={t('recentObjectives.viewDetailsAria', {name: obj.nombre})}
                                 className={styles.detailsButton}
                             >
                                 <FaArrowRight />
@@ -46,7 +51,7 @@ const RecentObjectivesList = ({ objectives }) => {
             </ul>
             <div className={styles.viewAllButtonContainer}>
                 <Button onClick={() => navigate('/mis-objetivos')} variant="outline" size="small">
-                    Ver todos los objetivos
+                    {t('recentObjectives.viewAllObjectives')}
                 </Button>
             </div>
         </div>

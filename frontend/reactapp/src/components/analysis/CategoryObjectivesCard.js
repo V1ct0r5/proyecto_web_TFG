@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './CategoryObjectivesCard.module.css';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const InlineProgressBar = ({ percentage, color }) => (
     <div className={styles.inlineProgressBarContainer}>
@@ -9,12 +10,14 @@ const InlineProgressBar = ({ percentage, color }) => (
 );
 
 const CategoryObjectivesCard = ({ categoryName, objectiveCount, objectives, color }) => {
+    const { t } = useTranslation();
+
     return (
         <div className={styles.categoryCard}>
             <div className={styles.categoryHeader}>
                 <span className={styles.categoryColorDot} style={{ backgroundColor: color }}></span>
                 <h4 className={styles.categoryName}>{categoryName}</h4>
-                <span className={styles.objectiveCountBadge}>{objectiveCount} objetivo{objectiveCount !== 1 ? 's' : ''}</span>
+                <span className={styles.objectiveCountBadge}>{t('common.objective', { count: objectiveCount })}</span>
             </div>
             {objectives && objectives.length > 0 ? (
                 <ul className={styles.objectivesList}>
@@ -36,7 +39,7 @@ const CategoryObjectivesCard = ({ categoryName, objectiveCount, objectives, colo
                     ))}
                 </ul>
             ) : (
-                <p className={styles.noObjectivesText}>No hay objetivos en esta categoría.</p>
+                <p className={styles.noObjectivesText}>{t('categoryObjectivesCard.noObjectives')}</p>
             )}
         </div>
     );

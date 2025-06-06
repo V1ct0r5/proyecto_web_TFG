@@ -8,6 +8,7 @@ import {
     Legend,
     Title
 } from 'chart.js';
+import { useTranslation } from 'react-i18next';
 
 // IMPORTANTE: Registra los componentes de Chart.js.
 // Idealmente, haz esto UNA VEZ globalmente en tu App.js o un archivo de configuración.
@@ -29,12 +30,14 @@ const getStatusChartColors = (statuses) => {
 };
 
 const ObjectiveStatusChart = ({ data }) => {
+    const { t } = useTranslation();
+
     const processedChartData = useMemo(() => {
         if (!data || data.length === 0) {
             return {
                 labels: [],
                 datasets: [{
-                    label: 'Estado de Objetivos', data: [],
+                    label: t('charts.objectiveStatusLabel'), data: [],
                     backgroundColor: [], borderColor: [],
                     borderWidth: 1, offset: 8,
                 }],
@@ -46,15 +49,15 @@ const ObjectiveStatusChart = ({ data }) => {
         return {
             labels,
             datasets: [{
-                label: 'Estado de Objetivos', data: chartValues,
+                label: t('charts.objectiveStatusLabel'), data: chartValues,
                 backgroundColor: backgroundColors, borderColor: borderColors,
                 borderWidth: 1, offset: 8,
             }],
         };
-    }, [data]);
+    }, [data, t]);
 
     if (!data || data.length === 0) {
-        return <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--muted-foreground)' }}>No hay datos de estados para mostrar.</p>;
+        return <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--muted-foreground)' }}>{t('charts.noStatusData')}</p>;
     }
 
     const options = {
@@ -70,7 +73,7 @@ const ObjectiveStatusChart = ({ data }) => {
                         if (context.parsed !== null && context.dataset.data.length > 0) {
                             const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
                             const percentage = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
-                            label += `<span class="math-inline">\{context\.raw\} \(</span>{percentage}%)`;
+                            label += `${context.raw} (${percentage}%)`;
                         } else if (context.raw !== undefined) label += context.raw;
                         return label;
                     }

@@ -5,81 +5,81 @@ import api from '../services/apiService';
 import { toast } from 'react-toastify';
 import styles from './AppHeader.module.css';
 import buttonStyles from '../components/ui/Button.module.css';
+import { useTranslation } from 'react-i18next';
 
-const getHeaderTitle = (pathname) => {
-    switch (pathname) {
-        case '/dashboard':
-            return 'Panel de Control';
-        case '/objectives': // Asumiendo que esta es la ruta para la página de creación
-            return 'Crear Nuevo Objetivo';
-        case '/mis-objetivos':
-            return 'Mis Objetivos';
-        case '/analisis':
-            return 'Análisis de Progreso';
-        case '/profile':
-            return 'Mi Perfil';
-        case '/configuracion':
-            return 'Configuración';
-        default:
-            if (pathname.match(/^\/objectives\/view\/(\d+)$/)) return 'Detalles del Objetivo';
-            if (pathname.match(/^\/objectives\/(\d+)$/)) return 'Detalles del Objetivo';
-            if (pathname.match(/^\/objectives\/edit\/(\d+)$/)) return 'Editar Objetivo';
-            if (pathname.match(/^\/objectives\/(\d+)\/update-progress$/)) return 'Actualizar Progreso';
-            return 'GoalMaster'; // Título por defecto o fallback
-    }
-};
-
-function AppHeader() {
+const AppHeader = () => {
     const { user, isAuthenticated, logout: contextLogout } = useAuth();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
 
+    const getHeaderTitle = (pathname) => {
+        const path = pathname.toLowerCase();
+        if (path.startsWith('/objectives/edit/')) return t('pageTitles.editObjective');
+        if (path.startsWith('/objectives/view/')) return t('pageTitles.objectiveDetails');
+        if (path.startsWith('/objectives/')) {
+            if (path.includes('/update-progress')) return t('pageTitles.updateProgress');
+            if (path.split('/').length === 3) return t('pageTitles.objectiveDetails');
+        }
+        switch (path) {
+            case '/dashboard':
+                return t('pageTitles.dashboard');
+            case '/objectives':
+                return t('pageTitles.createObjective');
+            case '/mis-objetivos':
+                return t('pageTitles.myObjectives');
+            case '/analisis':
+                return t('pageTitles.analysis');
+            case '/profile':
+                return t('pageTitles.profile');
+            case '/settings': // Corregido de '/configuracion'
+                return t('pageTitles.settings');
+            default:
+                return t('common.appName');
+        }
+    };
+    
     const pageTitle = getHeaderTitle(location.pathname);
 
     const handleLogout = async () => {
         try {
             await api.logout();
-            toast.success('Sesión cerrada con éxito.');
+            toast.success(t('toast.logoutSuccess'));
         } catch (err) {
-            // Los errores 401/403 deberían ser manejados por el interceptor de apiService.
-            // Este toast es para otros posibles errores de red/servidor durante el logout.
             if (!(err.response && (err.response.status === 401 || err.response.status === 403))) {
-                toast.error('Error al comunicar con el servidor para cerrar sesión. Se cerrará la sesión localmente.');
+                toast.error(t('toast.logoutError'));
             }
         } finally {
-            contextLogout(); // Limpia el estado del contexto y el localStorage.
+            contextLogout();
             navigate("/login", { replace: true });
         }
     };
 
     if (!isAuthenticated) {
-        // No renderizar el header si el usuario no está autenticado.
-        // Esta lógica podría también estar centralizada en un componente de rutas protegidas.
         return null;
     }
 
     return (
         <header className={styles.header}>
             <div className={styles.leftContent}>
-                {/* Muestra el título de la página o un placeholder/logo por defecto */}
                 {pageTitle ? (
                     <h1 className={styles.headerPageTitle}>{pageTitle}</h1>
                 ) : (
-                    <div className={styles.headerPlaceholder}></div> // Considerar mostrar el logo aquí como fallback
+                    <div className={styles.headerPlaceholder}></div>
                 )}
             </div>
 
             {user && (
                 <div className={styles.rightContent}>
                     <span className={styles.userInfo}>
-                        ¡Hola, {user.nombre_usuario || 'Usuario'}!
+                        {t('header.greeting', { name: user.nombre_usuario || t('common.userFallback') })}
                     </span>
                     <button
                         onClick={handleLogout}
-                        className={`${buttonStyles.button} ${buttonStyles.buttonSecondary}`}
-                        aria-label="Cerrar sesión"
+                        className={`${buttonStyles.buttonSecondary} ${buttonStyles.secondary}`}
+                        aria-label={t('header.logoutAriaLabel')}
                     >
-                        Cerrar Sesión
+                        {t('header.logoutButton')}
                     </button>
                 </div>
             )}

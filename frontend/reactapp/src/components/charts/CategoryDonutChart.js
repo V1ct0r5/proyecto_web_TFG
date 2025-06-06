@@ -8,16 +8,19 @@ import {
     Title
 } from 'chart.js';
 import { getCategoryChartColors } from '../../utils/ChartColors';
+import { useTranslation } from 'react-i18next';
 
 ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
 const CategoryDonutChart = ({ data }) => {
+    const { t } = useTranslation();
+
     const processedChartData = useMemo(() => {
         if (!data || data.length === 0) {
             return {
                 labels: [],
                 datasets: [{
-                    label: 'Distribución por Categoría',
+                    label: t('charts.distributionByCategoryLabel'),
                     data: [],
                     backgroundColor: [],
                     borderColor: [],
@@ -35,7 +38,7 @@ const CategoryDonutChart = ({ data }) => {
             labels,
             datasets: [
                 {
-                    label: 'Distribución por Categoría',
+                    label: t('charts.distributionByCategoryLabel'),
                     data: chartValues,
                     backgroundColor: backgroundColors,
                     borderColor: borderColors,
@@ -44,10 +47,10 @@ const CategoryDonutChart = ({ data }) => {
                 },
             ],
         };
-    }, [data]);
+    }, [data, t]);
 
     if (!data || data.length === 0) {
-        return <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--muted-foreground)' }}>No hay datos de categorías para mostrar.</p>;
+        return <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--muted-foreground)' }}>{t('charts.noCategoryData')}</p>;
     }
 
     const options = {

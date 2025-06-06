@@ -1,4 +1,3 @@
-// src/components/charts/DistributionBarChart.js
 import React, { useState, useEffect, useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -10,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { useTranslation } from 'react-i18next';
 
 ChartJS.register(
   CategoryScale,
@@ -20,22 +20,21 @@ ChartJS.register(
   Legend
 );
 
-// Función auxiliar para obtener el valor de una variable CSS
 const getCssVariableValue = (variableName) => {
   if (typeof window !== 'undefined') {
     const value = getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
-    return value || null; // Retorna null si la variable está vacía o no se encuentra
+    return value || null;
   }
   return null;
 };
 
 const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
+  const { t } = useTranslation();
   const [chartStyling, setChartStyling] = useState({
-    // Fallbacks en caso de que las variables CSS no se carguen
-    completedBg: 'rgba(79, 70, 229, 0.7)',     // Fallback --primary con alpha
-    completedBorder: '#4F46E5',                 // Fallback --primary sólido
-    remainingBg: 'rgba(100, 116, 139, 0.6)',   // Fallback --muted-foreground con alpha
-    remainingBorder: '#64748B',                // Fallback --muted-foreground sólido
+    completedBg: 'rgba(79, 70, 229, 0.7)',
+    completedBorder: '#4F46E5',
+    remainingBg: 'rgba(100, 116, 139, 0.6)',
+    remainingBorder: '#64748B',
   });
 
   useEffect(() => {
@@ -50,13 +49,13 @@ const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
       remainingBg: remainingBgColor,
       remainingBorder: remainingBorderColor,
     });
-  }, []); // El array vacío asegura que esto se ejecute solo una vez, al montar
+  }, []);
 
   const chartData = useMemo(() => ({
-    labels: ['Completado', 'Restante'],
+    labels: [t('charts.completed'), t('charts.remaining')],
     datasets: [
       {
-        label: 'Porcentaje', // Puedes ocultar la leyenda si prefieres
+        label: t('charts.percentage'),
         data: [completedPercentage, remainingPercentage],
         backgroundColor: [
           chartStyling.completedBg,
@@ -69,7 +68,7 @@ const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
         borderWidth: 1,
       },
     ],
-  }), [completedPercentage, remainingPercentage, chartStyling]);
+  }), [completedPercentage, remainingPercentage, chartStyling, t]);
 
   const options = {
     responsive: true,
@@ -78,7 +77,7 @@ const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
       x: {
         title: {
             display: true,
-            text: 'Estado'
+            text: t('charts.status')
         }
       },
       y: {
@@ -86,7 +85,7 @@ const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
         max: 100,
         title: {
             display: true,
-            text: 'Porcentaje (%)'
+            text: t('charts.percentageAxis')
         },
         ticks: {
           callback: function(value) {
@@ -97,7 +96,7 @@ const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
     },
     plugins: {
       legend: {
-        display: true, // O cámbialo a false si no quieres la leyenda arriba
+        display: true,
         position: 'top',
       },
       title: {

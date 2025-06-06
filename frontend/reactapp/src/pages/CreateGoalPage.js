@@ -6,8 +6,10 @@ import { useAuth } from "../context/AuthContext";
 import styles from "./CreateGoalPage.module.css";
 import { toast } from 'react-toastify';
 import LoadingSpinner from "../components/ui/LoadingSpinner";
+import { useTranslation } from "react-i18next";
 
 function CreateObjectivePage() {
+    const { t } = useTranslation();
     const [objetivos, setObjetivos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,11 +30,11 @@ function CreateObjectivePage() {
         setIsSubmitting(true);
         try {
             await api.createObjective(objectiveData);
-            toast.success('¡Nuevo objetivo creado con éxito!');
+            toast.success(t('toast.objectiveCreateSuccess'));
             navigate('/dashboard', { replace: true });
         } catch (err) {
             const errorMessage = err.data?.message || err.message || "Error desconocido al crear el objetivo.";
-            toast.error(`Error al crear el objetivo: ${errorMessage}`);
+            toast.error(`${t('toast.objectiveCreateErrorPrefix')} ${errorMessage}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -44,7 +46,7 @@ function CreateObjectivePage() {
         } else {
             navigate('/dashboard');
         }
-        toast.info("Creación de objetivo cancelada.");
+        toast.info(t('toast.objectiveCreateCancel'));
     };
 
     const fetchInitialObjectivesForTitle = useCallback(async () => {
@@ -53,13 +55,13 @@ function CreateObjectivePage() {
             setObjetivos(Array.isArray(data) ? data : []);
         } catch (err) {
             if (err.status === 401 || err.status === 403) {
-                toast.error("Tu sesión ha expirado o no estás autorizado.");
+                toast.error(t('toast.sessionExpiredOrUnauthorized'));
                 logout();
                 navigate("/login", { replace: true, state: { from: location } });
             }
             setObjetivos([]);
         }
-    }, [navigate, logout, location]);
+    }, [navigate, logout, location, t]);
 
     useEffect(() => {
         setLoading(true);
@@ -71,7 +73,7 @@ function CreateObjectivePage() {
     if (loading) {
         return (
             <div className={styles.pageLoadingContainer}>
-                <LoadingSpinner size="large" text="Preparando formulario..." />
+                <LoadingSpinner size="large" text={t('loaders.preparingForm')} />
             </div>
         );
     }
@@ -81,12 +83,12 @@ function CreateObjectivePage() {
             <div className={styles.formWrapper}>
                 {pageMessage && <p className={styles.pageInfoMessage}>{pageMessage}</p>}
                 <h2 className={styles.formTitle}>
-                    {objetivos.length > 0 ? "Crea un Nuevo Objetivo" : "Crea Tu Primer Objetivo"}
+                    {objetivos.length > 0 ? t('createGoalPage.title.new') : t('createGoalPage.title.first')}
                 </h2>
                 <ObjetivosForm
                     onSubmit={handleObjectiveSubmission}
                     isEditMode={false}
-                    buttonText="Crear Objetivo"
+                    buttonText={t('objectivesForm.createButton')}
                     onCancel={handleCancelCreation}
                     isLoading={isSubmitting}
                 />

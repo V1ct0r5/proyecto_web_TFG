@@ -1,9 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import styles from './SideBar.module.css';
-import { FaPlus, FaHome, FaBullseye, FaChartBar, FaUser, FaCog } from 'react-icons/fa'; // Asegúrate de tener react-icons instalado
+import { FaPlus, FaHome, FaBullseye, FaChartBar, FaUser, FaCog } from 'react-icons/fa';
+import { useTranslation } from 'react-i18next';
 
 const Sidebar = () => {
+    const { t } = useTranslation();
+
     return (
         <div className={styles.sidebar}>
             <div className={styles.logoContainer}>
@@ -19,7 +22,7 @@ const Sidebar = () => {
                     `${styles.createButton} ${isActive ? styles.activeCreateButton : ''} btn-shine`
                 }
             >
-                <FaPlus className={styles.icon} /> Nuevo Objetivo
+                <FaPlus className={styles.icon} /> {t('sidebar.newObjective')}
             </NavLink>
 
             <nav className={styles.navigation}>
@@ -29,7 +32,7 @@ const Sidebar = () => {
                         isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
                     }
                 >
-                    <FaHome className={styles.icon} /> Dashboard
+                    <FaHome className={styles.icon} /> {t('sidebar.dashboard')}
                 </NavLink>
                 <NavLink
                     to="/mis-objetivos"
@@ -37,7 +40,7 @@ const Sidebar = () => {
                         isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
                     }
                 >
-                    <FaBullseye className={styles.icon} /> Mis Objetivos
+                    <FaBullseye className={styles.icon} /> {t('sidebar.myObjectives')}
                 </NavLink>
                 <NavLink
                     to="/analisis"
@@ -45,7 +48,7 @@ const Sidebar = () => {
                         isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
                     }
                 >
-                    <FaChartBar className={styles.icon} /> Análisis
+                    <FaChartBar className={styles.icon} /> {t('sidebar.analysis')}
                 </NavLink>
                 <NavLink
                     to="/profile"
@@ -53,7 +56,7 @@ const Sidebar = () => {
                         isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
                     }
                 >
-                    <FaUser className={styles.icon} /> Mi Perfil
+                    <FaUser className={styles.icon} /> {t('sidebar.myProfile')}
                 </NavLink>
                 <NavLink
                     to="/settings"
@@ -61,7 +64,7 @@ const Sidebar = () => {
                         isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
                     }
                 >
-                    <FaCog className={styles.icon} /> Configuración
+                    <FaCog className={styles.icon} /> {t('sidebar.settings')}
                 </NavLink>
             </nav>
         </div>
