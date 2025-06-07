@@ -1,6 +1,6 @@
 /* Estilo para el contenedor principal de cada grupo de formulario */
 .formGroup {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     display: flex;
     flex-direction: column; /* Apila la etiqueta, el input y el error verticalmente */
     gap: 0.3rem; /* Pequeño espacio vertical entre la etiqueta, el input y el mensaje de error */

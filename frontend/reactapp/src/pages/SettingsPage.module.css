@@ -8,6 +8,14 @@
     box-sizing: border-box; /* Asegura que el padding se incluya en el ancho */
 }
 
+.globalActionsContainer {
+    display: flex; /* Activa Flexbox */
+    justify-content: flex-end; /* Alinea los botones al final (derecha) */
+    align-items: center; /* Centra los botones verticalmente */
+    gap: 1rem; /* Crea un espacio de 16px entre los botones */
+    margin-left: auto; /* Empuja el contenedor hacia la derecha */
+}
+
 /* Reutilizar estilos de encabezado de página */
 .pageHeader {
     display: flex;
@@ -217,4 +225,50 @@
     font-size: 0.85rem;
     margin-top: 0.5rem;
     text-align: left;
+}
+
+/* Estilo para cada fila de acción (Exportar, Eliminar) */
+.actionRow {
+    display: flex;
+    flex-wrap: wrap; /* Permite que el botón se mueva abajo en pantallas pequeñas */
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+}
+
+.actionRow:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+}
+
+.actionDescription {
+    flex-grow: 1;
+    margin-right: 1rem;
+}
+
+/* Estilo para el texto principal de la acción */
+.actionDescription strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 0.25rem;
+}
+
+/* Estilo para la descripción secundaria de la acción */
+.actionDescription p {
+    font-size: 0.9rem;
+    color: var(--muted-foreground);
+    margin: 0;
+    max-width: 60ch; /* Limita el ancho para mejor legibilidad */
+}
+
+/* Contenedor del botón para asegurar que no se estire */
+.actionButtonContainer {
+    flex-shrink: 0;
+}
+
+/* Estilo específico para la fila de Eliminar Cuenta */
+.actionRowDestructive .actionDescription strong {
+    color: var(--destructive);
 }

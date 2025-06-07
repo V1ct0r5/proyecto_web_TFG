@@ -17,6 +17,7 @@
   transition: background-color 0.2s ease-in-out;
   text-align: center;
   margin-top: 1.5rem;
+  gap: 0.5rem;
 }
 
 /* Estilo específico para el botón de crear objetivo (usado en Dashboard/ObjetivosPage) */
@@ -143,4 +144,12 @@
 .buttonSmall {
   padding: 0.3rem 0.75rem;
   font-size: 0.8rem;
+}
+
+.destructive {
+  background-color: var(--destructive);
+  color: var(--destructive-foreground);
+}
+.destructive:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--destructive) 85%, black);
 }

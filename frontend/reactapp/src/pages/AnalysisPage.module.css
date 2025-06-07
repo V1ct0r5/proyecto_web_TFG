@@ -46,29 +46,45 @@
 }
 
 .tabsContainer {
-    display: inline-flex;
-    background-color: var(--muted);
-    border-radius: var(--radius);
-    padding: 0.25rem;
-    margin-bottom: 1.5rem;
-    width: max-content;
+    display: inline-flex; /* Para que el contenedor se ajuste al contenido */
+    align-items: center;
+    background-color: var(--accent); /* Fondo gris claro para la bandeja */
+    border-radius: var(--radius-lg, 0.75rem); /* Bordes redondeados para la bandeja */
+    padding: 0.3rem; /* Pequeño padding interno para separar los botones del borde */
+    border: 1px solid var(--border);
+    margin-bottom: 2rem;
+    max-width: max-content;
 }
 
+/* Estilo base para cada botón DENTRO del contenedor de pestañas */
 .tabButton {
-    padding: 0.6rem 1.2rem;
-    font-weight: 500;
+    /* Reseteamos los estilos de botón para que no tengan su propio fondo por defecto */
+    background: transparent !important;
+    border: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    
+    /* Estilos comunes para todas las pestañas */
+    padding: 0.5rem 1rem !important;
+    border-radius: var(--radius-md, 0.5rem); /* Bordes redondeados para la píldora interna */
+    font-weight: 600;
     font-size: 0.9rem;
-    border-radius: var(--radius-sm);
-    background-color: transparent;
-    color: var(--muted-foreground);
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-    margin: 0;
+    color: var(--muted-foreground) !important; /* Color para pestañas inactivas */
+    transition: all 0.2s ease-in-out;
 }
-.tabButton:hover:not([data-active="true"]) {
-    color: var(--foreground);
-    background-color: transparent !important;
+
+/* Efecto al pasar el ratón por una pestaña INACTIVA */
+.tabButton:hover:not(.activeTabButton) {
+    background-color: var(--muted) !important; /* Un fondo muy sutil para indicar interacción */
+    color: var(--foreground) !important;
+}
+
+/* Estilo para la pestaña ACTIVA (la píldora blanca) */
+.activeTabButton {
+    background-color: var(--card) !important; /* Fondo blanco/de tarjeta */
+    color: var(--foreground) !important; /* Texto oscuro/principal */
+    box-shadow: var(--shadow-sm) !important; /* Sombra sutil para darle profundidad */
+    font-weight: 700;
 }
 .tabButton[data-active="true"] {
     background-color: var(--card, #ffffff);
