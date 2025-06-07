@@ -34,8 +34,8 @@ exports.registrarUsuario = async (req, res, next) => {
         const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON ? nuevoUsuario.toJSON() : { ...nuevoUsuario };
         res.status(201).json({ 
             message: "Usuario registrado con éxito.",
-            usuario: usuarioSinContrasena, 
-            token 
+            token,
+            ...usuarioSinContrasena
         });
     } catch (error) {
         next(error); // Errores (ej. 409 por duplicado) son manejados por el servicio y pasados al errorHandler
