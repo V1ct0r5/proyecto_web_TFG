@@ -1,5 +1,4 @@
-// frontend/reactapp/src/pages/SettingsPage.js
-import React, { useState, useEffect, useCallback } from 'react'; // Eliminado useRef si no se usa aquí explícitamente
+import React, { useState, useEffect } from 'react';
 import styles from './SettingsPage.module.css';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -7,31 +6,32 @@ import FormGroup from '../components/ui/FormGroup';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import apiService from '../services/apiService';
 import { toast } from 'react-toastify';
-// import { useNavigate } from 'react-router-dom'; // No se usa navigate directamente en este snippet
 import { FaChevronDown, FaChevronUp, FaEye, FaEyeSlash, FaDownload, FaTrash } from 'react-icons/fa';
 import { useSettings } from '../context/SettingsContext';
+import { useTranslation } from 'react-i18next';
 
 function SettingsPage() {
     const { settings, updateSettings, isLoadingSettings } = useSettings();
-    // const navigate = useNavigate(); // Descomentar si se necesita
+    const { t, i18n } = useTranslation();
 
-    // Estado local para los campos del formulario, inicializado desde el contexto.
-    // Se actualiza cuando 'settings' del contexto cambia.
-    const [localSettingsData, setLocalSettingsData] = useState(settings || {}); 
-    
-    const [isSavingGeneral, setIsSavingGeneral] = useState(false);
+    // Estado para los datos del formulario (el estado "sucio" o de borrador)
+    const [localSettingsData, setLocalSettingsData] = useState(settings || {});
+    // Nuevo estado para saber si hay cambios sin guardar
+    const [isDirty, setIsDirty] = useState(false);
+
+    // Estados para los diferentes procesos de guardado y errores
+    const [isSaving, setIsSaving] = useState(false);
     const [isSavingPassword, setIsSavingPassword] = useState(false);
     const [isProcessingDataAction, setIsProcessingDataAction] = useState(false);
-    
-    // Errores específicos por sección para mayor claridad
-    const [generalSettingsError, setGeneralSettingsError] = useState(null);
     const [passwordFormError, setPasswordFormError] = useState(null);
     const [dataAccountError, setDataAccountError] = useState(null);
 
+    // Estados para el formulario de contraseña
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
+    // Estado para las secciones desplegables
     const [openSections, setOpenSections] = useState({
         notifications: true,
         appearance: true,
@@ -39,95 +39,98 @@ function SettingsPage() {
         dataAccount: true,
     });
 
+    // Estados para mostrar/ocultar contraseñas
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
+    // Sincroniza el estado local cuando los ajustes del contexto cambian (ej. al cargar la página o al revertir)
     useEffect(() => {
-        // Sincronizar localSettingsData cuando settings del contexto cambie
-        // Esto asegura que el formulario refleje los datos más recientes del contexto
-        // (ej. después de una carga inicial o una actualización externa).
-        // Si el usuario tenía cambios locales no guardados, se sobrescribirán.
-        // Esto es a menudo el comportamiento esperado para evitar inconsistencias.
-        if (settings) {
-            setLocalSettingsData(prevData => ({
-                ...prevData, // Mantener campos no gestionados por 'settings' si los hubiera
-                ...settings // Sobrescribir con los valores del contexto
-            }));
-        }
+        setLocalSettingsData(settings || {});
     }, [settings]);
 
+    // Detecta si hay cambios sin guardar comparando el estado local con el del contexto
+    useEffect(() => {
+        const hasChanges = JSON.stringify(settings) !== JSON.stringify(localSettingsData);
+        setIsDirty(hasChanges);
+    }, [settings, localSettingsData]);
+
+    // Maneja los cambios en la mayoría de los inputs del formulario
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        if (['currentPassword', 'newPassword', 'confirmNewPassword'].includes(name)) {
-            if (name === 'currentPassword') setCurrentPassword(value);
-            else if (name === 'newPassword') setNewPassword(value);
-            else if (name === 'confirmNewPassword') setConfirmNewPassword(value);
-        } else {
-            setLocalSettingsData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+        setLocalSettingsData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    };
+
+    // Maneja el cambio de idioma: actualiza la UI y el estado local, pero no guarda
+    const handleLanguageChange = (e) => {
+        const newLang = e.target.value;
+        i18n.changeLanguage(newLang);
+        setLocalSettingsData(prev => ({ ...prev, language: newLang }));
+    };
+
+    // Descarta los cambios locales y vuelve al estado guardado
+    const handleRevertChanges = () => {
+        setLocalSettingsData(settings);
+        if (i18n.language !== settings.language) {
+            i18n.changeLanguage(settings.language);
         }
+        toast.info(t('toast.changesReverted', 'Cambios descartados.'));
     };
 
-    const toggleSection = (sectionName) => {
-        setOpenSections(prev => ({ ...prev, [sectionName]: !prev[sectionName] }));
-    };
-
+    // Guarda todos los cambios de configuración general
     const handleSaveAllSettings = async () => {
-        setIsSavingGeneral(true);
-        setGeneralSettingsError(null); // Limpiar error de esta sección
+        setIsSaving(true);
         try {
-            const payload = { // Solo enviar los campos relevantes para "configuración general"
-                emailNotifications: localSettingsData.emailNotifications,
-                pushNotifications: localSettingsData.pushNotifications,
-                profileVisibility: localSettingsData.profileVisibility,
-                showStatistics: localSettingsData.showStatistics,
-                allowAnalysis: localSettingsData.allowAnalysis,
-                themePreference: localSettingsData.themePreference,
-                language: localSettingsData.language,
-                dateFormat: localSettingsData.dateFormat,
-            };
-            await updateSettings(payload); // updateSettings del contexto se encarga de la UI optimista y el API
-            toast.success("Configuración general guardada con éxito.");
+            await updateSettings(localSettingsData);
+            toast.success(t('toast.settingsSaveSuccess'));
         } catch (err) {
-            const errorMessage = err.data?.message || err.message || "Error al guardar la configuración general.";
-            setGeneralSettingsError(errorMessage); // Mostrar error en la sección relevante o globalmente
-            // toast.error ya se maneja en updateSettings del contexto si se relanza el error
+            // El toast de error ya es manejado por el contexto
         } finally {
-            setIsSavingGeneral(false);
+            setIsSaving(false);
         }
     };
 
-    const handleChangePassword = async () => {
+    const handlePasswordInputChange = (e) => {
+        const { name, value } = e.target;
+        if (name === 'currentPassword') setCurrentPassword(value);
+        else if (name === 'newPassword') setNewPassword(value);
+        else if (name === 'confirmNewPassword') setConfirmNewPassword(value);
+    };
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
         setIsSavingPassword(true);
         setPasswordFormError(null);
         if (!currentPassword || !newPassword || !confirmNewPassword) {
-            setPasswordFormError("Todos los campos de contraseña son obligatorios.");
-            toast.error("Por favor, rellena todos los campos de contraseña.");
+            const errorMsg = t('formValidation.allPasswordFieldsRequired');
+            setPasswordFormError(errorMsg);
+            toast.error(errorMsg);
             setIsSavingPassword(false);
             return;
         }
-        if (newPassword.length < 8) { // Ejemplo de validación de fortaleza
-             setPasswordFormError("La nueva contraseña debe tener al menos 8 caracteres.");
-             toast.error("La nueva contraseña debe tener al menos 8 caracteres.");
-             setIsSavingPassword(false);
-             return;
+        if (newPassword.length < 8) {
+            const errorMsg = t('formValidation.passwordMinLength', { count: 8 });
+            setPasswordFormError(errorMsg);
+            toast.error(errorMsg);
+            setIsSavingPassword(false);
+            return;
         }
         if (newPassword !== confirmNewPassword) {
-            setPasswordFormError("La nueva contraseña y su confirmación no coinciden.");
-            toast.error("Las nuevas contraseñas no coinciden.");
+            const errorMsg = t('formValidation.passwordsDoNotMatch');
+            setPasswordFormError(errorMsg);
+            toast.error(errorMsg);
             setIsSavingPassword(false);
             return;
         }
         try {
-            const passwordPayload = { currentPassword, newPassword };
-            await apiService.changePassword(passwordPayload);
-            toast.success("Contraseña actualizada con éxito.");
+            await apiService.changePassword({ currentPassword, newPassword });
+            toast.success(t('toast.passwordUpdated'));
             setCurrentPassword(''); setNewPassword(''); setConfirmNewPassword('');
             setPasswordFormError(null);
         } catch (err) {
-            const errorMessage = err.data?.message || err.message || "Error al cambiar la contraseña.";
+            const errorMessage = err.data?.message || err.message || t('toast.passwordUpdateError');
             setPasswordFormError(errorMessage);
-            toast.error(`Error: ${errorMessage}`);
+            toast.error(errorMessage);
         } finally {
             setIsSavingPassword(false);
         }
@@ -140,138 +143,111 @@ function SettingsPage() {
             const responseData = await apiService.exportUserData();
             const jsonString = JSON.stringify(responseData, null, 2);
             const blob = new Blob([jsonString], { type: 'application/json' });
-            const href = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = href;
-            link.download = `datos_objectify_${new Date().toISOString().split('T')[0]}.json`;
+            link.href = URL.createObjectURL(blob);
+            link.download = `datos_goalmaster_${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(href); // Limpiar ObjectURL
-            toast.success("La exportación de tus datos ha comenzado.");
+            URL.revokeObjectURL(link.href);
+            toast.success(t('toast.exportSuccess'));
         } catch (err) {
-            const errorMessage = err.data?.message || err.message || "Error al exportar los datos.";
+            const errorMessage = err.data?.message || err.message || t('toast.exportError');
             setDataAccountError(errorMessage);
-            toast.error(`Error: ${errorMessage}`);
+            toast.error(errorMessage);
         } finally {
             setIsProcessingDataAction(false);
         }
     };
 
     const handleDeleteAccount = async () => {
-        if (!window.confirm("¿Estás ABSOLUTAMENTE seguro de que quieres eliminar tu cuenta? Esta acción es irreversible y borrará todos tus objetivos y datos permanentemente.")) {
+        if (!window.confirm(t('settingsPage.data.deleteConfirmation'))) {
             return;
         }
         setIsProcessingDataAction(true);
         setDataAccountError(null);
         try {
             await apiService.deleteAccount();
-            toast.success("Tu cuenta ha sido eliminada. Serás redirigido.");
-            // El evento 'logoutUser' notificará a AuthContext para limpiar estado y redirigir
+            toast.success(t('toast.accountDeleted'));
             window.dispatchEvent(new CustomEvent('logoutUser', { detail: { reason: 'accountDeleted', notifyBackend: false } }));
         } catch (err) {
-            const errorMessage = err.data?.message || err.message || "Error al eliminar la cuenta.";
+            const errorMessage = err.data?.message || err.message || t('toast.deleteAccountError');
             setDataAccountError(errorMessage);
-            toast.error(`Error: ${errorMessage}`);
+            toast.error(errorMessage);
         } finally {
             setIsProcessingDataAction(false);
         }
     };
 
+    const toggleSection = (sectionName) => {
+        setOpenSections(prev => ({ ...prev, [sectionName]: !prev[sectionName] }));
+    };
+
     if (isLoadingSettings) {
-        return <div className={styles.centeredStatus}><LoadingSpinner size="large" text="Cargando configuración..." /></div>;
+        return <div className={styles.centeredStatus}><LoadingSpinner size="large" text={t('loaders.loadingSettings')} /></div>;
     }
 
-    // El JSX completo seguiría aquí. Para brevedad, se omite la repetición del JSX largo.
-    // Asegúrate de mostrar los errores específicos de sección (generalSettingsError, passwordFormError, dataAccountError)
-    // dentro de sus respectivas secciones si openSections[sectionName] es true.
-    // Ejemplo para el error general (si se mantiene un error global):
-    // {generalSettingsError && <p className={`${styles.formErrorMessage} ${styles.globalFormError}`}>{generalSettingsError}</p>}
-    
-    // Ejemplo de cómo mostrar el error en la sección de contraseña:
-    // {openSections.changePassword && passwordFormError && <p className={`${styles.formErrorMessage} ${styles.sectionFormError}`}>{passwordFormError}</p>}
-    
-    // ... (JSX completo aquí, similar al original pero usando los nuevos estados de error específicos si se implementan)
-    // Aquí va el JSX completo de tu componente SettingsPage
-    // No lo repito para brevedad, pero asegúrate de que esté aquí, y que los mensajes de error
-    // se muestren usando los nuevos estados (generalSettingsError, passwordFormError, dataAccountError)
-    // dentro de sus respectivas secciones si están abiertas.
     return (
         <div className={styles.settingsPageContainer}>
             <div className={styles.pageHeader}>
-                <h1 className={styles.pageTitle}>Configuración de la Cuenta</h1>
+                <h1 className={styles.pageTitle}>{t('settingsPage.accountSettingsTitle')}</h1>
+                
             </div>
 
-            {/* Mostrar error general si existe y no es específico de una sección abierta con su propio error */}
-            {generalSettingsError && 
-             !((openSections.changePassword && passwordFormError) || (openSections.dataAccount && dataAccountError)) &&
-                <p className={`${styles.formErrorMessage} ${styles.globalFormError}`}>{generalSettingsError}</p>
-            }
-
-            {/* Sección de Notificaciones */}
             <section className={styles.settingsCard}>
-                <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('notifications')} role="button" tabIndex={0} onKeyPress={(e) => (e.key === 'Enter' || e.key === ' ') && toggleSection('notifications')} aria-expanded={openSections.notifications}>
-                    <h2 className={styles.cardTitle}>Notificaciones</h2>
+                <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('notifications')} role="button" tabIndex={0}>
+                    <h2 className={styles.cardTitle}>{t('settingsPage.notifications.title')}</h2>
                     {openSections.notifications ? <FaChevronUp className={styles.toggleIconOpen} /> : <FaChevronDown className={styles.toggleIcon} />}
                 </div>
                 {openSections.notifications && (
                     <>
-                        <p className={styles.cardSubtitle}>Configura cómo y cuándo quieres recibir notificaciones.</p>
+                        <p className={styles.cardSubtitle}>{t('settingsPage.notifications.subtitle')}</p>
                         <div className={styles.formSection}>
                             <FormGroup>
                                 <label className={styles.toggleLabel} htmlFor="emailNotifications-checkbox">
-                                    Notificaciones por email
+                                    {t('settingsPage.notifications.emailLabel')}
                                     <Input type="checkbox" id="emailNotifications-checkbox" name="emailNotifications" checked={!!localSettingsData.emailNotifications} onChange={handleInputChange} className={styles.toggleInput} />
                                     <span className={styles.toggleSlider}></span>
                                 </label>
-                                <p className={styles.toggleDescription}>Recibe actualizaciones importantes por correo electrónico.</p>
+                                <p className={styles.toggleDescription}>{t('settingsPage.notifications.emailDescription')}</p>
                             </FormGroup>
                             <FormGroup>
                                 <label className={styles.toggleLabel} htmlFor="pushNotifications-checkbox">
-                                    Notificaciones push (Navegador)
+                                    {t('settingsPage.notifications.pushLabel')}
                                     <Input type="checkbox" id="pushNotifications-checkbox" name="pushNotifications" checked={!!localSettingsData.pushNotifications} onChange={handleInputChange} className={styles.toggleInput} />
                                     <span className={styles.toggleSlider}></span>
                                 </label>
-                                <p className={styles.toggleDescription}>Permite notificaciones en tiempo real en tu navegador.</p>
+                                <p className={styles.toggleDescription}>{t('settingsPage.notifications.pushDescription')}</p>
                             </FormGroup>
                         </div>
                     </>
                 )}
             </section>
 
-            
-
-            {/* Sección de Apariencia */}
             <section className={styles.settingsCard}>
-                <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('appearance')} role="button" tabIndex={0} onKeyPress={(e) => (e.key === 'Enter' || e.key === ' ') && toggleSection('appearance')} aria-expanded={openSections.appearance}>
-                    <h2 className={styles.cardTitle}>Apariencia</h2>
+                <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('appearance')} role="button" tabIndex={0}>
+                    <h2 className={styles.cardTitle}>{t('settingsPage.appearance.title')}</h2>
                     {openSections.appearance ? <FaChevronUp className={styles.toggleIconOpen} /> : <FaChevronDown className={styles.toggleIcon} />}
                 </div>
                 {openSections.appearance && (
                     <>
-                        <p className={styles.cardSubtitle}>Personaliza la apariencia de la aplicación.</p>
+                        <p className={styles.cardSubtitle}>{t('settingsPage.appearance.subtitle')}</p>
                         <div className={styles.formSection}>
-                            <FormGroup label="Tema:" htmlFor="theme-preference">
-                                <Input type="select" id="theme-preference" name="themePreference" value={localSettingsData.themePreference || 'system'} onChange={handleInputChange} >
-                                    <option value="light">Claro</option>
-                                    <option value="dark">Oscuro</option>
-                                    <option value="system">Preferencias del Sistema</option>
+                            <FormGroup label={t('settingsPage.appearance.themeLabel')} htmlFor="theme-preference">
+                                <Input type="select" id="theme-preference" name="themePreference" value={localSettingsData.themePreference || 'system'} onChange={handleInputChange}>
+                                    <option value="light">{t('theme.light')}</option>
+                                    <option value="dark">{t('theme.dark')}</option>
+                                    <option value="system">{t('theme.system')}</option>
                                 </Input>
                             </FormGroup>
-                            <FormGroup label="Idioma:" htmlFor="language">
-                                <Input type="select" id="language" name="language" value={localSettingsData.language || 'es'} onChange={handleInputChange} >
-                                    <option value="es">Español</option>
-                                    <option value="en">Inglés</option>
+                            <FormGroup label={t('settingsPage.appearance.languageLabel')} htmlFor="language">
+                                <Input type="select" id="language" name="language" value={localSettingsData.language || 'es'} onChange={handleLanguageChange}>
+                                    <option value="es">{t('language.es')}</option>
+                                    <option value="en">{t('language.en')}</option>
                                 </Input>
                             </FormGroup>
-                            <FormGroup label="Formato de fecha:" htmlFor="date-format">
-                                <Input
-                                    type="select"
-                                    id="date-format"
-                                    name="dateFormat"
-                                    value={localSettingsData.dateFormat || 'dd/MM/yyyy'}
-                                    onChange={handleInputChange}
-                                >
+                            <FormGroup label={t('settingsPage.appearance.dateFormatLabel')} htmlFor="date-format">
+                                <Input type="select" id="date-format" name="dateFormat" value={localSettingsData.dateFormat || 'dd/MM/yyyy'} onChange={handleInputChange}>
                                     <option value="dd/MM/yyyy">DD/MM/YYYY</option>
                                     <option value="MM/dd/yyyy">MM/DD/YYYY</option>
                                     <option value="yyyy-MM-dd">YYYY-MM-DD</option>
@@ -281,43 +257,29 @@ function SettingsPage() {
                     </>
                 )}
             </section>
-            
-            {/* Botón Global para Guardar Configuraciones Generales */}
-            <div className={styles.globalSaveActions}>
-                <Button
-                    variant="primary"
-                    onClick={handleSaveAllSettings}
-                    isLoading={isSavingGeneral}
-                    disabled={isSavingGeneral}
-                >
-                    Guardar Cambios de Configuración
-                </Button>
-            </div>
 
-
-            {/* Sección de Cambiar Contraseña */}
             <section className={styles.settingsCard}>
-                <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('changePassword')} role="button" tabIndex={0} onKeyPress={(e) => (e.key === 'Enter' || e.key === ' ') && toggleSection('changePassword')} aria-expanded={openSections.changePassword}>
-                    <h2 className={styles.cardTitle}>Cambiar Contraseña</h2>
+                <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('changePassword')} role="button" tabIndex={0}>
+                    <h2 className={styles.cardTitle}>{t('settingsPage.password.title')}</h2>
                     {openSections.changePassword ? <FaChevronUp className={styles.toggleIconOpen} /> : <FaChevronDown className={styles.toggleIcon} />}
                 </div>
                 {openSections.changePassword && (
                     <>
-                        <p className={styles.cardSubtitle}>Actualiza tu contraseña para mantener tu cuenta segura.</p>
-                        <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }}>
+                        <p className={styles.cardSubtitle}>{t('settingsPage.password.subtitle')}</p>
+                        <form onSubmit={handleChangePassword}>
                             <div className={styles.formSection}>
-                                <FormGroup label="Contraseña actual:" htmlFor="current-password">
-                                    <Input type={showCurrentPassword ? "text" : "password"} id="current-password" name="currentPassword" value={currentPassword} onChange={handleInputChange} actionIcon={showCurrentPassword ? <FaEyeSlash /> : <FaEye />} onActionClick={() => setShowCurrentPassword(!showCurrentPassword)} actionIconAriaLabel={showCurrentPassword ? "Ocultar contraseña actual" : "Mostrar contraseña actual"} autoComplete="current-password" />
+                                <FormGroup label={t('settingsPage.password.currentLabel')} htmlFor="current-password">
+                                    <Input type={showCurrentPassword ? "text" : "password"} id="current-password" name="currentPassword" value={currentPassword} onChange={handlePasswordInputChange} actionIcon={showCurrentPassword ? <FaEyeSlash /> : <FaEye />} onActionClick={() => setShowCurrentPassword(!showCurrentPassword)} actionIconAriaLabel={t(showCurrentPassword ? 'settingsPage.password.toggleAria.hideCurrent' : 'settingsPage.password.toggleAria.showCurrent')} autoComplete="current-password" />
                                 </FormGroup>
-                                <FormGroup label="Nueva contraseña:" htmlFor="new-password">
-                                    <Input type={showNewPassword ? "text" : "password"} id="new-password" name="newPassword" value={newPassword} onChange={handleInputChange} actionIcon={showNewPassword ? <FaEyeSlash /> : <FaEye />} onActionClick={() => setShowNewPassword(!showNewPassword)} actionIconAriaLabel={showNewPassword ? "Ocultar nueva contraseña" : "Mostrar nueva contraseña"} autoComplete="new-password" />
+                                <FormGroup label={t('settingsPage.password.newLabel')} htmlFor="new-password">
+                                    <Input type={showNewPassword ? "text" : "password"} id="new-password" name="newPassword" value={newPassword} onChange={handlePasswordInputChange} actionIcon={showNewPassword ? <FaEyeSlash /> : <FaEye />} onActionClick={() => setShowNewPassword(!showNewPassword)} actionIconAriaLabel={t(showNewPassword ? 'settingsPage.password.toggleAria.hideNew' : 'settingsPage.password.toggleAria.showNew')} autoComplete="new-password" />
                                 </FormGroup>
-                                <FormGroup label="Confirmar nueva contraseña:" htmlFor="confirm-new-password">
-                                    <Input type={showConfirmNewPassword ? "text" : "password"} id="confirm-new-password" name="confirmNewPassword" value={confirmNewPassword} onChange={handleInputChange} actionIcon={showConfirmNewPassword ? <FaEyeSlash /> : <FaEye />} onActionClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)} actionIconAriaLabel={showConfirmNewPassword ? "Ocultar confirmación de contraseña" : "Mostrar confirmación de contraseña"} autoComplete="new-password" />
+                                <FormGroup label={t('settingsPage.password.confirmLabel')} htmlFor="confirm-new-password">
+                                    <Input type={showConfirmNewPassword ? "text" : "password"} id="confirm-new-password" name="confirmNewPassword" value={confirmNewPassword} onChange={handlePasswordInputChange} actionIcon={showConfirmNewPassword ? <FaEyeSlash /> : <FaEye />} onActionClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)} actionIconAriaLabel={t(showConfirmNewPassword ? 'settingsPage.password.toggleAria.hideConfirm' : 'settingsPage.password.toggleAria.showConfirm')} autoComplete="new-password" />
                                 </FormGroup>
                                 {passwordFormError && <p className={`${styles.formErrorMessage} ${styles.sectionFormError}`}>{passwordFormError}</p>}
                                 <div className={styles.passwordChangeActions}>
-                                    <Button type="submit" variant="primary" isLoading={isSavingPassword} disabled={isSavingPassword} > Cambiar Contraseña </Button>
+                                    <Button type="submit" variant="primary" isLoading={isSavingPassword} disabled={isSavingPassword}>{t('settingsPage.password.changeButton')}</Button>
                                 </div>
                             </div>
                         </form>
@@ -325,33 +287,56 @@ function SettingsPage() {
                 )}
             </section>
 
-            {/* Sección de Datos y Cuenta */}
-            <section className={`${styles.settingsCard} ${styles.dangerZone}`}>
-                <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('dataAccount')} role="button" tabIndex={0} onKeyPress={(e) => (e.key === 'Enter' || e.key === ' ') && toggleSection('dataAccount')} aria-expanded={openSections.dataAccount}>
-                    <h2 className={styles.cardTitle}>Datos y Cuenta</h2>
+            <section className={styles.settingsCard}>
+                <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('dataAccount')} role="button" tabIndex={0}>
+                    <h2 className={styles.cardTitle}>{t('settingsPage.data.title')}</h2>
                     {openSections.dataAccount ? <FaChevronUp className={styles.toggleIconOpen} /> : <FaChevronDown className={styles.toggleIcon} />}
                 </div>
+
                 {openSections.dataAccount && (
-                    <>
-                        <p className={styles.cardSubtitle}>Gestiona tus datos y configuración de cuenta.</p>
-                        <div className={styles.formSection}>
-                            <FormGroup label="Exportar datos:">
-                                <p className={styles.sectionDescription}>Descarga una copia de todos tus datos personales y de objetivos.</p>
-                                <div className={styles.inlineAction}>
-                                    <Button variant="secondary" onClick={handleExportData} isLoading={isProcessingDataAction} disabled={isProcessingDataAction} leftIcon={<FaDownload />} > Exportar mis datos </Button>
-                                </div>
-                            </FormGroup>
-                            <FormGroup label="Eliminar cuenta:">
-                                <p className={styles.sectionDescription}>Esta acción es irreversible y borrará todos tus datos permanentemente.</p>
-                                <div className={styles.inlineAction}>
-                                    <Button variant="destructive" onClick={handleDeleteAccount} isLoading={isProcessingDataAction} disabled={isProcessingDataAction} leftIcon={<FaTrash />} > Eliminar mi cuenta </Button>
-                                </div>
-                            </FormGroup>
-                            {dataAccountError && <p className={`${styles.formErrorMessage} ${styles.sectionFormError}`}>{dataAccountError}</p>}
+                    <div className={styles.formSection}>
+                        {/* Fila para Exportar Datos */}
+                        <div className={styles.actionRow}>
+                            <div className={styles.actionDescription}>
+                                <strong>{t('settingsPage.data.exportLabel')}</strong>
+                                <p>{t('settingsPage.data.exportDescription')}</p>
+                            </div>
+                            <div className={styles.actionButtonContainer}>
+                                <Button variant="secondary" onClick={handleExportData} isLoading={isProcessingDataAction} disabled={isProcessingDataAction} leftIcon={<FaDownload />} >
+                                    {t('settingsPage.data.exportButton')}
+                                </Button>
+                            </div>
                         </div>
-                    </>
+
+                        {/* Fila para Eliminar Cuenta */}
+                        <div className={`${styles.actionRow} ${styles.actionRowDestructive}`}>
+                            <div className={styles.actionDescription}>
+                                <strong>{t('settingsPage.data.deleteLabel')}</strong>
+                                <p>{t('settingsPage.data.deleteDescription')}</p>
+                            </div>
+                            <div className={styles.actionButtonContainer}>
+                                <Button variant="destructive" onClick={handleDeleteAccount} isLoading={isProcessingDataAction} disabled={isProcessingDataAction} leftIcon={<FaTrash />} >
+                                    {t('settingsPage.data.deleteButton')}
+                                </Button>
+                            </div>
+                        </div>
+                        
+                        {dataAccountError && <p className={`${styles.formErrorMessage} ${styles.sectionFormError}`}>{dataAccountError}</p>}
+                    </div>
                 )}
             </section>
+            <div>
+            {isDirty && (
+                    <div className={styles.globalActionsContainer}>  {/* <--- ESTE ES EL CONTENEDOR */}
+                        <Button variant="secondary" onClick={handleRevertChanges} disabled={isSaving}>
+                            {t('common.revert', 'Revertir')}
+                        </Button>
+                        <Button variant="primary" onClick={handleSaveAllSettings} isLoading={isSaving} disabled={isSaving}>
+                            {t('common.saveChanges')}
+                        </Button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
