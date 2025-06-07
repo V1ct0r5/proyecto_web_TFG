@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const bcrypt = require('bcryptjs');
 
 module.exports = (sequelize) => {
   const Usuario = sequelize.define("Usuario", {
@@ -69,6 +70,24 @@ module.exports = (sequelize) => {
     tableName: 'Usuarios',
     timestamps: true,
     underscored: true,
+
+    hooks: {
+      // Se ejecuta antes de guardar un nuevo usuario en la BD
+      beforeCreate: async (usuario) => {
+        if (usuario.contrasena) {
+          const salt = await bcrypt.genSalt(10);
+          usuario.contrasena = await bcrypt.hash(usuario.contrasena, salt);
+        }
+      },
+      // Se ejecuta antes de actualizar un usuario existente
+      beforeUpdate: async (usuario) => {
+        // Solo cifra la contraseña si el campo 'contrasena' ha cambiado
+        if (usuario.changed('contrasena')) {
+          const salt = await bcrypt.genSalt(10);
+          usuario.contrasena = await bcrypt.hash(usuario.contrasena, salt);
+        }
+      }
+    }
   });
 
   Usuario.associate = (models) => {
@@ -87,6 +106,11 @@ module.exports = (sequelize) => {
       as: 'activityLogs',
       onDelete: 'CASCADE'
     });
+  };
+
+  Usuario.prototype.comparePassword = async function (candidatePassword) {
+    // Compara la contraseña que envía el usuario con la que está hasheada en la BD
+    return bcrypt.compare(candidatePassword, this.contrasena);
   };
 
   return Usuario;
