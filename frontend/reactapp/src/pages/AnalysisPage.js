@@ -25,7 +25,6 @@ const categoryNameToKeyMap = {
     'Otros': 'categories.other'
 };
 
-// Mapa para traducir los nombres de estados que vienen del backend
 const statusNameToKeyMap = {
     'En progreso': 'status.inProgress',
     'Completado': 'status.completed',
@@ -37,11 +36,14 @@ const statusNameToKeyMap = {
 
 function AnalysisPage() {
     const { t } = useTranslation();
+    
+    // --- CORRECCIÓN: Actualizar estado inicial de trend para usar una clave de traducción ---
     const [summaryStats, setSummaryStats] = useState({
         totalObjectives: 0, activeObjectives: 0, completedObjectives: 0,
         averageProgress: 0, categoryCount: 0, categories: [],
-        trend: { type: 'neutral', text: t('analysis.trends.stable') }
+        trend: { type: 'neutral', textKey: 'analysis.trends.stable' }
     });
+
     const [rawCategoryDistribution, setRawCategoryDistribution] = useState([]);
     const [rawObjectiveStatus, setRawObjectiveStatus] = useState([]);
     const [rawMonthlyProgress, setRawMonthlyProgress] = useState([]);
@@ -92,8 +94,9 @@ function AnalysisPage() {
     const fetchAllGeneralDataAPI = useCallback(async (period) => {
         const params = { period };
         return Promise.allSettled([
-            api.getAnalysisSummary(params), api.getCategoryDistribution(params),
-            api.getObjectiveStatusDistribution(params), api.getMonthlyProgress(params)
+            api.getCategoryDistribution(params),
+            api.getObjectiveStatusDistribution(params), 
+            api.getMonthlyProgress(params)
         ]);
     }, []);
 
@@ -119,7 +122,12 @@ function AnalysisPage() {
             setError(null);
 
             try {
-                const summaryResPromise = api.getAnalysisSummary({ period: timePeriod });
+                const summaryResult = await api.getAnalysisSummary({ period: timePeriod });
+                 if (isMounted) {
+                    setSummaryStats(prev => ({...prev, ...summaryResult}));
+                } else {
+                     throw new Error(t('toast.summaryLoadError'));
+                }
 
                 let tabDataPromise;
                 if (activeTab === 'general') {
@@ -129,38 +137,28 @@ function AnalysisPage() {
                 } else if (activeTab === 'byCategory') {
                     tabDataPromise = fetchCategoriesTabDataAPI(timePeriod);
                 }
-
-                const summaryResult = await summaryResPromise;
-                if (isMounted && summaryResult) {
-                    setSummaryStats(summaryResult);
-                } else if (isMounted) {
-                    throw new Error(t('toast.summaryLoadError'));
-                }
-
+                
                 if (tabDataPromise) {
-                    if (activeTab === 'general') {
-                        const [, catDistRes, statusRes, monthlyRes] = await tabDataPromise;
-                        if (isMounted) {
+                     const results = await tabDataPromise;
+                     if(isMounted) {
+                        if (activeTab === 'general') {
+                            const [catDistRes, statusRes, monthlyRes] = results;
                             if (catDistRes.status === 'fulfilled' && catDistRes.value) setRawCategoryDistribution(catDistRes.value);
                             if (statusRes.status === 'fulfilled' && statusRes.value) setRawObjectiveStatus(statusRes.value);
                             if (monthlyRes.status === 'fulfilled' && monthlyRes.value) setRawMonthlyProgress(monthlyRes.value);
-                        }
-                    } else if (activeTab === 'byObjective') {
-                        const [objProgressRes, rankedRes] = await tabDataPromise;
-                        if (isMounted) {
-                            if (objProgressRes.status === 'fulfilled' && objProgressRes.value) setRawObjectivesProgressData(objProgressRes.value);
+                        } else if (activeTab === 'byObjective') {
+                            const [objProgressRes, rankedRes] = results;
+                             if (objProgressRes.status === 'fulfilled' && objProgressRes.value) setRawObjectivesProgressData(objProgressRes.value);
                             if (rankedRes.status === 'fulfilled' && rankedRes.value) {
                                 setTopProgressObjectives(rankedRes.value.top || []);
                                 setLowProgressObjectives(rankedRes.value.low || []);
                             }
-                        }
-                    } else if (activeTab === 'byCategory') {
-                        const [catAvgProgressRes, detailedByCatRes] = await tabDataPromise;
-                        if (isMounted) {
-                            if (catAvgProgressRes.status === 'fulfilled' && catAvgProgressRes.value) setRawCategoryAverageProgress(catAvgProgressRes.value);
+                        } else if (activeTab === 'byCategory') {
+                            const [catAvgProgressRes, detailedByCatRes] = results;
+                             if (catAvgProgressRes.status === 'fulfilled' && catAvgProgressRes.value) setRawCategoryAverageProgress(catAvgProgressRes.value);
                             if (detailedByCatRes.status === 'fulfilled' && detailedByCatRes.value) setDetailedObjectivesByCategory(detailedByCatRes.value);
                         }
-                    }
+                     }
                 }
             } catch (err) {
                 if (isMounted) {
@@ -175,66 +173,71 @@ function AnalysisPage() {
         loadData();
         return () => { isMounted = false; };
     }, [activeTab, timePeriod, fetchAllGeneralDataAPI, fetchObjectivesTabDataAPI, fetchCategoriesTabDataAPI, t]);
-
+    
     const categoryDistribution = useMemo(() =>
         (rawCategoryDistribution || []).map((item, idx) => ({
             ...item,
-            name: t(categoryNameToKeyMap[item.name] || item.name), // Traducir nombre
-            color: getCategoryColor(item.name, idx, summaryStats.categories)
+            name: t(item.nameKey || item.name),
+            color: getCategoryColor(item.name, idx)
         }))
-        , [rawCategoryDistribution, getCategoryColor, summaryStats.categories, t]);
+    , [rawCategoryDistribution, getCategoryColor, t]);
 
     const objectiveStatus = useMemo(() =>
         (rawObjectiveStatus || []).map((item) => ({
             ...item,
-            name: t(statusNameToKeyMap[item.name] || item.name), // Traducir nombre
+            name: t(item.nameKey || item.name),
             color: getStatusColorForChart(item.name)
         }))
-        , [rawObjectiveStatus, getStatusColorForChart, t]);
-
+    , [rawObjectiveStatus, getStatusColorForChart, t]);
+    
     const objectivesProgressData = useMemo(() =>
         (rawObjectivesProgressData || []).map((item, idx) => ({
             ...item,
-            // El nombre del objetivo no se traduce, pero su categoría sí para el color
             color: getCategoryColor(item.category, idx, summaryStats.categories)
         }))
-        , [rawObjectivesProgressData, getCategoryColor, summaryStats.categories]);
+    , [rawObjectivesProgressData, getCategoryColor, summaryStats.categories]);
 
     const categoryAverageProgress = useMemo(() =>
         (rawCategoryAverageProgress || []).map((item, idx) => ({
             ...item,
-            categoryName: t(categoryNameToKeyMap[item.categoryName] || item.categoryName), // Traducir nombre de categoría
+            categoryName: t(categoryNameToKeyMap[item.categoryName] || item.categoryName),
             color: getCategoryColor(item.categoryName, idx, summaryStats.categories)
         }))
-        , [rawCategoryAverageProgress, getCategoryColor, summaryStats.categories, t]);
+    , [rawCategoryAverageProgress, getCategoryColor, summaryStats.categories, t]);
 
     const coloredTopProgressObjectives = useMemo(() =>
         (topProgressObjectives || []).map((obj, idx) => ({
             ...obj,
-            tipo_objetivo: t(categoryNameToKeyMap[obj.tipo_objetivo] || obj.tipo_objetivo), // Traducir tipo
+            tipo_objetivo: t(categoryNameToKeyMap[obj.tipo_objetivo] || obj.tipo_objetivo),
             color: getCategoryColor(obj.tipo_objetivo, idx, summaryStats.categories)
         }))
-        , [topProgressObjectives, getCategoryColor, summaryStats.categories, t]);
+    , [topProgressObjectives, getCategoryColor, summaryStats.categories, t]);
 
     const coloredLowProgressObjectives = useMemo(() =>
         (lowProgressObjectives || []).map((obj, idx) => ({
             ...obj,
-            tipo_objetivo: t(categoryNameToKeyMap[obj.tipo_objetivo] || obj.tipo_objetivo), // Traducir tipo
+            tipo_objetivo: t(categoryNameToKeyMap[obj.tipo_objetivo] || obj.tipo_objetivo),
             color: getCategoryColor(obj.tipo_objetivo, idx, summaryStats.categories)
         }))
-        , [lowProgressObjectives, getCategoryColor, summaryStats.categories, t]);
+    , [lowProgressObjectives, getCategoryColor, summaryStats.categories, t]);
 
     const coloredDetailedObjectivesByCategory = useMemo(() =>
         (detailedObjectivesByCategory || []).map((catData, catIdx) => ({
             ...catData,
-            categoryName: t(categoryNameToKeyMap[catData.categoryName] || catData.categoryName), // Traducir nombre de categoría principal
+            categoryName: t(categoryNameToKeyMap[catData.categoryName] || catData.categoryName),
             color: getCategoryColor(catData.categoryName, catIdx, summaryStats.categories),
             objectives: (catData.objectives || []).map((obj) => ({
                 ...obj,
                 color: getCategoryColor(catData.categoryName, catIdx, summaryStats.categories)
             }))
         }))
-        , [detailedObjectivesByCategory, getCategoryColor, summaryStats.categories, t]);
+    , [detailedObjectivesByCategory, getCategoryColor, summaryStats.categories, t]);
+
+    const dynamicTrendSubtitle = useMemo(() => {
+        const selectedOption = timePeriodOptions.find(option => option.value === timePeriod);
+        const periodText = selectedOption ? t(selectedOption.key) : '';
+        return t('analysis.stats.trendSubtitle', { period: periodText });
+    }, [timePeriod, timePeriodOptions, t]);
 
 
     const renderCurrentTabContent = () => {
@@ -336,14 +339,21 @@ function AnalysisPage() {
                 <StatsCard title={t('analysis.stats.categories')} value={summaryStats.categoryCount.toString()}>
                     <div className={styles.categoryListInCard}>
                         {summaryStats.categories.slice(0, 3).map((cat, index) => (
-                            <span key={cat.name} className={styles.categoryChip} style={{ backgroundColor: getCategoryColor(cat.name, index, summaryStats.categories) }}>
+                            <span key={cat.name} className={styles.categoryChip} style={{ backgroundColor: getCategoryColor(cat.name, index) }}>
                                 {t(categoryNameToKeyMap[cat.name] || cat.name)}
                             </span>
                         ))}
                         {summaryStats.categories.length > 3 && <span className={styles.categoryChipMore}>{t('analysis.stats.moreCategories', { count: summaryStats.categories.length - 3 })}</span>}
                     </div>
                 </StatsCard>
-                <StatsCard title={t('analysis.stats.trend')} value={summaryStats.trend?.text} ><p className={styles.statsDetailTextSmall}>{t('analysis.stats.trendSubtitle')}</p></StatsCard>
+                
+                <StatsCard 
+                    title={t('analysis.stats.trend')} 
+                    value={summaryStats.trend?.textKey ? t(summaryStats.trend.textKey) : '...'} 
+                >
+                    <p className={styles.statsDetailTextSmall}>{dynamicTrendSubtitle}</p>
+                </StatsCard>
+
             </section>
 
             <div className={styles.tabsContainer}>
@@ -373,4 +383,5 @@ function AnalysisPage() {
         </div>
     );
 }
+
 export default AnalysisPage;
