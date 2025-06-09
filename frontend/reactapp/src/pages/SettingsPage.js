@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
 import styles from './SettingsPage.module.css';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -11,7 +11,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useTranslation } from 'react-i18next';
 
 function SettingsPage() {
-    const { settings, updateSettings, isLoadingSettings } = useSettings();
+    const { settings, updateSettings, isLoadingSettings, applyTemporarySettings } = useSettings(); // Assuming applyTemporarySettings exists or you'll add it
     const { t, i18n } = useTranslation();
 
     // Estado para los datos del formulario (el estado "sucio" o de borrador)
@@ -46,8 +46,18 @@ function SettingsPage() {
 
     // Sincroniza el estado local cuando los ajustes del contexto cambian (ej. al cargar la página o al revertir)
     useEffect(() => {
-        setLocalSettingsData(settings || {});
-    }, [settings]);
+        if (settings) {
+            setLocalSettingsData(settings);
+            // Apply language immediately if it changes from settings (e.g., initial load or revert)
+            if (i18n.language !== settings.language) {
+                i18n.changeLanguage(settings.language);
+            }
+            // If you have a global mechanism to apply theme/date format immediately
+            // based on the context's 'settings', you would call it here too.
+            // For example, if your useSettings context applies these globally:
+            // applyTemporarySettings(settings); // Or a specific function for initial load
+        }
+    }, [settings, i18n]); // Added i18n to dependencies
 
     // Detecta si hay cambios sin guardar comparando el estado local con el del contexto
     useEffect(() => {
@@ -56,48 +66,73 @@ function SettingsPage() {
     }, [settings, localSettingsData]);
 
     // Maneja los cambios en la mayoría de los inputs del formulario
-    const handleInputChange = (e) => {
+    const handleInputChange = useCallback((e) => {
         const { name, value, type, checked } = e.target;
-        setLocalSettingsData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    };
+        const newValue = type === 'checkbox' ? checked : value;
+
+        setLocalSettingsData(prev => {
+            const updatedData = { ...prev, [name]: newValue };
+
+            // Apply appearance settings immediately to the UI
+            if (name === 'themePreference' || name === 'dateFormat') {
+                if (applyTemporarySettings) { // Assuming applyTemporarySettings exists in context
+                    applyTemporarySettings({ [name]: newValue });
+                } else {
+                    // Fallback or direct DOM manipulation if no context function
+                    // This is less ideal but would achieve immediate visual change
+                    if (name === 'themePreference') {
+                        document.documentElement.setAttribute('data-theme', newValue);
+                    }
+                    // For dateFormat, direct visual change might be harder without re-rendering components
+                }
+            }
+            return updatedData;
+        });
+    }, [applyTemporarySettings]); // Added applyTemporarySettings to dependencies
 
     // Maneja el cambio de idioma: actualiza la UI y el estado local, pero no guarda
-    const handleLanguageChange = (e) => {
+    const handleLanguageChange = useCallback((e) => {
         const newLang = e.target.value;
-        i18n.changeLanguage(newLang);
-        setLocalSettingsData(prev => ({ ...prev, language: newLang }));
-    };
+        i18n.changeLanguage(newLang); // This changes the UI language immediately
+        setLocalSettingsData(prev => ({ ...prev, language: newLang })); // Update local form state
+    }, [i18n]); // Added i18n to dependencies
 
     // Descarta los cambios locales y vuelve al estado guardado
-    const handleRevertChanges = () => {
+    const handleRevertChanges = useCallback(() => {
         setLocalSettingsData(settings);
         if (i18n.language !== settings.language) {
             i18n.changeLanguage(settings.language);
         }
-        toast.info(t('toast.changesReverted', 'Cambios descartados.'));
-    };
+        if (applyTemporarySettings) { // Reapply original theme/date format if available
+            applyTemporarySettings(settings);
+        } else {
+             // Fallback for theme:
+             document.documentElement.setAttribute('data-theme', settings.themePreference || 'system');
+        }
+        toast.info(t('toast.changesReverted'));
+    }, [settings, i18n, t, applyTemporarySettings]); // Added applyTemporarySettings to dependencies
 
     // Guarda todos los cambios de configuración general
-    const handleSaveAllSettings = async () => {
+    const handleSaveAllSettings = useCallback(async () => {
         setIsSaving(true);
         try {
-            await updateSettings(localSettingsData);
+            await updateSettings(localSettingsData); // This calls the API
             toast.success(t('toast.settingsSaveSuccess'));
         } catch (err) {
-            // El toast de error ya es manejado por el contexto
+            // The error toast is already handled by the context or interceptor
         } finally {
             setIsSaving(false);
         }
-    };
+    }, [localSettingsData, updateSettings, t]); // Added t to dependencies
 
-    const handlePasswordInputChange = (e) => {
+    const handlePasswordInputChange = useCallback((e) => {
         const { name, value } = e.target;
         if (name === 'currentPassword') setCurrentPassword(value);
         else if (name === 'newPassword') setNewPassword(value);
         else if (name === 'confirmNewPassword') setConfirmNewPassword(value);
-    };
+    }, []);
 
-    const handleChangePassword = async (e) => {
+    const handleChangePassword = useCallback(async (e) => {
         e.preventDefault();
         setIsSavingPassword(true);
         setPasswordFormError(null);
@@ -134,9 +169,9 @@ function SettingsPage() {
         } finally {
             setIsSavingPassword(false);
         }
-    };
+    }, [currentPassword, newPassword, confirmNewPassword, t]); // Added t to dependencies
 
-    const handleExportData = async () => {
+    const handleExportData = useCallback(async () => {
         setIsProcessingDataAction(true);
         setDataAccountError(null);
         try {
@@ -158,9 +193,9 @@ function SettingsPage() {
         } finally {
             setIsProcessingDataAction(false);
         }
-    };
+    }, [t]);
 
-    const handleDeleteAccount = async () => {
+    const handleDeleteAccount = useCallback(async () => {
         if (!window.confirm(t('settingsPage.data.deleteConfirmation'))) {
             return;
         }
@@ -177,11 +212,11 @@ function SettingsPage() {
         } finally {
             setIsProcessingDataAction(false);
         }
-    };
+    }, [t]);
 
-    const toggleSection = (sectionName) => {
+    const toggleSection = useCallback((sectionName) => {
         setOpenSections(prev => ({ ...prev, [sectionName]: !prev[sectionName] }));
-    };
+    }, []);
 
     if (isLoadingSettings) {
         return <div className={styles.centeredStatus}><LoadingSpinner size="large" text={t('loaders.loadingSettings')} /></div>;
@@ -193,36 +228,6 @@ function SettingsPage() {
                 <h1 className={styles.pageTitle}>{t('settingsPage.accountSettingsTitle')}</h1>
                 
             </div>
-
-            <section className={styles.settingsCard}>
-                <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('notifications')} role="button" tabIndex={0}>
-                    <h2 className={styles.cardTitle}>{t('settingsPage.notifications.title')}</h2>
-                    {openSections.notifications ? <FaChevronUp className={styles.toggleIconOpen} /> : <FaChevronDown className={styles.toggleIcon} />}
-                </div>
-                {openSections.notifications && (
-                    <>
-                        <p className={styles.cardSubtitle}>{t('settingsPage.notifications.subtitle')}</p>
-                        <div className={styles.formSection}>
-                            <FormGroup>
-                                <label className={styles.toggleLabel} htmlFor="emailNotifications-checkbox">
-                                    {t('settingsPage.notifications.emailLabel')}
-                                    <Input type="checkbox" id="emailNotifications-checkbox" name="emailNotifications" checked={!!localSettingsData.emailNotifications} onChange={handleInputChange} className={styles.toggleInput} />
-                                    <span className={styles.toggleSlider}></span>
-                                </label>
-                                <p className={styles.toggleDescription}>{t('settingsPage.notifications.emailDescription')}</p>
-                            </FormGroup>
-                            <FormGroup>
-                                <label className={styles.toggleLabel} htmlFor="pushNotifications-checkbox">
-                                    {t('settingsPage.notifications.pushLabel')}
-                                    <Input type="checkbox" id="pushNotifications-checkbox" name="pushNotifications" checked={!!localSettingsData.pushNotifications} onChange={handleInputChange} className={styles.toggleInput} />
-                                    <span className={styles.toggleSlider}></span>
-                                </label>
-                                <p className={styles.toggleDescription}>{t('settingsPage.notifications.pushDescription')}</p>
-                            </FormGroup>
-                        </div>
-                    </>
-                )}
-            </section>
 
             <section className={styles.settingsCard}>
                 <div className={styles.cardHeaderWithToggle} onClick={() => toggleSection('appearance')} role="button" tabIndex={0}>
@@ -329,7 +334,7 @@ function SettingsPage() {
             {isDirty && (
                     <div className={styles.globalActionsContainer}>  {/* <--- ESTE ES EL CONTENEDOR */}
                         <Button variant="secondary" onClick={handleRevertChanges} disabled={isSaving}>
-                            {t('common.revert', 'Revertir')}
+                            {t('common.revert')}
                         </Button>
                         <Button variant="primary" onClick={handleSaveAllSettings} isLoading={isSaving} disabled={isSaving}>
                             {t('common.saveChanges')}
