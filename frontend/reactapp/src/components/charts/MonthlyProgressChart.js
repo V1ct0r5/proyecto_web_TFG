@@ -10,6 +10,15 @@ ChartJS.register(
     CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler
 );
 
+const categoryNameToKeyMap = {
+    'Finanzas': 'categories.finance',
+    'Salud': 'categories.health',
+    'Desarrollo personal': 'categories.personalDevelopment',
+    'Relaciones': 'categories.relationships',
+    'Carrera profesional': 'categories.career',
+    'Otros': 'categories.other'
+};
+
 const getLineChartColors = (index) => {
     const colors = [
         { border: 'rgba(75, 192, 192, 1)', background: 'rgba(75, 192, 192, 0.2)' },
@@ -34,10 +43,16 @@ const MonthlyProgressChart = ({ data }) => {
         const datasets = categories.map((category, index) => {
             const categoryData = data.map(item => item[category] || 0);
             const colors = getLineChartColors(index);
+            const translatedLabel = t(categoryNameToKeyMap[category] || category);
             return {
-                label: category, data: categoryData,
-                borderColor: colors.border, backgroundColor: colors.background,
-                fill: false, tension: 0.2, pointRadius: 3, pointHoverRadius: 5,
+                label: translatedLabel, // Usamos la etiqueta traducida
+                data: categoryData,
+                borderColor: colors.border, 
+                backgroundColor: colors.background,
+                fill: false, 
+                tension: 0.2, 
+                pointRadius: 3, 
+                pointHoverRadius: 5,
             };
         });
         return { labels, datasets };
