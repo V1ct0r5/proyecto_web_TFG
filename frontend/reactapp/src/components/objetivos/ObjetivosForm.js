@@ -123,9 +123,7 @@ function ObjetivosForm({
             objectiveData.valor_actual = objectiveData.valor_inicial_numerico; 
         } else { // Modo Edición
             objectiveData.valor_actual = (data.valorActual !== '' && data.valorActual !== null && !isNaN(data.valorActual)) ? parseFloat(data.valorActual) : null;
-            // Mantener valor_inicial y valor_meta de initialData, no se modifican desde el form en edición
-            objectiveData.valor_inicial_numerico = (initialData.valor_inicial_numerico !== undefined && initialData.valor_inicial_numerico !== null && !isNaN(initialData.valor_inicial_numerico)) ? parseFloat(initialData.valor_inicial_numerico) : null;
-            objectiveData.valor_cuantitativo = (initialData.valor_cuantitativo !== undefined && initialData.valor_cuantitativo !== null && !isNaN(initialData.valor_cuantitativo)) ? parseFloat(initialData.valor_cuantitativo) : null;
+            objectiveData.valor_cuantitativo = (data.valorMeta !== '' && data.valorMeta !== null && !isNaN(data.valorMeta)) ? parseFloat(data.valorMeta) : null;
         }
 
         try {
