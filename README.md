@@ -27,3 +27,10 @@ El objetivo de este TFG es diseñar y desarrollar una aplicación web que permit
     - **Integración con redes sociales u otras plataformas externas:** No se integrarán redes sociales u otras plataformas externas, a menos que sea un requisito específico indicado por el tutor.
     - **Análisis avanzado de datos o inteligencia artificial:** El proyecto no incluirá funcionalidades complejas de análisis de datos ni la implementación de algoritmos de inteligencia artificial.
     - **Desarrollo de aplicaciones móviles nativas:** La aplicación será exclusivamente web, sin desarrollo para plataformas móviles nativas (iOS/Android).
+
+
+
+
+<a href="https://deepwiki.com/V1ct0r5/proyecto_web_TFG"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+
+
