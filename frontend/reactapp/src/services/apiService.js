@@ -6,15 +6,12 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:300
 
 const apiService = axios.create({
     baseURL: API_BASE_URL,
-    // Content-Type se maneja automáticamente por Axios para JSON y FormData
 });
 
-// Función para crear el evento de logout con detalles
 const createLogoutEvent = (details) => new CustomEvent('logoutUser', { detail: details });
 
 let logoutProcessInitiated = false;
 
-// Interceptor de Solicitud: Adjunta el token a las peticiones autenticadas
 apiService.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
@@ -24,12 +21,11 @@ apiService.interceptors.request.use(
         return config;
     },
     (error) => {
-        console.error("Error en configuración de petición Axios:", error); // Útil para depuración
+        console.error("Error en configuración de petición Axios:", error);
         return Promise.reject(error);
     }
 );
 
-// Interceptor de Respuesta: Manejo centralizado de errores y expiración de sesión
 apiService.interceptors.response.use(
     response => response, 
     async error => {
@@ -45,7 +41,7 @@ apiService.interceptors.response.use(
                 if (!logoutProcessInitiated) {
                     logoutProcessInitiated = true;
                     toast.error('Tu sesión ha expirado o el acceso ha sido denegado. Por favor, inicia sesión de nuevo.', {
-                        position: "top-center", autoClose: 4000, /* ...otras opciones de toast... */
+                        position: "top-center", autoClose: 4000,
                     });
                     
                     window.dispatchEvent(createLogoutEvent({ reason: 'apiAuthError', notifyBackend: false }));
@@ -75,9 +71,6 @@ apiService.interceptors.response.use(
     }
 );
 
-// Definición de todas las funciones del API
-// (Las funciones individuales ya no necesitan try/catch { throw error; }
-// si el objetivo es solo relanzar, ya que el interceptor o el async/await lo manejan)
 const api = {
     // --- Autenticación ---
     register: async (userData) => {
@@ -99,10 +92,18 @@ const api = {
     },
 
     // --- Objetivos ---
-    getObjectives: async () => {
-        const response = await apiService.get('/objectives');
+    // --- INICIO DE LA CORRECCIÓN: Se reemplaza getObjectives por getObjectivesFiltered ---
+    getObjectivesFiltered: async (filters = {}) => {
+        const params = new URLSearchParams();
+        if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
+        if (filters.category && filters.category !== 'all') params.append('category', filters.category);
+        if (filters.sortBy) params.append('sortBy', filters.sortBy);
+        if (filters.includeArchived) params.append('includeArchived', String(filters.includeArchived));
+        
+        const response = await apiService.get(`/objectives?${params.toString()}`);
         return response.data;
     },
+    // --- FIN DE LA CORRECCIÓN ---
     getObjectiveById: async (objectiveId) => {
         const response = await apiService.get(`/objectives/${objectiveId}`);
         return response.data;
@@ -139,14 +140,13 @@ const api = {
         const response = await apiService.get('/analysis/summary', { params });
         return response.data;
     },
-    // ... (resto de funciones de análisis) ...
-    getCategoryDistribution: async (params) => { /* ... */ const response = await apiService.get('/analysis/distribution/category', { params }); return response.data; },
-    getObjectiveStatusDistribution: async (params) => { /* ... */ const response = await apiService.get('/analysis/distribution/status', { params }); return response.data; },
-    getMonthlyProgress: async (params) => { /* ... */ const response = await apiService.get('/analysis/progress/monthly', { params }); return response.data; },
-    getObjectivesProgressChartData: async (params) => { /* ... */ const response = await apiService.get('/analysis/objectives-progress', { params }); return response.data; },
-    getRankedObjectives: async (params) => { /* ... */ const response = await apiService.get('/analysis/ranked-objectives', { params }); return response.data; },
-    getCategoryAverageProgress: async (params) => { /* ... */ const response = await apiService.get('/analysis/category-average-progress', { params }); return response.data; },
-    getDetailedObjectivesByCategory: async (params) => { /* ... */ const response = await apiService.get('/analysis/objectives-by-category-detailed', { params }); return response.data; },
+    getCategoryDistribution: async (params) => { const response = await apiService.get('/analysis/distribution/category', { params }); return response.data; },
+    getObjectiveStatusDistribution: async (params) => { const response = await apiService.get('/analysis/distribution/status', { params }); return response.data; },
+    getMonthlyProgress: async (params) => { const response = await apiService.get('/analysis/progress/monthly', { params }); return response.data; },
+    getObjectivesProgressChartData: async (params) => { const response = await apiService.get('/analysis/objectives-progress', { params }); return response.data; },
+    getRankedObjectives: async (params) => { const response = await apiService.get('/analysis/ranked-objectives', { params }); return response.data; },
+    getCategoryAverageProgress: async (params) => { const response = await apiService.get('/analysis/category-average-progress', { params }); return response.data; },
+    getDetailedObjectivesByCategory: async (params) => { const response = await apiService.get('/analysis/objectives-by-category-detailed', { params }); return response.data; },
 
 
     // --- Perfil de Usuario ---
@@ -194,11 +194,6 @@ const api = {
     },
 };
 
-// Este bucle re-añade un try/catch a cada función que simplemente relanza el error.
-// Dado que las funciones son async y usan await, los errores de apiService ya
-// se propagarían como promesas rechazadas. Este bucle es redundante si solo
-// relanza el error, pero podría usarse para logging centralizado si fuera necesario.
-// Para mayor simplicidad, se podría eliminar si no se añade lógica adicional al catch.
 for (const key in api) {
     if (typeof api[key] === 'function') {
         const originalFunction = api[key];
@@ -206,8 +201,6 @@ for (const key in api) {
             try {
                 return await originalFunction(...args);
             } catch (error) {
-                // Aquí se podría añadir logging centralizado antes de relanzar
-                // console.error(`API call to ${key} failed:`, error);
                 throw error;
             }
         };
