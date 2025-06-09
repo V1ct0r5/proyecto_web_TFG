@@ -17,6 +17,7 @@
     "updatedLabel": "Actualizado:",
     "edit": "Editar",
     "details": "Detalles",
+    "archive": "Archivar",
     "selectDate": "Selecciona una fecha",
     "status": "Estado",
     "cancel": "Cancelar",
@@ -36,7 +37,8 @@
     "saveChanges": "Guardar Cambios",
     "saving": "Guardando...",
     "backToDashboard": "Volver al Dashboard",
-    "backToMyObjectives": "Volver a mis objetivos"
+    "backToMyObjectives": "Volver a mis objetivos",
+    "revert": "Revertir"
   },
   "formValidation": {
     "emailRequired": "El correo electrónico es obligatorio.",
@@ -85,10 +87,12 @@
     "loadingProfile": "Cargando perfil..."
   },
   "toast": {
+    "changesReverted": "Cambios descartados.",
     "logoutSuccess": "Sesión cerrada con éxito.",
     "logoutError": "Error al comunicar con el servidor para cerrar sesión. Se cerrará la sesión localmente.",
     "summaryLoadError": "No se pudo cargar el resumen de estadísticas inicial.",
     "analysisLoadError": "No se pudieron cargar los datos de análisis.",
+    "statsLoadError": "No se pudieron cargar las estadísticas del perfil.",
     "objectiveCreateSuccess": "¡Nuevo objetivo creado con éxito!",
     "objectiveCreateErrorPrefix": "Error al crear el objetivo:",
     "objectiveCreateCancel": "Creación de objetivo cancelada.",
@@ -98,11 +102,15 @@
     "recentActivityLoadError": "No se pudo cargar la actividad reciente.",
     "dashboardLoadError": "No se pudieron cargar los datos del panel de control.",
     "objectiveLoadForEditError": "Error al cargar el objetivo para edición.",
+    "objectiveUpdateSuccess": "¡Objetivo actualizado con éxito!",
     "objectiveUpdateError": "Error al actualizar el objetivo.",
     "objectiveDeleteSuccess": "Objetivo eliminado con éxito.",
     "objectiveDeleteError": "Error al eliminar el objetivo: {{error}}",
     "objectiveLoadDetailsError": "Error al cargar los detalles del objetivo.",
+    "objectiveArchiveSuccess": "¡Objetivo archivado con éxito!",
+    "objectiveArchiveError": "Error al archivar el objetivo: {{error}}",
     "noObjectivesYet": "Aún no tienes objetivos. ¡Vamos a crear el primero!",
+    "listUpdated": "Lista actualizada.",
     "avatarUpload": {
       "fileTooLarge": "El archivo es demasiado grande. Máximo 2MB.",
       "invalidFormat": "Formato de archivo no válido. Solo JPG, PNG, GIF.",
@@ -115,7 +123,7 @@
     "sessionExpired": "Tu sesión ha expirado por inactividad. Serás desconectado.",
     "settingsLoadError": "No se pudo cargar tu configuración guardada. Se usarán los valores por defecto.",
     "loginRequiredForSettings": "Debes iniciar sesión para guardar la configuración.",
-    "settingsSaveSuccess": "Configuración general guardada con éxito.",
+    "settingsSaveSuccess": "Configuración guardada con éxito.",
     "settingsSaveError": "Error al guardar la configuración. Por favor, inténtalo de nuevo.",
     "passwordUpdated": "Contraseña actualizada con éxito.",
     "passwordUpdateError": "Error al cambiar la contraseña.",
@@ -157,7 +165,7 @@
     "logoutButton": "Cerrar Sesión"
   },
   "loginForm": {
-    "submitButton": "Iniciar Sesión",
+    "submitButton": "Iniciar sesión",
     "welcomeBack": "¡Bienvenido de nuevo, {{user}}!",
     "createFirstObjective": "¡Comencemos creando tu primer objetivo!",
     "errors": {
@@ -167,7 +175,7 @@
     }
   },
   "registroForm": {
-    "submitButton": "Crear Cuenta",
+    "submitButton": "Crear cuenta",
     "success": "¡Registro completado con éxito! Iniciando sesión...",
     "errors": {
       "autoLoginFailed": "Registro exitoso, pero hubo un problema al iniciar sesión automáticamente. Por favor, intenta iniciar sesión manualmente.",
@@ -177,7 +185,8 @@
   "confirmationDialog": {
     "defaultTitle": "Confirmar Acción",
     "defaultMessage": "¿Estás seguro de que deseas realizar esta acción?",
-    "deleteObjective": "¿Estás seguro de que quieres eliminar este objetivo?"
+    "deleteObjective": "¿Estás seguro de que quieres eliminar este objetivo?",
+    "archiveObjective": "¿Estás seguro de que quieres archivar el objetivo '{{name}}'?"
   },
   "charts": {
     "averageProgressLabel": "Progreso Promedio (%)",
@@ -202,6 +211,8 @@
   },
   "analysis": {
     "trends": {
+      "positive": "Al alza",
+      "negative": "A la baja",
       "stable": "Estable"
     },
     "timePeriods": {
@@ -244,7 +255,7 @@
       "categories": "Categorías",
       "moreCategories": "...y {{count}} más",
       "trend": "Tendencia",
-      "trendSubtitle": "Basado en el progreso de los últimos 30 días"
+      "trendSubtitle": "Basado en el progreso de: {{period}}"
     }
   },
   "createGoalPage": {
@@ -279,7 +290,6 @@
       "viewCategoryDetails": "Ver detalle de categorías",
       "viewAnalysis": "Ver Análisis"
     },
-    
     "sections": {
       "keyObjectives": "Objetivos Clave / Recientes",
       "recentActivity": "Actividad Reciente"
@@ -290,8 +300,8 @@
     "trends": {
       "completed": "Completado",
       "finishedUnmet": "Finalizado (No alcanzado)",
-      "upwards": "Al alza",
-      "downwards": "A la baja",
+      "onTrack": "En buen camino",
+      "behind": "Necesita mejorar",
       "notApplicable": "No aplica"
     },
     "buttons": {
@@ -353,7 +363,8 @@
     "labels": {
       "search": "Buscar:",
       "category": "Categoría:",
-      "sortBy": "Ordenar por:"
+      "sortBy": "Ordenar por:",
+      "includeArchived": "Incluir archivados"
     },
     "sort": {
       "recent": "Más Recientes",
@@ -489,38 +500,37 @@
     "es": "Español",
     "en": "Inglés"
   },
-  "categoryObjectivesCard": {
-    "noObjectives": "No hay objetivos en esta categoría."
+  "devErrors": {
+    "useAuthMissingProvider": "useAuth debe ser usado dentro de un AuthProvider",
+    "useSettingsMissingProvider": "useSettings debe ser usado dentro de un SettingsProvider"
   },
-  "rankedObjectivesList": {
-    "noData": "No hay objetivos para mostrar."
-  },
-  "recentObjectives": {
-    "updatedAgo": "Act. hace {{distance}}",
-    "viewAllObjectives": "Ver todos los objetivos"
+  "input": {
+    "defaultActionAriaLabel": "Realizar acción del input"
   },
   "objectiveCard": {
+    "viewDetailsAria": "Ver detalles del objetivo {{name}}",
     "current": "Actual:",
-    "target": "Meta:"
+    "target": "Meta:",
+    "updated": "Act. {{date}}"
   },
   "objectivesForm": {
+    "createButton": "Crear Objetivo",
+    "updateButton": "Actualizar Objetivo",
+    "formCleared": "Formulario limpiado.",
     "nameLabel": "Nombre del objetivo",
     "namePlaceholder": "Ej. Correr 5km diarios",
     "descriptionLabel": "Descripción",
     "descriptionPlaceholder": "Describe los detalles de tu objetivo",
-    "unitPlaceholder": "Ej. km, horas, euros, etc.",
     "typeLabel": "Tipo de objetivo",
     "selectType": "Selecciona un tipo",
     "initialValueLabel": "Valor inicial",
+    "currentValueLabel": "Valor actual",
     "targetValueLabel": "Valor meta",
     "unitLabel": "Unidad de medida",
-    "startDateLabel": "Fecha de inicio",
-    "endDateLabel": "Fecha de finalización",
-    "createButton": "Crear Objetivo",
-    "currentValueLabel": "Valor actual",
+    "unitPlaceholder": "Ej. km, horas, euros, etc.",
     "lowerIsBetter": "Un valor más bajo es mejor",
-    "updateButton": "Actualizar Objetivo",
-    "formCleared": "Formulario limpiado."
+    "startDateLabel": "Fecha de inicio",
+    "endDateLabel": "Fecha de finalización"
   },
   "progressBar": {
     "excellent": "Excelente progreso",
@@ -537,15 +547,21 @@
     "career": "Carrera profesional",
     "other": "Otros"
   },
-  "devErrors": {
-    "useAuthMissingProvider": "useAuth debe ser usado dentro de un AuthProvider",
-    "useSettingsMissingProvider": "useSettings debe ser usado dentro de un SettingsProvider"
-  },
-  "input": {
-    "defaultActionAriaLabel": "Realizar acción del input"
-  },
   "activityFeed": {
     "noRecentActivity": "No hay actividad reciente.",
     "ago": "Hace {{distance}}"
+  },
+  "statsCard": {
+    "viewDetails": "Ver detalles"
+  },
+  "recentObjectives": {
+    "updatedAgo": "Act. hace {{distance}}",
+    "viewAllObjectives": "Ver todos los objetivos"
+  },
+  "activityLog": {
+    "objectiveCreated": "Nuevo objetivo '{{objectiveName}}' creado.",
+    "progressUpdated": "Progreso para '{{objectiveName}}' actualizado a {{newValue}} {{unit}}.",
+    "statusChanged": "Estado del objetivo \"{{objectiveName}}\" cambiado de \"{{oldStatus}}\" a \"{{newStatus}}\".",
+    "objectiveDeleted": "Objetivo '{{objectiveName}}' eliminado."
   }
 }
