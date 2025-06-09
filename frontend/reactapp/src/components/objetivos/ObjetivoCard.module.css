@@ -8,42 +8,38 @@
     display: flex;
     flex-direction: column;
     transition: all 0.3s ease;
-    /* AUMENTO: Ancho máximo de la tarjeta para permitir un tamaño más grande */
-    max-width: 400px; /* Puedes ajustar este valor, por ejemplo, 350px, 450px */
-    width: 100%; /* Asegura que ocupe el ancho disponible hasta el max-width */
+    max-width: 400px;
+    width: 100%;
 }
 
 .objetivoCard:hover {
-    transform: translateY(-4px); /* Ligeramente más pronunciado para el hover */
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra más notoria */
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* --- CONTENIDO PRINCIPAL CON PADDING --- */
 .cardContent {
-    padding: 1.5rem; /* AUMENTO: Más padding interno (antes 1rem) */
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1.2rem; /* AUMENTO: Más espacio entre elementos internos (antes 0.8rem) */
+    gap: 1.2rem;
     flex-grow: 1;
 }
 
-/* --- CABECERA (Contiene Título y Badge Categoría) --- */
 .cardHeaderContent {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 1rem; /* AUMENTO: Más espacio entre título y badge */
+    gap: 1rem;
     flex-wrap: wrap;
 }
 
-/* Título */
 .cardTitle {
-    font-size: 1.25rem; /* AUMENTO: Título más grande (antes 0.95rem) */
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--card-foreground);
     margin: 0;
     line-height: 1.3;
-    letter-spacing: -0.02em; /* Ligeramente más compacto para el texto grande */
+    letter-spacing: -0.02em;
     flex-grow: 1;
     min-width: 0;
     word-wrap: break-word;
@@ -55,15 +51,14 @@
     text-overflow: ellipsis;
 }
 
-/* Badge de Categoría */
 .categoryBadge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.3rem; /* Ajuste el espacio entre icono y texto */
-    padding: 0.4rem 1rem; /* AUMENTO: Más padding para el badge */
+    gap: 0.3rem;
+    padding: 0.4rem 1rem;
     border-radius: 9999px;
-    font-size: 0.85rem; /* AUMENTO: Texto del badge más grande */
+    font-size: 0.85rem;
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
@@ -75,23 +70,22 @@
 }
 
 .categoryBadgeIcon {
-    font-size: 1em; /* Ajusta el tamaño del icono del badge si es necesario */
+    font-size: 1em;
     display: flex;
     align-items: center;
     color: var(--muted-foreground);
 }
 
-/* --- DESCRIPCIÓN --- */
 .cardDescription {
-    font-size: 0.95rem; /* AUMENTO: Descripción más grande (antes 0.85rem) */
+    font-size: 0.95rem;
     color: var(--muted-foreground);
     margin: 0;
-    line-height: 1.6; /* AUMENTO: Mayor interlineado para mejor legibilidad */
-    max-height: 4.8em; /* AUMENTO: Permitir más líneas de descripción (aproximadamente 4-5 líneas) */
+    line-height: 1.6;
+    max-height: 4.8em;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Se mantiene en 3 líneas visuales para un buen resumen */
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
 }
 
@@ -99,28 +93,26 @@
     margin: 0;
 }
 
-/* --- SECCIÓN DE PROGRESO --- */
 .progressContainer {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem; /* AUMENTO: Más espacio en el contenedor de progreso */
+    gap: 0.5rem;
 }
 
 .progressHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.9rem; /* AUMENTO: Texto de "Progreso" más grande */
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--foreground);
 }
 
-/* Barra de progreso visual */
 .progressBar {
     background-color: var(--muted);
     border-radius: 9999px;
     overflow: hidden;
-    height: 0.6rem; /* AUMENTO: Barra de progreso más gruesa (antes 0.4rem) */
+    height: 0.6rem;
     width: 100%;
 }
 
@@ -130,7 +122,6 @@
     border-radius: 9999px;
 }
 
-/* Clases para el color de la barra de progreso según el porcentaje */
 .progressFillLow {
     background-color: var(--destructive);
 }
@@ -146,7 +137,7 @@
 .progressValues {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem; /* AUMENTO: Más espacio entre los valores de progreso */
+    gap: 1rem;
     margin-top: 0.4rem;
 }
 
@@ -156,30 +147,29 @@
 }
 
 .progressValueLabel {
-    font-size: 0.8rem; /* AUMENTO: Texto de la etiqueta de valor más grande */
+    font-size: 0.8rem;
     color: var(--muted-foreground);
     font-weight: 500;
     margin-bottom: 0.15rem;
 }
 
 .progressValueNumber {
-    font-size: 1rem; /* AUMENTO: Número de valor más grande */
+    font-size: 1rem;
     font-weight: 700;
     color: var(--card-foreground);
 }
 
-/* --- SECCIÓN DE DATOS ADICIONALES (Fecha, etc.) --- */
 .progressDate {
     display: flex;
     align-items: center;
-    gap: 0.4rem; /* Aumento del espacio entre icono y texto */
-    font-size: 0.85rem; /* AUMENTO: Texto de fecha más grande */
+    gap: 0.4rem;
+    font-size: 0.85rem;
     color: var(--muted-foreground);
     margin-top: 0.4rem;
 }
 
 .dataIcon {
-    font-size: 1.1em; /* AUMENTO: Icono de fecha más grande */
+    font-size: 1.1em;
 }
 
 .dataLabel {
@@ -190,9 +180,8 @@
     font-weight: 400;
 }
 
-/* --- PIE DE PÁGINA Y BOTONES --- */
 .cardFooter {
-    padding: 1rem 1.5rem; /* AUMENTO: Más padding en el footer */
+    padding: 1rem 1.5rem;
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: flex-end;
@@ -202,18 +191,17 @@
 
 .cardActions {
     display: flex;
-    gap: 0.8rem; /* AUMENTO: Más espacio entre los botones */
+    gap: 0.8rem;
 }
 
-/* Estilo base para los botones dentro de la tarjeta */
 .button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.35rem; /* Ajuste del espacio entre icono y texto */
-    padding: 0.4rem 1rem; /* AUMENTO: Botones con más padding */
+    gap: 0.35rem;
+    padding: 0.4rem 1rem;
     border-radius: var(--radius);
-    font-size: 0.85rem; /* AUMENTO: Texto de botón más grande */
+    font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -234,33 +222,44 @@
 }
 
 .buttonIcon {
-    font-size: 1.1rem; /* AUMENTO: Iconos de botón más grandes */
+    font-size: 1.1rem;
 }
 
 /* --- ESTILOS DE ESTADO --- */
-.status-pendiente {
-    color: var(--warning);
-    font-weight: 600;
-    background-color: color-mix(in srgb, var(--warning) 15%, transparent);
-    padding: 0.3em 0.8em; /* Ajuste ligero del padding para que se vea proporcionado */
+/* Base para todos los estados */
+.cardStatus {
+    padding: 0.3em 0.8em;
     border-radius: 4px;
-    font-size: 0.9rem; /* Ligeramente más grande el texto de estado */
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 0.5rem;
 }
 
-.status-enprogreso {
+.status-pendiente, .status-pending {
+    color: var(--warning-foreground);
+    background-color: color-mix(in srgb, var(--warning) 20%, transparent);
+}
+
+.status-enprogreso, .status-inprogress {
     color: var(--primary);
-    font-weight: 600;
-    background-color: color-mix(in srgb, var(--primary) 15%, transparent);
-    padding: 0.3em 0.8em; /* Ajuste ligero del padding para que se vea proporcionado */
-    border-radius: 4px;
-    font-size: 0.9rem; /* Ligeramente más grande el texto de estado */
+    background-color: color-mix(in srgb, var(--primary) 20%, transparent);
 }
 
-.status-completado {
-    color: var(--secondary);
-    font-weight: 600;
-    background-color: color-mix(in srgb, var(--secondary) 15%, transparent);
-    padding: 0.3em 0.8em; /* Ajuste ligero del padding para que se vea proporcionado */
-    border-radius: 4px;
-    font-size: 0.9rem; /* Ligeramente más grande el texto de estado */
+.status-completado, .status-completed {
+    color: var(--success-foreground);
+    background-color: color-mix(in srgb, var(--success) 20%, transparent);
 }
+
+/* --- INICIO DE CORRECCIÓN: Estilos para Fallido y Archivado --- */
+.status-fallido, .status-failed {
+    color: var(--destructive-foreground);
+    background-color: color-mix(in srgb, var(--destructive) 20%, transparent);
+}
+
+.status-archivado, .status-archived {
+    color: var(--muted-foreground);
+    background-color: var(--muted);
+    border: 1px dashed var(--border);
+}
+/* --- FIN DE LA CORRECCIÓN --- */
