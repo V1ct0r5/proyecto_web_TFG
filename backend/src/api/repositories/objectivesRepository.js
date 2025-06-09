@@ -1,29 +1,64 @@
 // backend/src/api/repositories/objectiveRepository.js
 const db = require('../../config/database');
-const Objetivo = db.Objetivo; // Usar el nombre del modelo tal como se define en db.Objetivo
-// const Progress = db.Progress; // No se usa directamente en este repositorio
+const { Op } = require('sequelize');
+const Objetivo = db.Objetivo;
 
 class ObjectiveRepository {
     constructor() {
-        this.model = Objetivo; // El modelo principal que este repositorio gestiona
+        this.model = Objetivo;
     }
 
-    /**
-     * Obtiene todos los objetivos para un usuario específico.
-     * @param {number} userId El ID del usuario.
-     * @returns {Promise<Array<Objetivo>>} Una promesa que resuelve con un array de objetivos.
-     */
-    async findAll(userId) {
-        return await this.model.findAll({ where: { id_usuario: userId } });
+    async findAll(userId, filters = {}) {
+        const whereClause = { id_usuario: userId };
+
+        // Si 'includeArchived' es falso o no se proporciona, excluimos los archivados.
+        if (String(filters.includeArchived).toLowerCase() !== 'true') {
+            whereClause.estado = { [Op.not]: 'Archivado' };
+        }
+        
+        if (filters.category && filters.category !== 'all') {
+            whereClause.tipo_objetivo = filters.category;
+        }
+
+        if (filters.searchTerm) {
+            whereClause[Op.or] = [
+                { nombre: { [Op.like]: `%${filters.searchTerm}%` } },
+                { descripcion: { [Op.like]: `%${filters.searchTerm}%` } }
+            ];
+        }
+
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Lógica de ordenación actualizada para usar claves neutrales
+        let orderClause = [['updatedAt', 'DESC']]; // Orden por defecto
+        if (filters.sortBy) {
+            switch (filters.sortBy) {
+                case 'recent': // antes 'recientes'
+                    orderClause = [['updatedAt', 'DESC']];
+                    break;
+                case 'oldest': // antes 'antiguos'
+                    orderClause = [['updatedAt', 'ASC']];
+                    break;
+                case 'nameAsc':
+                    orderClause = [['nombre', 'ASC']];
+                    break;
+                case 'nameDesc':
+                    orderClause = [['nombre', 'DESC']];
+                    break;
+                 case 'dateAsc': // antes 'fechaFinAsc'
+                    orderClause = [['fecha_fin', 'ASC']];
+                    break;
+                // Los casos de progreso ('progressAsc', 'progressDesc') se manejan en el servicio
+                // después de calcular el progreso, ya que no es un campo de la DB.
+            }
+        }
+        // --- FIN DE LA CORRECCIÓN ---
+
+        return await this.model.findAll({ 
+            where: whereClause,
+            order: orderClause
+        });
     }
 
-    /**
-     * Busca un objetivo por su ID y el ID del usuario, con opciones de inclusión.
-     * @param {number} objectiveId El ID del objetivo.
-     * @param {number} userId El ID del usuario.
-     * @param {object} options Opciones adicionales para la consulta de Sequelize (ej. `include`).
-     * @returns {Promise<Objetivo|null>} Una promesa que resuelve con el objetivo encontrado o null.
-     */
     async findById(objectiveId, userId, options = {}) {
         return await this.model.findOne({
             where: { id_objetivo: objectiveId, id_usuario: userId },
@@ -31,24 +66,10 @@ class ObjectiveRepository {
         });
     }
 
-    /**
-     * Crea un nuevo objetivo en la base de datos.
-     * @param {object} objectiveData Los datos del objetivo a crear.
-     * @param {object} options Opciones adicionales para la operación de creación (ej. `transaction`).
-     * @returns {Promise<Objetivo>} Una promesa que resuelve con el objetivo creado.
-     */
     async create(objectiveData, options = {}) {
         return await this.model.create(objectiveData, options);
     }
 
-    /**
-     * Actualiza un objetivo existente.
-     * @param {number} objectiveId El ID del objetivo a actualizar.
-     * @param {number} userId El ID del usuario al que pertenece el objetivo.
-     * @param {object} updatedData Los datos a actualizar.
-     * @param {object} options Opciones adicionales para la operación de actualización (ej. `transaction`).
-     * @returns {Promise<number>} Una promesa que resuelve con el número de filas actualizadas.
-     */
     async update(objectiveId, userId, updatedData, options = {}) {
         const [updatedRows] = await this.model.update(updatedData, {
             where: { id_objetivo: objectiveId, id_usuario: userId },
@@ -57,13 +78,6 @@ class ObjectiveRepository {
         return updatedRows;
     }
 
-    /**
-     * Elimina un objetivo de la base de datos.
-     * @param {number} objectiveId El ID del objetivo a eliminar.
-     * @param {number} userId El ID del usuario al que pertenece el objetivo.
-     * @param {object} options Opciones adicionales para la operación de eliminación (ej. `transaction`).
-     * @returns {Promise<number>} Una promesa que resuelve con el número de filas eliminadas (1 si se eliminó, 0 si no).
-     */
     async delete(objectiveId, userId, options = {}) {
         return await this.model.destroy({
             where: { id_objetivo: objectiveId, id_usuario: userId },
