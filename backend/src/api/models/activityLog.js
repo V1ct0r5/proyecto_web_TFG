@@ -56,7 +56,6 @@ module.exports = (sequelize) => {
             foreignKey: 'id_usuario',
             as: 'usuario',
             onUpdate: 'CASCADE'
-            // TODO: Considerar onDelete: 'CASCADE' o 'RESTRICT' para la relación con Usuario
         });
         ActivityLog.belongsTo(models.Objetivo, {
             foreignKey: 'id_objetivo',
