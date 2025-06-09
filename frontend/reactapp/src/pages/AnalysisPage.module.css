@@ -141,7 +141,6 @@
     flex-grow: 1;
 }
 .chartContainerFullWidth {
-    composes: chartContainer;
     min-height: 350px;
 }
 
