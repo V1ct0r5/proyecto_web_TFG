@@ -1,95 +1,68 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import ObjetivosForm from "../components/objetivos/ObjetivosForm";
+// frontend/reactapp/src/pages/CreateGoalPage.js
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { toast } from 'react-toastify';
 import api from "../services/apiService";
 import { useAuth } from "../context/AuthContext";
+
+import ObjetivosForm from "../components/objetivos/ObjetivosForm";
 import styles from "./CreateGoalPage.module.css";
-import { toast } from 'react-toastify';
-import LoadingSpinner from "../components/ui/LoadingSpinner";
-import { useTranslation } from "react-i18next";
 
 function CreateObjectivePage() {
     const { t } = useTranslation();
-    const [objetivos, setObjetivos] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { user } = useAuth(); // Usamos el contexto para saber si tiene objetivos
+    const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { logout } = useAuth();
-
-    const [pageMessage, setPageMessage] = useState('');
-
-    useEffect(() => {
-        if (location.state?.message) {
-            setPageMessage(location.state.message);
-        }
-    }, [location.state]);
-
-    const handleObjectiveSubmission = async (objectiveData) => {
+    const handleObjectiveSubmission = async (formData) => {
         setIsSubmitting(true);
         try {
-            await api.createObjective(objectiveData);
+            // Mapeo de datos del formulario al formato que espera la API
+            // El formulario devuelve fechas como objetos Date, el servicio de API debería manejarlos
+            // o se formatean aquí a 'yyyy-MM-dd' si es necesario.
+            const payload = {
+                name: formData.name,
+                description: formData.description,
+                category: formData.category,
+                initialValue: formData.initialValue || 0, // Enviar 0 si está vacío
+                targetValue: formData.targetValue,
+                unit: formData.unit,
+                isLowerBetter: formData.isLowerBetter,
+                startDate: formData.startDate,
+                endDate: formData.endDate,
+            };
+            
+            await api.createObjective(payload);
             toast.success(t('toast.objectiveCreateSuccess'));
             navigate('/dashboard', { replace: true });
         } catch (err) {
-            const errorMessage = err.data?.message || err.message || "Error desconocido al crear el objetivo.";
-            toast.error(`${t('toast.objectiveCreateErrorPrefix')} ${errorMessage}`);
+            toast.error(err.message || t('toast.objectiveCreateErrorPrefix'));
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const handleCancelCreation = () => {
-        if (objetivos.length > 0) {
-            navigate('/dashboard');
-        } else {
-            navigate('/dashboard');
-        }
+    /**
+     * 1. CREA ESTA FUNCIÓN PARA MANEJAR LA CANCELACIÓN
+     * Esta función simplemente navega de vuelta al dashboard.
+     */
+    const handleCancel = () => {
         toast.info(t('toast.objectiveCreateCancel'));
+        navigate('/dashboard');
     };
-
-    const fetchInitialObjectivesForTitle = useCallback(async () => {
-        try {
-            const data = await api.getObjectives();
-            setObjetivos(Array.isArray(data) ? data : []);
-        } catch (err) {
-            if (err.status === 401 || err.status === 403) {
-                toast.error(t('toast.sessionExpiredOrUnauthorized'));
-                logout();
-                navigate("/login", { replace: true, state: { from: location } });
-            }
-            setObjetivos([]);
-        }
-    }, [navigate, logout, location, t]);
-
-    useEffect(() => {
-        setLoading(true);
-        fetchInitialObjectivesForTitle().finally(() => {
-            setLoading(false);
-        });
-    }, [fetchInitialObjectivesForTitle]);
-
-    if (loading) {
-        return (
-            <div className={styles.pageLoadingContainer}>
-                <LoadingSpinner size="large" text={t('loaders.preparingForm')} />
-            </div>
-        );
-    }
 
     return (
         <div className={styles.createGoalPageContainer}>
             <div className={styles.formWrapper}>
-                {pageMessage && <p className={styles.pageInfoMessage}>{pageMessage}</p>}
                 <h2 className={styles.formTitle}>
-                    {objetivos.length > 0 ? t('createGoalPage.title.new') : t('createGoalPage.title.first')}
+                    {/* El título depende de si el usuario ya tiene objetivos */}
+                    {user?.hasObjectives ? t('createGoalPage.title.new') : t('createGoalPage.title.first')}
                 </h2>
                 <ObjetivosForm
                     onSubmit={handleObjectiveSubmission}
+                    onCancel={handleCancel} // 2. PASA LA FUNCIÓN DE CANCELACIÓN AL FORMULARIO
                     isEditMode={false}
-                    buttonText={t('objectivesForm.createButton')}
-                    onCancel={handleCancelCreation}
                     isLoading={isSubmitting}
                 />
             </div>

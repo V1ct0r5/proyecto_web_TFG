@@ -1,156 +1,102 @@
 // backend/src/api/services/dashboardService.js
 const { Op, fn, col } = require('sequelize');
 const db = require('../../config/database');
-const { Objetivo, Progress, ActivityLog } = db.sequelize.models;
+const { Objective, ActivityLog } = db;
 const AppError = require('../../utils/AppError');
+const { calculateProgressPercentage } = require('./objectivesService');
 
+class DashboardService {
 
-exports.calculateSummaryStats = async (userId) => {
-    if (!userId) {
-        throw new AppError('ID de usuario no fue proporcionado al servicio de cálculo de estadísticas.', 500);
-    }
-
-    // --- CORRECCIÓN: Contar solo los objetivos que NO están archivados ---
-    const totalObjectives = await Objetivo.count({ 
-        where: { 
-            id_usuario: userId,
-            estado: { [Op.not]: 'Archivado' }
-        } 
-    });
-
-    const statusCountsResult = await Objetivo.findAll({
-        attributes: ['estado', [fn('COUNT', col('estado')), 'count']],
-        // --- CORRECCIÓN: Contar solo los estados de objetivos no archivados ---
-        where: { 
-            id_usuario: userId,
-            estado: { [Op.not]: 'Archivado' }
-        },
-        group: ['estado'],
-        raw: true,
-    });
-    const statusCounts = statusCountsResult.reduce((acc, item) => {
-        acc[item.estado] = parseInt(item.count, 10);
-        return acc;
-    }, {});
-
-    // El cálculo del progreso promedio ya excluía correctamente los archivados, se mantiene.
-    const activeQuantitativeObjectives = await Objetivo.findAll({
-        where: {
-            id_usuario: userId,
-            estado: { [Op.in]: ['En progreso', 'Pendiente', 'No Iniciados'] },
-            valor_cuantitativo: { [Op.ne]: null },
-            valor_inicial_numerico: { [Op.ne]: null }
-        },
-    });
-
-    let averageProgress = 0;
-    if (activeQuantitativeObjectives.length > 0) {
-        const totalProgressSum = activeQuantitativeObjectives.reduce((sum, obj) => {
-            const initial = parseFloat(obj.valor_inicial_numerico);
-            const current = parseFloat(obj.valor_actual);
-            const target = parseFloat(obj.valor_cuantitativo);
-            let progress = 0;
-            if (!isNaN(initial) && !isNaN(current) && !isNaN(target)) {
-                if (obj.es_menor_mejor) {
-                    const range = initial - target;
-                    progress = range <= 0 ? (current <= target ? 100 : 0) : Math.max(0, ((initial - current) / range) * 100);
-                } else {
-                    const range = target - initial;
-                    progress = range <= 0 ? (current >= target ? 100 : 0) : Math.max(0, ((current - initial) / range) * 100);
-                }
-                progress = Math.min(100, Math.round(progress));
-            }
-            return sum + progress;
-        }, 0);
-        averageProgress = Math.round(totalProgressSum / activeQuantitativeObjectives.length);
-    }
-
-    // El conteo de objetivos próximos a vencer ya excluía correctamente los archivados.
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-    const dueSoonCount = await Objetivo.count({
-        where: {
-            id_usuario: userId,
-            fecha_fin: { [Op.ne]: null, [Op.lte]: sevenDaysFromNow, [Op.gte]: new Date() },
-            estado: { [Op.notIn]: ['Completado', 'Archivado', 'Fallido'] }
+    async calculateSummaryStats(userId) {
+        if (!userId) {
+            throw new AppError('ID de usuario no proporcionado.', 500);
         }
-    });
 
-    const categoryDistributionResult = await Objetivo.findAll({
-        attributes: ['tipo_objetivo', [fn('COUNT', col('tipo_objetivo')), 'count']],
-        // --- CORRECCIÓN: Excluir archivados del gráfico de categorías ---
-        where: { 
-            id_usuario: userId,
-            estado: { [Op.not]: 'Archivado' }
-        },
-        group: ['tipo_objetivo'],
-        raw: true,
-    });
-    const categoryDistribution = categoryDistributionResult.map(item => ({
-        name: item.tipo_objetivo,
-        value: parseInt(item.count, 10)
-    }));
+        const baseWhere = { userId, status: { [Op.not]: 'ARCHIVED' } };
 
-    return {
-        totalObjectives,
-        statusCounts,
-        averageProgress,
-        dueSoonCount,
-        categoryDistribution,
-    };
-};
+        const totalObjectives = await Objective.count({ where: { userId, status: { [Op.not]: 'ARCHIVED' } } });
 
-exports.fetchRecentObjectives = async (userId, limit) => {
-    const objectives = await Objetivo.findAll({
-        // --- CORRECCIÓN: Excluir archivados de la lista de recientes ---
-        where: { 
-            id_usuario: userId,
-            estado: { [Op.not]: 'Archivado' }
-        },
-        order: [['updatedAt', 'DESC']],
-        limit: limit,
-        attributes: ['id_objetivo', 'nombre', 'estado', 'updatedAt', 'valor_actual', 'valor_cuantitativo', 'valor_inicial_numerico', 'es_menor_mejor'],
-    });
-
-    // El cálculo del progreso para cada objetivo es correcto
-    return objectives.map(obj => {
-        let progressPercentage = 0;
-        const initial = parseFloat(obj.valor_inicial_numerico);
-        const current = parseFloat(obj.valor_actual);
-        const target = parseFloat(obj.valor_cuantitativo);
-        if (!isNaN(initial) && !isNaN(current) && !isNaN(target)) {
-            if (obj.es_menor_mejor) {
-                const range = initial - target;
-                progressPercentage = range <= 0 ? (current <= target ? 100 : 0) : ((initial - current) / range) * 100;
-            } else {
-                const range = target - initial;
-                progressPercentage = range <= 0 ? (current >= target ? 100 : 0) : ((current - initial) / range) * 100;
-            }
-            progressPercentage = Math.max(0, Math.min(100, Math.round(progressPercentage)));
-        }
-        return {
-            id_objetivo: obj.id_objetivo,
-            nombre: obj.nombre,
-            estado: obj.estado,
-            updatedAt: obj.updatedAt,
-            progreso_calculado: progressPercentage,
-        };
-    });
-};
-
-// --- SIN CAMBIOS AQUÍ ---
-// La actividad reciente SÍ debe mostrar el log de "Objetivo archivado",
-// por lo que esta función no debe filtrar por estado.
-exports.fetchRecentActivities = async (userId, limit) => {
-    try {
-        const activities = await ActivityLog.findAll({
-            where: { id_usuario: userId },
-            order: [['createdAt', 'DESC']],
-            limit: limit
+        const statusCountsResult = await Objective.findAll({
+            attributes: [
+                ['estado', 'status'], // Selecciona la columna 'estado', la nombra 'status'
+                [fn('COUNT', col('estado')), 'count']
+            ],
+            where: { userId, status: { [Op.not]: 'ARCHIVED' } },
+            group: [col('estado')], // Agrupa por la columna real 'estado'
+            raw: true,
         });
-        return activities;
-    } catch (error) {
-        console.error('Error en fetchRecentActivities (servicio):', error);
-        throw new AppError('Error al obtener la actividad reciente.', 500, error);
+        const statusCounts = statusCountsResult.reduce((acc, item) => {
+            acc[item.status] = parseInt(item.count, 10);
+            return acc;
+        }, {});
+
+        const quantitativeObjectives = await Objective.findAll({
+            where: { ...baseWhere, targetValue: { [Op.ne]: null } },
+        });
+
+        let averageProgress = 0;
+        if (quantitativeObjectives.length > 0) {
+            const totalProgress = quantitativeObjectives.reduce((sum, obj) => {
+                return sum + calculateProgressPercentage(obj.toJSON());
+            }, 0);
+            averageProgress = Math.round(totalProgress / quantitativeObjectives.length);
+        }
+
+        const sevenDaysFromNow = new Date();
+        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+        const dueSoonCount = await Objective.count({
+            where: {
+                userId,
+                endDate: { [Op.ne]: null, [Op.between]: [new Date(), sevenDaysFromNow] },
+                status: { [Op.notIn]: ['COMPLETED', 'ARCHIVED', 'FAILED'] }
+            }
+        });
+        
+        // --- ESTA ES LA PARTE CORREGIDA PARA EL ERROR ACTUAL ---
+        const categories = await Objective.findAll({
+            attributes: [
+                ['tipo_objetivo', 'category'], // Selecciona la columna 'tipo_objetivo', la nombra 'category'
+                [fn('COUNT', col('tipo_objetivo')), 'count']
+            ],
+            where: baseWhere,
+            group: [col('tipo_objetivo')], // Agrupa por la columna real 'tipo_objetivo'
+            raw: true,
+        });
+
+        return { totalObjectives, statusCounts, averageProgress, dueSoonCount, categories };
     }
-};
+
+    async fetchRecentObjectives(userId, limit) {
+        const numericLimit = parseInt(limit, 10) || 4;
+        const objectives = await Objective.findAll({
+            where: { userId, status: { [Op.not]: 'ARCHIVED' } },
+            order: [['updatedAt', 'DESC']],
+            limit: numericLimit,
+        });
+
+        return objectives.map(obj => {
+            const objectiveJson = obj.toJSON();
+            const progressPercentage = calculateProgressPercentage(objectiveJson);
+            return {
+                id: objectiveJson.id,
+                name: objectiveJson.name,
+                status: objectiveJson.status,
+                updatedAt: objectiveJson.updatedAt,
+                progressPercentage: progressPercentage,
+            };
+        });
+    }
+
+    async fetchRecentActivities(userId, limit) {
+        const numericLimit = parseInt(limit, 10) || 5;
+        return ActivityLog.findAll({
+            where: { userId },
+            order: [['createdAt', 'DESC']],
+            limit: numericLimit,
+            include: [{ model: Objective, as: 'objective', attributes: ['name']}]
+        });
+    }
+}
+
+module.exports = new DashboardService();

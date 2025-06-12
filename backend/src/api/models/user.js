@@ -1,117 +1,109 @@
+// backend/src/api/models/user.js
 const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
+/**
+ * Defines the User model.
+ * @param {Sequelize} sequelize - The Sequelize instance.
+ * @returns {ModelCtor<Model>} The User model.
+ */
 module.exports = (sequelize) => {
-  const Usuario = sequelize.define("Usuario", {
+  const User = sequelize.define("User", {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    nombre_usuario: {
+    username: {
       type: DataTypes.STRING(50),
       allowNull: false,
       unique: true,
+      field: 'nombre_usuario' // Mantiene el nombre de la columna en la BD por retrocompatibilidad
     },
-    correo_electronico: {
+    email: {
       type: DataTypes.STRING(255),
       allowNull: false,
       unique: true,
-      validate: {
-        isEmail: true
-      }
+      validate: { isEmail: true },
+      field: 'correo_electronico'
     },
-    contrasena: {
+    password: {
       type: DataTypes.STRING(255),
       allowNull: false,
+      field: 'contrasena'
     },
-    telefono: {
-      type: DataTypes.STRING(25), // Corregido: sin espacio extra
+    phone: {
+      type: DataTypes.STRING(25),
       allowNull: true,
     },
-    biografia: {
+    bio: {
       type: DataTypes.TEXT,
       allowNull: true,
+      field: 'biografia'
     },
-    ubicacion: {
+    location: {
       type: DataTypes.STRING(255),
       allowNull: true,
+      field: 'ubicacion'
     },
-    avatar_url: {
-      type: DataTypes.STRING(2048), // URL puede ser larga
+    avatarUrl: {
+      type: DataTypes.STRING(2048),
       allowNull: true,
+      field: 'avatar_url'
     },
-    theme_preference: {
+    // User preferences
+    themePreference: {
       type: DataTypes.ENUM('light', 'dark', 'system'),
       allowNull: false,
       defaultValue: 'system',
+      field: 'theme_preference'
     },
-    language_preference: {
+    languagePreference: {
       type: DataTypes.ENUM('es', 'en'),
       allowNull: false,
       defaultValue: 'es',
-    },
-    date_format_preference: {
-      type: DataTypes.ENUM('DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'),
-      allowNull: false,
-      defaultValue: 'DD/MM/YYYY',
-    },
-    email_notifications: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true,
-    },
-    push_notifications: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
+      field: 'language_preference'
     },
   }, {
     tableName: 'Usuarios',
     timestamps: true,
     underscored: true,
-
     hooks: {
-      // Se ejecuta antes de guardar un nuevo usuario en la BD
-      beforeCreate: async (usuario) => {
-        if (usuario.contrasena) {
+      /**
+       * Hashes the user's password before creating a new user record.
+       */
+      beforeCreate: async (user) => {
+        if (user.password) {
           const salt = await bcrypt.genSalt(10);
-          usuario.contrasena = await bcrypt.hash(usuario.contrasena, salt);
+          user.password = await bcrypt.hash(user.password, salt);
         }
       },
-      // Se ejecuta antes de actualizar un usuario existente
-      beforeUpdate: async (usuario) => {
-        // Solo cifra la contraseña si el campo 'contrasena' ha cambiado
-        if (usuario.changed('contrasena')) {
+      /**
+       * Hashes the user's password before updating, but only if the password has changed.
+       */
+      beforeUpdate: async (user) => {
+        if (user.changed('password')) {
           const salt = await bcrypt.genSalt(10);
-          usuario.contrasena = await bcrypt.hash(usuario.contrasena, salt);
+          user.password = await bcrypt.hash(user.password, salt);
         }
       }
     }
   });
 
-  Usuario.associate = (models) => {
-    Usuario.hasMany(models.Objetivo, {
-        foreignKey: 'id_usuario', 
-        as: 'objetivos',         
-        onDelete: 'CASCADE'      
-    });
-    Usuario.hasMany(models.Progress, {
-        foreignKey: 'id_usuario', 
-        as: 'progresos',         
-        onDelete: 'CASCADE'      
-    });
-    Usuario.hasMany(models.ActivityLog, { // Asociación añadida
-      foreignKey: 'id_usuario',
-      as: 'activityLogs',
-      onDelete: 'CASCADE'
-    });
+  User.associate = (models) => {
+    User.hasMany(models.Objective, { foreignKey: 'userId', as: 'objectives', onDelete: 'CASCADE' });
+    User.hasMany(models.Progress, { foreignKey: 'userId', as: 'progressEntries', onDelete: 'CASCADE' });
+    User.hasMany(models.ActivityLog, { foreignKey: 'userId', as: 'activityLogs', onDelete: 'CASCADE' });
   };
 
-  Usuario.prototype.comparePassword = async function (candidatePassword) {
-    // Compara la contraseña que envía el usuario con la que está hasheada en la BD
-    return bcrypt.compare(candidatePassword, this.contrasena);
+  /**
+   * Compares a candidate password with the user's hashed password.
+   * @param {string} candidatePassword - The password to compare.
+   * @returns {Promise<boolean>} True if the passwords match.
+   */
+  User.prototype.comparePassword = async function (candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
   };
 
-  return Usuario;
+  return User;
 };

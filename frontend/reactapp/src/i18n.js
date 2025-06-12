@@ -1,36 +1,39 @@
-// src/i18n.js
+// frontend/reactapp/src/i18n.js
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import HttpApi from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 i18n
-  .use(HttpApi) // Carga traducciones desde una URL (ej. /locales/{{lng}}/{{ns}}.json)
-  .use(LanguageDetector) // Detecta el idioma del usuario
-  .use(initReactI18next) // Pasa la instancia de i18n a react-i18next
+  // Carga traducciones desde una URL (ej. /locales/es/translation.json)
+  .use(HttpApi)
+  // Detecta automáticamente el idioma del usuario desde el navegador, localStorage, etc.
+  .use(LanguageDetector)
+  // Pasa la instancia de i18n a react-i18next para su uso en componentes
+  .use(initReactI18next)
   .init({
-    // Idiomas disponibles
-    supportedLngs: ['en', 'es'],
-    // Idioma por defecto si el detectado no está disponible
-    fallbackLng: 'en',
-    // Namespace por defecto
-    ns: 'translation',
+    // Idioma a usar si el idioma detectado no está disponible
+    fallbackLng: 'es',
+    // Lista de idiomas soportados
+    supportedLngs: ['es', 'en'],
+    // Namespace por defecto a cargar
     defaultNS: 'translation',
-    // Opciones para el backend (dónde encontrar los JSON)
+    // Opciones para el backend que carga los archivos JSON
     backend: {
       loadPath: '/locales/{{lng}}/{{ns}}.json',
     },
-    // Opciones para el detector de idioma
+    // Opciones para la detección de idioma
     detection: {
-      order: ['queryString', 'cookie', 'localStorage', 'sessionStorage', 'navigator', 'htmlTag'],
-      caches: ['cookie', 'localStorage'],
+      order: ['localStorage', 'cookie', 'navigator', 'htmlTag'],
+      caches: ['localStorage', 'cookie'],
     },
-    // Opciones de React
+    // Permite que React use Suspense para la carga asíncrona de traducciones
     react: {
-      useSuspense: true, // Usa Suspense de React para la carga de traducciones
+      useSuspense: true,
     },
     interpolation: {
-        escapeValue: false // React ya escapa los valores para prevenir XSS
+        // React ya protege contra ataques XSS, por lo que no es necesario escaparlo dos veces.
+        escapeValue: false,
     }
   });
 

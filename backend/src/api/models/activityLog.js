@@ -1,67 +1,76 @@
+// backend/src/api/models/activityLog.js
 const { DataTypes } = require('sequelize');
 
+/**
+ * Defines the ActivityLog model for recording user actions.
+ * @param {Sequelize} sequelize - The Sequelize instance.
+ * @returns {ModelCtor<Model>} The ActivityLog model.
+ */
 module.exports = (sequelize) => {
     const ActivityLog = sequelize.define("ActivityLog", {
-        id_activity_log: {
+        id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
+            field: 'id_activity_log'
         },
-        id_usuario: {
+        userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: {
-                model: 'Usuarios', // Nombre de la tabla de Usuarios
-                key: 'id'
-            }
+            references: { model: 'Usuarios', key: 'id' },
+            field: 'id_usuario'
         },
-        id_objetivo: {
+        objectiveId: {
             type: DataTypes.INTEGER,
-            allowNull: true, // Importante: debe permitir NULL para ON DELETE SET NULL
-            references: {
-                model: 'Objetivos', // Nombre de la tabla de Objetivos
-                key: 'id_objetivo'
-            }
-            // La acción onDelete se define en la asociación de abajo
+            allowNull: true, // Permite nulos para que 'ON DELETE SET NULL' funcione
+            references: { model: 'Objetivos', key: 'id_objetivo' },
+            field: 'id_objetivo'
         },
-        tipo_actividad: {
+        activityType: {
             type: DataTypes.ENUM(
                 'OBJECTIVE_CREATED',
-                'OBJECTIVE_UPDATED', // Considerar si este es genérico o si se necesitarán más específicos
                 'PROGRESS_UPDATED',
                 'OBJECTIVE_STATUS_CHANGED',
                 'OBJECTIVE_DELETED'
             ),
             allowNull: false,
+            field: 'tipo_actividad'
         },
-        descripcion: {
+        descriptionKey: {
             type: DataTypes.TEXT,
             allowNull: false,
+            comment: 'Translation key for the activity description.',
+            field: 'descripcion'
         },
-        detalles_adicionales: {
+        additionalDetails: {
             type: DataTypes.JSON,
             allowNull: true,
+            comment: 'JSON object with context-specific data for the activity.',
+            field: 'detalles_adicionales'
         },
-        // 'createdAt' será el timestamp del log, 'updatedAt' está desactivado
     }, {
         tableName: 'ActivityLogs',
         timestamps: true,
-        updatedAt: false,
+        updatedAt: false, // Log entries should be immutable
         underscored: true,
-        // TODO: Considerar añadir índices para id_usuario, id_objetivo, tipo_actividad, created_at
+        // Índices recomendados para optimizar el rendimiento de las consultas en producción.
+        indexes: [
+            { fields: ['id_usuario'] },
+            { fields: ['id_objetivo'] },
+            { fields: ['created_at'] }
+        ]
     });
 
     ActivityLog.associate = (models) => {
-        ActivityLog.belongsTo(models.Usuario, {
-            foreignKey: 'id_usuario',
-            as: 'usuario',
+        ActivityLog.belongsTo(models.User, {
+            foreignKey: 'userId',
+            as: 'user',
             onUpdate: 'CASCADE'
         });
-        ActivityLog.belongsTo(models.Objetivo, {
-            foreignKey: 'id_objetivo',
-            as: 'objetivo',
-            allowNull: true,
-            onDelete: 'SET NULL',
+        ActivityLog.belongsTo(models.Objective, {
+            foreignKey: 'objectiveId',
+            as: 'objective',
+            onDelete: 'SET NULL', // Si se borra un objetivo, la referencia aquí se vuelve nula pero el log persiste.
             onUpdate: 'CASCADE'
         });
     };

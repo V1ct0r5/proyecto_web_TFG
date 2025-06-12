@@ -123,7 +123,7 @@
   padding: 0.4rem 0.8rem;
   background-color: transparent; /* Fondo transparente */
   border: 1px solid var(--border); /* Usar border */
-  color: var(--primary); /* Color del texto para botón outline */
+  color: var(--foreground); /* Color del texto para botón outline */
   border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -131,8 +131,8 @@
 
 .buttonOutline:hover {
   background-color: var(--muted);
-  border-color: var(--primary-hover);
-  color: var(--primary-hover);
+  border-color: var(--border-hover);
+  color: var(--primary);
 }
 
 .buttonOutline:disabled {
@@ -152,4 +152,21 @@
 }
 .destructive:hover:not(:disabled) {
   background-color: color-mix(in srgb, var(--destructive) 85%, black);
+}
+
+.buttonSubtle {
+  background-color: var(--muted); /* Fondo sutil, casi del color del fondo de las tarjetas */
+  color: var(--foreground); /* Color de texto normal */
+  border: 1px solid var(--border); /* Un borde ligero para definirlo */
+  margin-top: 0; /* Asegurarse de que no tenga margen superior por defecto */
+}
+
+.buttonSubtle:hover {
+  background-color: var(--border); /* Un poco más oscuro al pasar el ratón */
+  border-color: var(--border-hover);
+}
+
+.buttonSubtle:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--foreground) 20%, transparent); /* Sombra de enfoque sutil */
 }

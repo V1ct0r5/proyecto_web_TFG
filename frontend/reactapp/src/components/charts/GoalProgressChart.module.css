@@ -1,6 +1,22 @@
+/* frontend/reactapp/src/components/charts/GoalProgressChart.module.css */
 .chartContainer {
-    position: relative; /* Necesario para posicionar el texto central */
-    width: 200px; /* Ancho fijo para la dona */
-    height: 200px; /* Alto fijo para la dona */
-    margin: 0 auto 20px auto; /* Centrar y añadir espacio */
+    width: 150px;
+    height: 150px;
+    margin: 1rem auto;
+}
+
+/* Aplicamos nuestros estilos y variables de tema a las clases de la librería */
+.themedCircularProgressbar .CircularProgressbar-path {
+    stroke: var(--success); /* Color de la barra de progreso */
+    transition: stroke-dashoffset 0.5s ease 0s;
+}
+
+.themedCircularProgressbar .CircularProgressbar-trail {
+    stroke: var(--muted); /* Color del fondo de la barra */
+}
+
+.themedCircularProgressbar .CircularProgressbar-text {
+    fill: var(--success); /* Color del texto */
+    font-size: 20px;
+    font-weight: 600;
 }

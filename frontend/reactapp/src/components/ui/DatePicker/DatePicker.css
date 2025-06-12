@@ -122,6 +122,7 @@
 
 .date-picker-dropdown .react-calendar__navigation button:disabled {
     color: var(--muted-foreground); /* AÑADIDO */
+    background-color: transparent;
 }
 
 /* Días de la semana (L, M, X...) */
@@ -147,6 +148,7 @@
 /* Días deshabilitados */
 .date-picker-dropdown .react-calendar__tile:disabled {
     color: var(--muted-foreground); /* MODIFICADO */
+    background: transparent;
     cursor: not-allowed;
     opacity: 0.5; /* AÑADIDO */
 }

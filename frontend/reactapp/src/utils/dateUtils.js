@@ -10,7 +10,7 @@ const locales = {
 
 // Mapeo de las preferencias de formato del usuario a los strings de formato de date-fns
 const userFormatToDateFnsFormat = {
-  'DD/MM/YYYY': 'dd/MM/yyyy',
+  'dd/MM/yyyy': 'dd/MM/yyyy',
   'MM/DD/YYYY': 'MM/dd/yyyy',
   'YYYY-MM-DD': 'yyyy-MM-dd',
 };

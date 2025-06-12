@@ -1,14 +1,27 @@
+// frontend/reactapp/src/layouts/SideBar/SideBar.js
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import styles from './SideBar.module.css';
 import { FaPlus, FaHome, FaBullseye, FaChartBar, FaUser, FaCog } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Componente de la barra de navegación lateral principal de la aplicación.
+ * Muestra el logo y los enlaces de navegación a las diferentes secciones.
+ */
 const Sidebar = () => {
     const { t } = useTranslation();
 
+    const navItems = [
+        { to: "/dashboard", icon: <FaHome className={styles.icon} />, label: t('sidebar.dashboard') },
+        { to: "/mis-objetivos", icon: <FaBullseye className={styles.icon} />, label: t('sidebar.myObjectives') },
+        { to: "/analisis", icon: <FaChartBar className={styles.icon} />, label: t('sidebar.analysis') },
+        { to: "/profile", icon: <FaUser className={styles.icon} />, label: t('sidebar.myProfile') },
+        { to: "/settings", icon: <FaCog className={styles.icon} />, label: t('sidebar.settings') },
+    ];
+
     return (
-        <div className={styles.sidebar}>
+        <aside className={styles.sidebar}>
             <div className={styles.logoContainer}>
                 <div className={styles.appLogoCircle}>
                     <span>G</span>
@@ -16,58 +29,25 @@ const Sidebar = () => {
                 <span className={styles.appName}>GoalMaster</span>
             </div>
 
-            <NavLink
-                to="/objectives"
-                className={({ isActive }) =>
-                    `${styles.createButton} ${isActive ? styles.activeCreateButton : ''} btn-shine`
-                }
-            >
+            <NavLink to="/objectives" className={`${styles.createButton} btn-shine`}>
                 <FaPlus className={styles.icon} /> {t('sidebar.newObjective')}
             </NavLink>
 
             <nav className={styles.navigation}>
-                <NavLink
-                    to="/dashboard"
-                    className={({ isActive }) =>
-                        isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
-                    }
-                >
-                    <FaHome className={styles.icon} /> {t('sidebar.dashboard')}
-                </NavLink>
-                <NavLink
-                    to="/mis-objetivos"
-                    className={({ isActive }) =>
-                        isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
-                    }
-                >
-                    <FaBullseye className={styles.icon} /> {t('sidebar.myObjectives')}
-                </NavLink>
-                <NavLink
-                    to="/analisis"
-                    className={({ isActive }) =>
-                        isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
-                    }
-                >
-                    <FaChartBar className={styles.icon} /> {t('sidebar.analysis')}
-                </NavLink>
-                <NavLink
-                    to="/profile"
-                    className={({ isActive }) =>
-                        isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
-                    }
-                >
-                    <FaUser className={styles.icon} /> {t('sidebar.myProfile')}
-                </NavLink>
-                <NavLink
-                    to="/settings"
-                    className={({ isActive }) =>
-                        isActive ? `${styles.navItem} ${styles.activeNavItem}` : styles.navItem
-                    }
-                >
-                    <FaCog className={styles.icon} /> {t('sidebar.settings')}
-                </NavLink>
+                {navItems.map(item => (
+                    <NavLink
+                        key={item.to}
+                        to={item.to}
+                        className={({ isActive }) =>
+                            `${styles.navItem} ${isActive ? styles.activeNavItem : ''}`
+                        }
+                    >
+                        {item.icon}
+                        <span>{item.label}</span>
+                    </NavLink>
+                ))}
             </nav>
-        </div>
+        </aside>
     );
 };
 

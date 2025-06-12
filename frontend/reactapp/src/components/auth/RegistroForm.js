@@ -17,13 +17,7 @@ function RegistroForm() {
     const navigate = useNavigate();
     const { login: contextLogin } = useAuth();
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        watch,
-        setError
-    } = useForm({
+    const { register, handleSubmit, formState: { errors }, watch, setError } = useForm({
         mode: "onBlur"
     });
 
@@ -31,50 +25,30 @@ function RegistroForm() {
 
     const onSubmit = async (data) => {
         setIsSubmitting(true);
-
         try {
             const responseData = await api.register({
-                nombre_usuario: data.username,
-                correo_electronico: data.email,
-                contrasena: data.password,
-                confirmar_contrasena: data.confirmPassword
+                username: data.username,
+                email: data.email,
+                password: data.password,
+                confirmPassword: data.confirmPassword,
             });
 
             toast.success(t('registroForm.success'));
-
-            if (responseData && responseData.token && responseData.id && responseData.nombre_usuario && responseData.correo_electronico) {
-                const userForContext = {
-                    id: responseData.id,
-                    nombre_usuario: responseData.nombre_usuario,
-                    correo_electronico: responseData.correo_electronico,
-                };
-                contextLogin(responseData.token, userForContext);
+            if (responseData.token && responseData.user) {
+                contextLogin(responseData.token, responseData.user);
                 navigate("/dashboard", { replace: true });
             } else {
-                toast.error(t('registroForm.errors.autoLoginFailed'));
+                toast.warn(t('registroForm.errors.autoLoginFailed'));
                 navigate("/login");
             }
-
         } catch (error) {
-            const displayMessage = error.data?.message || error.message || t('registroForm.errors.defaultRegisterError');
+            const displayMessage = error.message || t('registroForm.errors.defaultRegisterError');
             toast.error(displayMessage);
-
-            if (error.data && error.data.errors && Array.isArray(error.data.errors)) {
+            if (error.data?.errors) {
                 error.data.errors.forEach(err => {
-                    const fieldName = err.param || err.path;
-                    const clientFieldName = fieldName === 'nombre_usuario' ? 'username' :
-                                           fieldName === 'correo_electronico' ? 'email' :
-                                           fieldName === 'contrasena' ? 'password' : fieldName;
-                    if (clientFieldName && typeof setError === 'function') {
-                        setError(clientFieldName, { type: "server", message: err.msg || t('common.serverError') });
-                    }
+                    const fieldName = err.path || 'unknown';
+                    setError(fieldName, { type: "server", message: err.msg });
                 });
-            } else if (error.status === 409) {
-                if (displayMessage.toLowerCase().includes('correo') || displayMessage.toLowerCase().includes('email')) {
-                   if (typeof setError === 'function') setError("email", { type: "server", message: displayMessage });
-                } else if (displayMessage.toLowerCase().includes('nombre de usuario') || displayMessage.toLowerCase().includes('username')) {
-                   if (typeof setError === 'function') setError("username", { type: "server", message: displayMessage });
-                }
             }
         } finally {
             setIsSubmitting(false);
@@ -87,16 +61,15 @@ function RegistroForm() {
                 <Input
                     type="text"
                     id="register-username"
+                    autoComplete="username"
                     placeholder={t('common.usernamePlaceholder')}
                     {...register("username", {
                         required: t('formValidation.usernameRequired'),
                         minLength: { value: 3, message: t('formValidation.minLength', { count: 3 }) },
-                        maxLength: { value: 50, message: t('formValidation.maxLength', { count: 50 }) },
                         pattern: { value: /^[a-zA-Z0-9_.-]+$/, message: t('formValidation.usernamePattern') }
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.username}
-                    aria-invalid={errors.username ? "true" : "false"}
                 />
             </FormGroup>
 
@@ -104,6 +77,7 @@ function RegistroForm() {
                 <Input
                     type="email"
                     id="register-email"
+                    autoComplete="email"
                     placeholder={t('common.emailPlaceholderExample')}
                     {...register("email", {
                         required: t('formValidation.emailRequired'),
@@ -111,7 +85,6 @@ function RegistroForm() {
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.email}
-                    aria-invalid={errors.email ? "true" : "false"}
                 />
             </FormGroup>
 
@@ -119,15 +92,14 @@ function RegistroForm() {
                 <Input
                     type="password"
                     id="register-password"
-                    placeholder={t('common.passwordPlaceholderMinLength', { count: 8 })}
                     autoComplete="new-password"
+                    placeholder={t('common.passwordPlaceholderMinLength', { count: 8 })}
                     {...register("password", {
                         required: t('formValidation.passwordRequired'),
                         minLength: { value: 8, message: t('formValidation.passwordMinLength', { count: 8 }) },
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.password}
-                    aria-invalid={errors.password ? "true" : "false"}
                 />
             </FormGroup>
 
@@ -143,12 +115,11 @@ function RegistroForm() {
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.confirmPassword}
-                    aria-invalid={errors.confirmPassword ? "true" : "false"}
                 />
             </FormGroup>
 
-            <Button type="submit" disabled={isSubmitting} variant="primary" className="full-width-button">
-                {isSubmitting ? <LoadingSpinner size="small" color="white" /> : t('registroForm.submitButton')}
+            <Button type="submit" disabled={isSubmitting} variant="primary" style={{ width: '100%' }}>
+                {isSubmitting ? <LoadingSpinner size="small" /> : t('registroForm.submitButton')}
             </Button>
         </form>
     );

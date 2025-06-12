@@ -1,157 +1,96 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from "react";
+// frontend/reactapp/src/context/AuthContext.js
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'react-toastify';
-import api from '../services/apiService';
-import { useTranslation } from "react-i18next";
 
 const AuthContext = createContext(null);
 
+// 15 minutos de inactividad para cierre de sesión automático
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 
 export const AuthProvider = ({ children }) => {
-    const [token, setToken] = useState(null);
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const { t } = useTranslation();
-
+    const [token, setToken] = useState(() => localStorage.getItem("token"));
+    const [user, setUser] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem("user"));
+        } catch {
+            return null;
+        }
+    });
+    const [isLoading, setIsLoading] = useState(true); // Solo para la carga inicial de localStorage
     const inactivityTimerRef = useRef(null);
 
-    const logout = useCallback(async (options = { notifyBackend: true }) => {
-        if (inactivityTimerRef.current) {
-            clearTimeout(inactivityTimerRef.current);
-            inactivityTimerRef.current = null;
-        }
-
-        if (options.notifyBackend) {
-            try {
-                await api.logout();
-            } catch (error) {
-                console.warn("AuthContext: Falló la notificación de logout al backend (no crítico):", error.message);
-            }
-        }
-
+    const logout = useCallback(() => {
+        clearTimeout(inactivityTimerRef.current);
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         setToken(null);
         setUser(null);
+        // apiService.logout() es opcional aquí, el cliente ya está deslogueado.
+        // El apiService se encargará de cualquier limpieza necesaria si el usuario hace otra petición.
     }, []);
-
-    const resetInactivityTimer = useCallback(() => {
-        if (inactivityTimerRef.current) {
-            clearTimeout(inactivityTimerRef.current);
-        }
-
-        if (token) {
-            inactivityTimerRef.current = setTimeout(() => {
-                toast.warn(t('toast.sessionExpired'), {
-                    position: "top-center",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
-                window.dispatchEvent(new CustomEvent('logoutUser', { detail: { reason: 'inactivity', notifyBackend: true } }));
-            }, INACTIVITY_TIMEOUT_MS);
-        }
-    }, [token, INACTIVITY_TIMEOUT_MS, t]);
-
-    useEffect(() => {
-        let isMounted = true;
-        const storedToken = localStorage.getItem("token");
-        const storedUserString = localStorage.getItem("user");
-
-        if (storedToken && storedUserString) {
-            try {
-                const parsedUser = JSON.parse(storedUserString);
-                if (isMounted) {
-                    setToken(storedToken);
-                    setUser(parsedUser);
-                }
-            } catch (e) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                if (isMounted) {
-                    setToken(null);
-                    setUser(null);
-                }
-                console.error("AuthContext: Error parseando usuario desde localStorage", e);
-            }
-        } else {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-        }
-        if (isMounted) {
-            setLoading(false);
-        }
-        return () => { isMounted = false; };
-    }, []);
-
-    useEffect(() => {
-        if (token) {
-            localStorage.setItem("token", token);
-        } else {
-            localStorage.removeItem("token");
-        }
-    }, [token]);
-
-    useEffect(() => {
-        const activityEvents = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'visibilitychange'];
-        
-        const activityDetected = () => {
-            resetInactivityTimer();
-        };
-
-        if (token) {
-            activityEvents.forEach(event => {
-                window.addEventListener(event, activityDetected, { passive: true });
-            });
-            resetInactivityTimer();
-        } else {
-            if (inactivityTimerRef.current) {
-                clearTimeout(inactivityTimerRef.current);
-                inactivityTimerRef.current = null;
-            }
-        }
-
-        return () => {
-            activityEvents.forEach(event => {
-                window.removeEventListener(event, activityDetected);
-            });
-            if (inactivityTimerRef.current) {
-                clearTimeout(inactivityTimerRef.current);
-                inactivityTimerRef.current = null;
-            }
-        };
-    }, [token, resetInactivityTimer]);
 
     const login = useCallback((newToken, userData) => {
         setToken(newToken);
         setUser(userData);
+        localStorage.setItem("token", newToken);
         localStorage.setItem("user", JSON.stringify(userData));
     }, []);
 
-    const authValue = useMemo(() => ({
+    // Carga inicial del estado desde localStorage
+    useEffect(() => {
+        setIsLoading(false);
+    }, []);
+
+    // Listener para el evento de logout global
+    useEffect(() => {
+        window.addEventListener('logoutUser', logout);
+        return () => window.removeEventListener('logoutUser', logout);
+    }, [logout]);
+
+    // Gestión del temporizador de inactividad
+    useEffect(() => {
+        const resetTimer = () => {
+            clearTimeout(inactivityTimerRef.current);
+            if (token) {
+                inactivityTimerRef.current = setTimeout(() => {
+                    toast.warn('Tu sesión ha expirado por inactividad.');
+                    logout();
+                }, INACTIVITY_TIMEOUT_MS);
+            }
+        };
+
+        const activityEvents = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'];
+        if (token) {
+            activityEvents.forEach(event => window.addEventListener(event, resetTimer, { passive: true }));
+            resetTimer(); // Inicia el temporizador
+        }
+
+        return () => {
+            clearTimeout(inactivityTimerRef.current);
+            activityEvents.forEach(event => window.removeEventListener(event, resetTimer));
+        };
+    }, [token, logout]);
+
+    const contextValue = useMemo(() => ({
         token,
         user,
         isAuthenticated: !!token,
-        isLoading: loading,
+        isLoading,
         login,
         logout,
-    }), [token, user, loading, login, logout]);
+    }), [token, user, isLoading, login, logout]);
 
     return (
-        <AuthContext.Provider value={authValue}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );
 };
 
 export const useAuth = () => {
-    const { t } = useTranslation();
     const context = useContext(AuthContext);
     if (context === null) {
-        throw new Error(t('devErrors.useAuthMissingProvider'));
+        throw new Error('useAuth debe ser utilizado dentro de un AuthProvider');
     }
     return context;
 };

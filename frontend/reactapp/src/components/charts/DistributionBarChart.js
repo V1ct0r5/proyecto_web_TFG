@@ -1,55 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+// frontend/reactapp/src/components/charts/DistributionBarChart.js
+import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title } from 'chart.js';
 import { useTranslation } from 'react-i18next';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-const getCssVariableValue = (variableName) => {
-  if (typeof window !== 'undefined') {
-    const value = getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
-    return value || null;
-  }
-  return null;
-};
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title);
 
 const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
   const { t } = useTranslation();
-  const [chartStyling, setChartStyling] = useState({
-    completedBg: 'rgba(79, 70, 229, 0.7)',
-    completedBorder: '#4F46E5',
-    remainingBg: 'rgba(100, 116, 139, 0.6)',
-    remainingBorder: '#64748B',
-  });
-
-  useEffect(() => {
-    const completedBgColor = getCssVariableValue('--chart-bar-completed-bg') || chartStyling.completedBg;
-    const completedBorderColor = getCssVariableValue('--chart-bar-completed-border') || chartStyling.completedBorder;
-    const remainingBgColor = getCssVariableValue('--chart-bar-remaining-bg') || chartStyling.remainingBg;
-    const remainingBorderColor = getCssVariableValue('--chart-bar-remaining-border') || chartStyling.remainingBorder;
-
-    setChartStyling({
-      completedBg: completedBgColor,
-      completedBorder: completedBorderColor,
-      remainingBg: remainingBgColor,
-      remainingBorder: remainingBorderColor,
-    });
-  }, []);
 
   const chartData = useMemo(() => ({
     labels: [t('charts.completed'), t('charts.remaining')],
@@ -58,68 +16,36 @@ const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
         label: t('charts.percentage'),
         data: [completedPercentage, remainingPercentage],
         backgroundColor: [
-          chartStyling.completedBg,
-          chartStyling.remainingBg,
+          'rgba(75, 192, 192, 0.7)', // Color para "Completado" (var --success)
+          'rgba(201, 203, 207, 0.6)', // Color para "Restante" (var --muted)
         ],
-        borderColor: [
-          chartStyling.completedBorder,
-          chartStyling.remainingBorder,
-        ],
-        borderWidth: 1,
+        barThickness: 50,
       },
     ],
-  }), [completedPercentage, remainingPercentage, chartStyling, t]);
+  }), [completedPercentage, remainingPercentage, t]);
 
-  const options = {
+  const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     scales: {
-      x: {
-        title: {
-            display: true,
-            text: t('charts.status')
-        }
-      },
       y: {
         beginAtZero: true,
         max: 100,
-        title: {
-            display: true,
-            text: t('charts.percentageAxis')
-        },
-        ticks: {
-          callback: function(value) {
-            return value + '%';
-          },
-        },
+        ticks: { callback: (value) => value + '%' },
       },
     },
     plugins: {
-      legend: {
-        display: true,
-        position: 'top',
-      },
-      title: {
-        display: false,
-      },
+      legend: { display: false },
+      title: { display: false },
       tooltip: {
         callbacks: {
-          label: function(context) {
-            let tooltipLabel = context.label || '';
-            if (tooltipLabel) {
-              tooltipLabel += ': ';
-            }
-            if (context.parsed.y !== null) {
-              tooltipLabel += context.parsed.y.toFixed(1) + '%';
-            }
-            return tooltipLabel;
-          },
+          label: (context) => `${context.label}: ${context.parsed.y?.toFixed(1) || 0}%`,
         },
       },
     },
-  };
+  }), [t]);
 
-  return <Bar options={options} data={chartData} />;
+  return <Bar options={chartOptions} data={chartData} />;
 };
 
 export default DistributionBarChart;

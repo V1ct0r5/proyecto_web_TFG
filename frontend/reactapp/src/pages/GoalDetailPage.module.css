@@ -88,8 +88,8 @@
 
 .deleteButton:hover {
     background-color: color-mix(in srgb, var(--destructive) 10%, transparent);
-    color: var(--destructive-hover);
-    border-color: var(--destructive-hover);
+    color: var(--destructive); /* Mantener el color original o definir --destructive-hover si es necesario */
+    border-color: var(--destructive); /* Mantener el color original o definir --destructive-hover si es necesario */
 }
 
 .goalDescriptionText {
@@ -108,7 +108,7 @@
 .card {
     background-color: var(--card);
     border-radius: 12px; /* Bordes más redondeados para las tarjetas */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm); /* Usar variable de sombra */
     padding: 1.2rem;
     display: flex;
     flex-direction: column;
@@ -119,7 +119,7 @@
 
 .card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12); /* Sombra más pronunciada al pasar el ratón */
+    box-shadow: var(--shadow-md); /* Usar variable de sombra */
 }
 
 .cardTitle {
@@ -261,12 +261,14 @@
 }
 
 .completedBar {
-    background-color: var(--primary);
+    background-color: var(--chart-bar-completed-bg); /* Usar variable del tema */
+    border: 1px solid var(--chart-bar-completed-border); /* Usar variable del tema */
     order: 1;
 }
 
 .remainingBar {
-    background-color: var(--muted-foreground);
+    background-color: var(--chart-bar-remaining-bg); /* Usar variable del tema */
+    border: 1px solid var(--chart-bar-remaining-border); /* Usar variable del tema */
     order: 2;
 }
 
@@ -297,7 +299,7 @@
 }
 
 .overdueMessage { /* Mensaje destacado para objetivos vencidos */
-    background-color: color-mix(in srgb, var(--destructive) 10%, transparent);
+    background-color: var(--destructive-soft-bg); /* Usar variable del tema */
     border: 1px solid var(--destructive);
     color: var(--destructive);
     padding: 0.8rem;
@@ -367,8 +369,8 @@
 
 .editFormContainer { /* Contenedor para el formulario de edición (si se muestra en la misma página) */
     background-color: var(--card);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-    border: 1px solid #E0E0E0; 
+    box-shadow: var(--shadow-md); /* Usar variable de sombra */
+    border: 1px solid var(--border); /* Usar variable de borde */
     border-radius: 12px; 
     padding: 2rem;
     margin-top: 2rem;
@@ -443,5 +445,12 @@
 
     .dataLabel {
         flex-basis: 70px; /* Reduce el ancho base de las etiquetas de datos */
+    }
+}
+
+/* Add this block for dark theme specific styles */
+html[data-theme='dark'] {
+    .card {
+        border: 1px solid var(--border-light); /* Differentiated border in dark mode */
     }
 }

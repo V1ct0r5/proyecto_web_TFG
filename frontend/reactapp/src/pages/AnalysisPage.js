@@ -16,28 +16,28 @@ import CategoryAverageProgressBarChart from '../components/charts/CategoryAverag
 import RankedObjectivesList from '../components/analysis/RankedObjectivesList';
 import CategoryObjectivesCard from '../components/analysis/CategoryObjectivesCard';
 
+// Las claves deben coincidir con los valores ENUM del backend.
 const categoryNameToKeyMap = {
-    'Finanzas': 'categories.finance',
-    'Salud': 'categories.health',
-    'Desarrollo personal': 'categories.personalDevelopment',
-    'Relaciones': 'categories.relationships',
-    'Carrera profesional': 'categories.career',
-    'Otros': 'categories.other'
+    'HEALTH': 'categories.health',
+    'FINANCE': 'categories.finance',
+    'PERSONAL_DEV': 'categories.personalDevelopment',
+    'RELATIONSHIPS': 'categories.relationships',
+    'CAREER': 'categories.career',
+    'OTHER': 'categories.other'
 };
 
+// Las claves deben coincidir con los valores ENUM del backend.
 const statusNameToKeyMap = {
-    'En progreso': 'status.inProgress',
-    'Completado': 'status.completed',
-    'Pendiente': 'status.pending',
-    'Fallido': 'status.failed',
-    'Archivado': 'status.archived',
-    'No Iniciados': 'status.notStarted'
+    'IN_PROGRESS': 'status.inProgress',
+    'COMPLETED': 'status.completed',
+    'PENDING': 'status.pending',
+    'FAILED': 'status.failed',
+    'ARCHIVED': 'status.archived',
 };
 
 function AnalysisPage() {
     const { t } = useTranslation();
     
-    // --- CORRECCIÓN: Actualizar estado inicial de trend para usar una clave de traducción ---
     const [summaryStats, setSummaryStats] = useState({
         totalObjectives: 0, activeObjectives: 0, completedObjectives: 0,
         averageProgress: 0, categoryCount: 0, categories: [],
@@ -67,6 +67,7 @@ function AnalysisPage() {
     ], []);
 
     const categoryColorsRef = useRef({});
+
     const getCategoryColor = useCallback((categoryName, index, allCategoriesSource) => {
         const allCategories = allCategoriesSource || summaryStats.categories || [];
         if (!categoryName) return '#cccccc';
@@ -84,9 +85,11 @@ function AnalysisPage() {
 
     const getStatusColorForChart = useCallback((statusName) => {
         const statusColorMap = {
-            'En progreso': 'rgba(54, 162, 235, 0.8)', 'Completado': 'rgba(75, 192, 192, 0.8)',
-            'Pendiente': 'rgba(255, 206, 86, 0.8)', 'Fallido': 'rgba(255, 99, 132, 0.8)',
-            'Archivado': 'rgba(153, 102, 255, 0.8)', 'No Iniciados': 'rgba(201, 203, 207, 0.8)'
+            'IN_PROGRESS': 'rgba(54, 162, 235, 0.8)',
+            'COMPLETED': 'rgba(75, 192, 192, 0.8)',
+            'PENDING': 'rgba(255, 206, 86, 0.8)',
+            'FAILED': 'rgba(255, 99, 132, 0.8)',
+            'ARCHIVED': 'rgba(153, 102, 255, 0.8)',
         };
         return statusColorMap[statusName] || 'rgba(201, 203, 207, 0.8)';
     }, []);
@@ -103,14 +106,16 @@ function AnalysisPage() {
     const fetchObjectivesTabDataAPI = useCallback(async (period) => {
         const params = { period };
         return Promise.allSettled([
-            api.getObjectivesProgressChartData(params), api.getRankedObjectives(params)
+            api.getObjectivesProgressChartData(params), 
+            api.getRankedObjectives(params)
         ]);
     }, []);
 
     const fetchCategoriesTabDataAPI = useCallback(async (period) => {
         const params = { period };
         return Promise.allSettled([
-            api.getCategoryAverageProgress(params), api.getDetailedObjectivesByCategory(params)
+            api.getCategoryAverageProgress(params), 
+            api.getDetailedObjectivesByCategory(params)
         ]);
     }, []);
 
@@ -122,11 +127,12 @@ function AnalysisPage() {
             setError(null);
 
             try {
+                // Siempre se carga el resumen, independientemente de la pestaña
                 const summaryResult = await api.getAnalysisSummary({ period: timePeriod });
-                 if (isMounted) {
+                if (isMounted) {
                     setSummaryStats(prev => ({...prev, ...summaryResult}));
                 } else {
-                     throw new Error(t('toast.summaryLoadError'));
+                    return; // Salir si el componente se desmonta
                 }
 
                 let tabDataPromise;
@@ -143,20 +149,20 @@ function AnalysisPage() {
                      if(isMounted) {
                         if (activeTab === 'general') {
                             const [catDistRes, statusRes, monthlyRes] = results;
-                            if (catDistRes.status === 'fulfilled' && catDistRes.value) setRawCategoryDistribution(catDistRes.value);
-                            if (statusRes.status === 'fulfilled' && statusRes.value) setRawObjectiveStatus(statusRes.value);
-                            if (monthlyRes.status === 'fulfilled' && monthlyRes.value) setRawMonthlyProgress(monthlyRes.value);
+                            if (catDistRes.status === 'fulfilled') setRawCategoryDistribution(catDistRes.value || []);
+                            if (statusRes.status === 'fulfilled') setRawObjectiveStatus(statusRes.value || []);
+                            if (monthlyRes.status === 'fulfilled') setRawMonthlyProgress(monthlyRes.value || []);
                         } else if (activeTab === 'byObjective') {
                             const [objProgressRes, rankedRes] = results;
-                             if (objProgressRes.status === 'fulfilled' && objProgressRes.value) setRawObjectivesProgressData(objProgressRes.value);
+                            if (objProgressRes.status === 'fulfilled') setRawObjectivesProgressData(objProgressRes.value || []);
                             if (rankedRes.status === 'fulfilled' && rankedRes.value) {
                                 setTopProgressObjectives(rankedRes.value.top || []);
                                 setLowProgressObjectives(rankedRes.value.low || []);
                             }
                         } else if (activeTab === 'byCategory') {
                             const [catAvgProgressRes, detailedByCatRes] = results;
-                             if (catAvgProgressRes.status === 'fulfilled' && catAvgProgressRes.value) setRawCategoryAverageProgress(catAvgProgressRes.value);
-                            if (detailedByCatRes.status === 'fulfilled' && detailedByCatRes.value) setDetailedObjectivesByCategory(detailedByCatRes.value);
+                            if (catAvgProgressRes.status === 'fulfilled') setRawCategoryAverageProgress(catAvgProgressRes.value || []);
+                            if (detailedByCatRes.status === 'fulfilled') setDetailedObjectivesByCategory(detailedByCatRes.value || []);
                         }
                      }
                 }
@@ -174,18 +180,20 @@ function AnalysisPage() {
         return () => { isMounted = false; };
     }, [activeTab, timePeriod, fetchAllGeneralDataAPI, fetchObjectivesTabDataAPI, fetchCategoriesTabDataAPI, t]);
     
+    // --- TRANSFORMACIÓN DE DATOS CON USEMEMO ---
+
     const categoryDistribution = useMemo(() =>
         (rawCategoryDistribution || []).map((item, idx) => ({
             ...item,
-            name: t(item.nameKey || item.name),
-            color: getCategoryColor(item.name, idx)
+            name: t(categoryNameToKeyMap[item.name] || item.name), 
+            color: getCategoryColor(item.name, idx, summaryStats.categories)
         }))
-    , [rawCategoryDistribution, getCategoryColor, t]);
+    , [rawCategoryDistribution, getCategoryColor, summaryStats.categories, t]);
 
     const objectiveStatus = useMemo(() =>
         (rawObjectiveStatus || []).map((item) => ({
             ...item,
-            name: t(item.nameKey || item.name),
+            name: t(statusNameToKeyMap[item.name] || item.name),
             color: getStatusColorForChart(item.name)
         }))
     , [rawObjectiveStatus, getStatusColorForChart, t]);
@@ -206,20 +214,42 @@ function AnalysisPage() {
     , [rawCategoryAverageProgress, getCategoryColor, summaryStats.categories, t]);
 
     const coloredTopProgressObjectives = useMemo(() =>
-        (topProgressObjectives || []).map((obj, idx) => ({
-            ...obj,
-            tipo_objetivo: t(categoryNameToKeyMap[obj.tipo_objetivo] || obj.tipo_objetivo),
-            color: getCategoryColor(obj.tipo_objetivo, idx, summaryStats.categories)
-        }))
-    , [topProgressObjectives, getCategoryColor, summaryStats.categories, t]);
+    (topProgressObjectives || []).map((obj, idx) => {
+        // Guardamos la clave original (ej: 'HEALTH') para usarla en la lógica
+        const originalCategoryKey = obj.tipo_objetivo; 
+        
+        // Buscamos la clave de traducción (ej: 'categories.health')
+        const translationKey = categoryNameToKeyMap[originalCategoryKey] || originalCategoryKey;
+        
+        // Obtenemos la traducción final (ej: 'Salud')
+        const translatedCategory = t(translationKey);
 
+        return {
+            ...obj, // Mantenemos todas las propiedades del objeto original
+            
+            // 1. REEMPLAZAMOS la clave por su valor traducido.
+            // El componente hijo ahora recibirá 'Salud' en la propiedad 'tipo_objetivo'.
+            tipo_objetivo: translatedCategory, 
+            
+            // 2. Usamos la CLAVE ORIGINAL para obtener el color correcto.
+            color: getCategoryColor(originalCategoryKey, idx, summaryStats.categories)
+        };
+    })
+, [topProgressObjectives, getCategoryColor, summaryStats.categories, t]);
+
+    // CORREGIDO: Misma simplificación para los objetivos de menor progreso.
     const coloredLowProgressObjectives = useMemo(() =>
-        (lowProgressObjectives || []).map((obj, idx) => ({
+    (lowProgressObjectives || []).map((obj, idx) => {
+        const originalCategoryKey = obj.tipo_objetivo;
+        const translationKey = categoryNameToKeyMap[originalCategoryKey] || originalCategoryKey;
+        const translatedCategory = t(translationKey);
+        return {
             ...obj,
-            tipo_objetivo: t(categoryNameToKeyMap[obj.tipo_objetivo] || obj.tipo_objetivo),
-            color: getCategoryColor(obj.tipo_objetivo, idx, summaryStats.categories)
-        }))
-    , [lowProgressObjectives, getCategoryColor, summaryStats.categories, t]);
+            tipo_objetivo: translatedCategory,
+            color: getCategoryColor(originalCategoryKey, idx, summaryStats.categories)
+        };
+    })
+, [lowProgressObjectives, getCategoryColor, summaryStats.categories, t]);
 
     const coloredDetailedObjectivesByCategory = useMemo(() =>
         (detailedObjectivesByCategory || []).map((catData, catIdx) => ({
@@ -248,6 +278,7 @@ function AnalysisPage() {
         if (error) {
             return <div className={styles.centeredStatus}><p className={styles.errorMessage}>{error}</p><Button onClick={() => {
                 const currentPeriod = timePeriod;
+                // Truco para forzar un re-render y re-lanzar el fetch
                 setTimePeriod('');
                 setTimeout(() => setTimePeriod(currentPeriod), 0);
             }} className={styles.retryButton}>{t('common.retry')}</Button></div>;
@@ -261,14 +292,22 @@ function AnalysisPage() {
                             <h3 className={styles.chartTitle}>{t('analysis.chartTitles.categoryDistribution')}</h3>
                             <span className={styles.chartSubtitle}>{t('analysis.chartTitles.categoryDistributionSubtitle')}</span>
                             <div className={styles.chartContainer}>
-                                <CategoryDonutChart data={categoryDistribution} />
+                                {categoryDistribution.length > 0 ? (
+                                    <CategoryDonutChart data={categoryDistribution} />
+                                ) : (
+                                    <p className={styles.noDataText}>{t('analysis.noDetailedObjectives')}</p>
+                                )}
                             </div>
                         </div>
                         <div className={styles.sectionWrapper}>
                             <h3 className={styles.chartTitle}>{t('analysis.chartTitles.objectiveStatus')}</h3>
                             <span className={styles.chartSubtitle}>{t('analysis.chartTitles.objectiveStatusSubtitle')}</span>
                             <div className={styles.chartContainer}>
-                                <ObjectiveStatusChart data={objectiveStatus} />
+                                {objectiveStatus.length > 0 ? (
+                                    <ObjectiveStatusChart data={objectiveStatus} />
+                                ) : (
+                                    <p className={styles.noDataText}>{t('charts.noStatusData')}</p>
+                                )}
                             </div>
                         </div>
                     </section>
@@ -276,7 +315,11 @@ function AnalysisPage() {
                         <h3 className={styles.chartTitle}>{t('analysis.chartTitles.monthlyProgress')}</h3>
                         <span className={styles.chartSubtitle}>{t('analysis.chartTitles.monthlyProgressSubtitle')}</span>
                         <div className={`${styles.chartContainer} ${styles.chartContainerFullWidth}`}>
-                            <MonthlyProgressChart data={rawMonthlyProgress} />
+                            {rawMonthlyProgress.length > 0 ? (
+                                <MonthlyProgressChart data={rawMonthlyProgress} />
+                            ) : (
+                                <p className={styles.noDataText}>{t('analysis.noDataMessages.monthlyProgress')}</p>
+                            )}
                         </div>
                     </section>
                 </>);
@@ -287,7 +330,11 @@ function AnalysisPage() {
                             <h3 className={styles.chartTitle}>{t('analysis.chartTitles.categoryAverageProgress')}</h3>
                             <span className={styles.chartSubtitle}>{t('analysis.chartTitles.categoryAverageProgressSubtitle')}</span>
                             <div className={`${styles.chartContainer} ${styles.chartContainerFullWidth}`}>
-                                <CategoryAverageProgressBarChart data={categoryAverageProgress} />
+                                {categoryAverageProgress.length > 0 ? (
+                                    <CategoryAverageProgressBarChart data={categoryAverageProgress} />
+                                ) : (
+                                    <p className={styles.noDataText}>{t('analysis.noDataMessages.categoryAverageProgress')}</p>
+                                )}
                             </div>
                         </section>
                         <section className={styles.categoriesDetailGrid}>
@@ -309,12 +356,22 @@ function AnalysisPage() {
                         <h3 className={styles.chartTitle}>{t('analysis.chartTitles.objectiveProgress')}</h3>
                         <span className={styles.chartSubtitle}>{t('analysis.chartTitles.objectiveProgressSubtitle')}</span>
                         <div className={`${styles.chartContainer} ${styles.chartContainerFullWidth}`}>
-                            <ObjectiveProgressBarChart data={objectivesProgressData} />
+                            {objectivesProgressData.length > 0 ? (
+                                <ObjectiveProgressBarChart data={objectivesProgressData} />
+                            ) : (
+                                <p className={styles.noDataText}>{t('analysis.noDataMessages.objectiveProgress')}</p>
+                            )}
                         </div>
                     </section>
                     <section className={styles.rankedObjectivesGrid}>
-                        <RankedObjectivesList title={t('analysis.chartTitles.topProgress')} objectives={coloredTopProgressObjectives} noDataMessage={t('analysis.noDataMessages.topProgress')} />
-                        <RankedObjectivesList title={t('analysis.chartTitles.lowProgress')} objectives={coloredLowProgressObjectives} noDataMessage={t('analysis.noDataMessages.lowProgress')} />
+                        {coloredTopProgressObjectives.length > 0 || coloredLowProgressObjectives.length > 0 ? (
+                            <>
+                                <RankedObjectivesList title={t('analysis.chartTitles.topProgress')} objectives={coloredTopProgressObjectives} noDataMessage={t('analysis.noDataMessages.topProgress')} />
+                                <RankedObjectivesList title={t('analysis.chartTitles.lowProgress')} objectives={coloredLowProgressObjectives} noDataMessage={t('analysis.noDataMessages.lowProgress')} />
+                            </>
+                        ) : (
+                           !isLoading && <div className={styles.sectionWrapper}><p className={styles.noDataText}>{t('analysis.noDataMessages.rankedObjectives')}</p></div>
+                        )}
                     </section>
                 </>);
             default:
@@ -339,7 +396,7 @@ function AnalysisPage() {
                 <StatsCard title={t('analysis.stats.categories')} value={summaryStats.categoryCount.toString()}>
                     <div className={styles.categoryListInCard}>
                         {summaryStats.categories.slice(0, 3).map((cat, index) => (
-                            <span key={cat.name} className={styles.categoryChip} style={{ backgroundColor: getCategoryColor(cat.name, index) }}>
+                            <span key={cat.name} className={styles.categoryChip} style={{ backgroundColor: getCategoryColor(cat.name, index, summaryStats.categories) }}>
                                 {t(categoryNameToKeyMap[cat.name] || cat.name)}
                             </span>
                         ))}
@@ -357,22 +414,13 @@ function AnalysisPage() {
             </section>
 
             <div className={styles.tabsContainer}>
-                <Button
-                    onClick={() => setActiveTab('general')}
-                    className={`${styles.tabButton} ${activeTab === 'general' ? styles.activeTabButton : ''}`}
-                >
+                <Button onClick={() => setActiveTab('general')} className={`${styles.tabButton} ${activeTab === 'general' ? styles.activeTabButton : ''}`} >
                     {t('analysis.tabs.general')}
                 </Button>
-                <Button
-                    onClick={() => setActiveTab('byCategory')}
-                    className={`${styles.tabButton} ${activeTab === 'byCategory' ? styles.activeTabButton : ''}`}
-                >
+                <Button onClick={() => setActiveTab('byCategory')} className={`${styles.tabButton} ${activeTab === 'byCategory' ? styles.activeTabButton : ''}`} >
                     {t('analysis.tabs.byCategory')}
                 </Button>
-                <Button
-                    onClick={() => setActiveTab('byObjective')}
-                    className={`${styles.tabButton} ${activeTab === 'byObjective' ? styles.activeTabButton : ''}`}
-                >
+                <Button onClick={() => setActiveTab('byObjective')} className={`${styles.tabButton} ${activeTab === 'byObjective' ? styles.activeTabButton : ''}`} >
                     {t('analysis.tabs.byObjective')}
                 </Button>
             </div>

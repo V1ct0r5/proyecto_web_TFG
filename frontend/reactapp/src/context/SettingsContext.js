@@ -24,7 +24,7 @@ export const useSettings = () => {
 const defaultSettings = {
     themePreference: 'system',
     language: 'es',
-    dateFormat: 'DD/MM/YYYY',
+    dateFormat: 'dd/MM/yyyy',
     emailNotifications: true,
     pushNotifications: false,
     profileVisibility: 'public',
@@ -43,7 +43,7 @@ export const SettingsProvider = ({ children }) => {
         let themeToApply = themePreference;
 
         if (themePreference === 'system') {
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: white)').matches;
             themeToApply = systemPrefersDark ? 'dark' : 'light';
         }
         

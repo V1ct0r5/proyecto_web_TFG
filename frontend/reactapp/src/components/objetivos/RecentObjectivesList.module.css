@@ -1,4 +1,4 @@
-/* frontend/reactapp/src/components/dashboard/RecentObjectivesList.module.css */
+/* frontend/reactapp/src/components/objetivos/RecentObjectivesList.module.css */
 .listContainer {
     display: flex;
     flex-direction: column;
@@ -10,6 +10,8 @@
     padding: 0;
     margin: 0;
     flex-grow: 1;
+    /* Para un scroll suave si el contenido excede el espacio */
+    overflow-y: auto;
 }
 
 .listItem {
@@ -17,11 +19,17 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1rem;
-    background-color: var(--card-background, #ffffff);
-    border: 1px solid var(--border-ultralight, #f0f0f0);
-    border-radius: var(--radius-md, 8px);
-    margin-bottom: 0.75rem; /* Espacio entre tarjetas */
-    box-shadow: var(--shadow-xs, 0 1px 2px rgba(0,0,0,0.03));
+    /* CORRECCIÓN: Usar variables de tema sin fallbacks fijos */
+    background-color: var(--card); 
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg); /* Usar el radio más grande para consistencia */
+    margin-bottom: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.listItem:hover {
+    background-color: var(--accent); /* Efecto hover sutil */
 }
 
 .listItem:last-child {
@@ -30,14 +38,15 @@
 
 .objectiveIcon {
     font-size: 1.5rem;
-    color: var(--primary-color, #6f42c1);
-    padding: 0.3rem;
-    border-radius: var(--radius-sm, 4px);
-    background-color: var(--primary-soft-bg, #e9e3f5);
+    padding: 0.5rem; /* Un poco más de padding */
+    border-radius: var(--radius-full); /* Icono circular para un look moderno */
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    /* CORRECCIÓN: Usar variables y color-mix para un fondo dinámico */
+    color: var(--primary);
+    background-color: color-mix(in srgb, var(--primary) 15%, transparent);
 }
 
 .objectiveInfo {
@@ -45,12 +54,13 @@
     flex-direction: column;
     gap: 0.1rem;
     flex-grow: 1;
-    min-width: 0; /* Para correcto funcionamiento de text-overflow */
+    min-width: 0; 
 }
 
 .objectiveNameLink {
     font-weight: 600;
-    color: var(--link-color);
+    /* CORRECCIÓN: Usar variable de texto principal */
+    color: var(--foreground);
     text-decoration: none;
     font-size: 0.95rem;
     white-space: nowrap;
@@ -59,7 +69,7 @@
 }
 .objectiveNameLink:hover {
     text-decoration: underline;
-    color: var(--link-hover-color);
+    color: var(--primary);
 }
 
 .lastUpdate {
@@ -77,23 +87,24 @@
 .progressPercent {
     font-weight: 600;
     font-size: 0.9rem;
-    color: var(--primary-color);
+    color: var(--primary);
     min-width: 35px;
     text-align: right;
 }
 
 .detailsButton {
-    color: var(--primary-color) !important;
+    /* CORRECCIÓN: Simplificar y usar variables */
+    color: var(--muted-foreground) !important;
     padding: 0.2rem !important;
 }
 .detailsButton:hover {
-    color: var(--primary-hover) !important;
-    background-color: var(--primary-soft-bg, #e9e3f5) !important;
+    color: var(--primary) !important;
+    background-color: color-mix(in srgb, var(--primary) 15%, transparent) !important;
 }
 
 .viewAllButtonContainer {
-    margin-top: auto; /* Empuja al final del contenedor flex */
-    padding-top: 1rem; /* Espacio sobre el botón */
+    margin-top: auto;
+    padding-top: 1rem;
     text-align: center;
 }
 
@@ -102,7 +113,7 @@
     font-style: italic;
     padding: 1rem 0;
     text-align: center;
-    flex-grow: 1; /* Para centrar dentro de un contenedor flex */
+    flex-grow: 1;
     display: flex;
     align-items: center;
     justify-content: center;

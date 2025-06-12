@@ -50,17 +50,16 @@
     }
 }
 
-.objectivesPreviewWrapper,
-.activityFeedWrapper {
-    background-color: var(--card); /* MODIFICADO: Usar --card y quitar fallback */
-    border-radius: var(--radius-lg); /* Quitar fallback si --radius-lg está en index.css */
-    border: 1px solid var(--border);  /* MODIFICADO: Usar --border y quitar fallback */
+.sectionCard {
+    background-color: var(--card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
     padding: 1.25rem 1.5rem;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     min-height: 0;
-    box-shadow: var(--shadow-sm); /* Quitar fallback si --shadow-sm está en index.css */
+    box-shadow: var(--shadow-sm);
 }
 
 .sectionTitle { /* Estilo añadido para los títulos H3 dentro de los wrappers */

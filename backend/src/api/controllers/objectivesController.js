@@ -1,78 +1,98 @@
 // backend/src/api/controllers/objectivesController.js
 const objectivesService = require('../services/objectivesService');
-const { validationResult } = require('express-validator');
 const AppError = require('../../utils/AppError');
 
-const ensureUserId = (req, next) => {
-    const userId = req.user.id;
+/**
+ * Utility function to get the authenticated user ID from the request object.
+ * @param {object} req - The Express request object.
+ * @returns {number} The user ID.
+ * @throws {AppError} If the user ID is not found.
+ */
+const getAuthUserId = (req) => {
+    const userId = req.user?.id;
     if (!userId) {
-        const err = new AppError('Error de autenticación: ID de usuario no encontrado.', 401);
-        if (typeof next === 'function') next(err);
-        else throw err;
-        return null;
+        throw new AppError('Error de autenticación: ID de usuario no encontrado.', 401);
     }
     return userId;
 };
 
-exports.obtenerObjetivos = async (req, res, next) => {
-    const userId = ensureUserId(req, next);
-    if (!userId) return;
+/**
+ * Handles the request to get all objectives for a user, with filtering.
+ */
+exports.getObjectives = async (req, res, next) => {
     try {
-        // --- CORRECCIÓN: Pasa el objeto de filtros (req.query) al servicio ---
-        const objetivos = await objectivesService.obtenerTodosLosObjetivos(userId, req.query);
-        res.status(200).json(objetivos);
-    } catch (error) { 
-        next(error); 
-    }
-};
-
-exports.crearObjetivo = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-    const userId = ensureUserId(req, next);
-    if (!userId) return;
-    try {
-        const nuevoObjetivo = await objectivesService.crearObjetivo(req.body, userId, req.transaction);
-        res.status(201).json(nuevoObjetivo);
-    } catch (error) { next(error); }
-};
-
-exports.obtenerObjetivoPorId = async (req, res, next) => {
-    const userId = ensureUserId(req, next);
-    if (!userId) return;
-    const { id: objectiveId } = req.params;
-    try {
-        const objetivo = await objectivesService.obtenerObjetivoPorId(objectiveId, userId);
-        res.status(200).json(objetivo);
-    } catch (error) { next(error); }
-};
-
-exports.actualizarObjetivo = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-    const userId = ensureUserId(req, next);
-    if (!userId) return;
-
-    const { id: objectiveId } = req.params;
-    const { progressData, ...objectiveData } = req.body;
-
-    try {
-        const objetivoActualizado = await objectivesService.actualizarObjetivo(
-            objectiveId, userId, objectiveData, progressData, req.transaction
-        );
-        res.status(200).json(objetivoActualizado);
+        const userId = getAuthUserId(req);
+        // req.query contiene todos los filtros (searchTerm, category, sortBy, etc.)
+        const objectives = await objectivesService.getAllObjectives(userId, req.query);
+        res.status(200).json({
+            status: 'success',
+            results: objectives.length,
+            data: { objectives }
+        });
     } catch (error) {
         next(error);
     }
 };
 
-exports.eliminarObjetivo = async (req, res, next) => {
-    const userId = ensureUserId(req, next);
-    if (!userId) return;
-    const { id: objectiveId } = req.params;
+/**
+ * Handles the request to get a single objective by its ID.
+ */
+exports.getObjectiveById = async (req, res, next) => {
     try {
-        const resultado = await objectivesService.eliminarObjetivo(objectiveId, userId, req.transaction);
-        res.status(200).json(resultado);
+        const userId = getAuthUserId(req);
+        const { id: objectiveId } = req.params;
+        const objective = await objectivesService.getObjectiveById(objectiveId, userId);
+        res.status(200).json({
+            status: 'success',
+            data: { objective }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles the request to create a new objective.
+ */
+exports.createObjective = async (req, res, next) => {
+    try {
+        const userId = getAuthUserId(req);
+        const newObjective = await objectivesService.createObjective(req.body, userId);
+        res.status(201).json({
+            status: 'success',
+            data: { objective: newObjective }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles the request to update an existing objective.
+ */
+exports.updateObjective = async (req, res, next) => {
+    try {
+        const userId = getAuthUserId(req);
+        const { id: objectiveId } = req.params;
+        const updatedObjective = await objectivesService.updateObjective(objectiveId, userId, req.body);
+        res.status(200).json({
+            status: 'success',
+            data: { objective: updatedObjective }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles the request to delete an objective.
+ */
+exports.deleteObjective = async (req, res, next) => {
+    try {
+        const userId = getAuthUserId(req);
+        const { id: objectiveId } = req.params;
+        await objectivesService.deleteObjective(objectiveId, userId);
+        res.status(204).json(); // No Content
     } catch (error) {
         next(error);
     }

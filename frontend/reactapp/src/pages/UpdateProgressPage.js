@@ -9,20 +9,18 @@ import { format, parseISO, isValid } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 
-const determineNewStatusLogic = (currentValueNum, targetValueStr, initialValueStr, currentStatus, isLowerBetter, tipoObjetivo) => {
-    const numericTarget = Number(targetValueStr);
-    const numericInitial = Number(initialValueStr);
-    const isEffectivelyQuantitative = !isNaN(numericInitial) && !isNaN(numericTarget);
+const determineNewStatusLogic = (currentValueNum, targetValueNum, initialValueNum, currentStatus, isLowerBetter) => { // Simplificado de targetValueStr, initialValueStr
+    const isEffectivelyQuantitative = !isNaN(initialValueNum) && !isNaN(targetValueNum);
 
     if (!isEffectivelyQuantitative || isNaN(currentValueNum)) return currentStatus;
 
     let newCalculatedStatus = currentStatus;
-    if (isLowerBetter ? (currentValueNum <= numericTarget) : (currentValueNum >= numericTarget)) {
-        newCalculatedStatus = 'Completado';
-    } else if (currentStatus === 'Pendiente' && currentValueNum !== numericInitial) {
-        newCalculatedStatus = 'En progreso';
-    } else if (currentStatus === 'Completado') {
-        newCalculatedStatus = 'En progreso';
+    if (isLowerBetter ? (currentValueNum <= targetValueNum) : (currentValueNum >= targetValueNum)) {
+        newCalculatedStatus = 'COMPLETED'; // Usar los estados ENUM del backend
+    } else if (currentStatus === 'PENDING' && currentValueNum !== initialValueNum) { // Usar PENDING
+        newCalculatedStatus = 'IN_PROGRESS'; // Usar IN_PROGRESS
+    } else if (currentStatus === 'COMPLETED') { // Si estaba completado y el nuevo valor lo saca de rango
+        newCalculatedStatus = 'IN_PROGRESS'; // Volver a en progreso
     }
     return newCalculatedStatus;
 };
@@ -46,7 +44,8 @@ function UpdateProgressPage() {
         try {
             const data = await apiService.getObjectiveById(objectiveId);
             setGoalData(data);
-            const initialDisplayValue = (data.valor_actual != null) ? String(data.valor_actual) : (data.valor_inicial_numerico != null) ? String(data.valor_inicial_numerico) : '';
+            // Usar data.currentValue o data.initialValue
+            const initialDisplayValue = (data.currentValue != null) ? String(data.currentValue) : (data.initialValue != null) ? String(data.initialValue) : '';
             setNewProgressValue(initialDisplayValue);
         } catch (err) {
             setError(t('errors.objectiveLoadError'));
@@ -69,8 +68,9 @@ function UpdateProgressPage() {
         const valueToUpdate = parseFloat(newProgressValue);
         if (isNaN(valueToUpdate)) { toast.error(t('toast.progressUpdate.invalidValueError')); setIsSubmitting(false); return; }
 
-        const calculatedNewStatus = determineNewStatusLogic(valueToUpdate, goalData.valor_cuantitativo, goalData.valor_inicial_numerico, goalData.estado, goalData.es_menor_mejor, goalData.tipo_objetivo);
-        const payload = { estado: calculatedNewStatus, progressData: { valor_actual: valueToUpdate, comentarios: notes.trim() === '' ? null : notes.trim() } };
+        // Usar goalData.targetValue, goalData.initialValue, goalData.status
+        const calculatedNewStatus = determineNewStatusLogic(valueToUpdate, Number(goalData.targetValue), Number(goalData.initialValue), goalData.status, goalData.isLowerBetter);
+        const payload = { status: calculatedNewStatus, progressData: { value: valueToUpdate, notes: notes.trim() === '' ? null : notes.trim() } }; // 'value' en lugar de 'valor_actual'
 
         try {
             await apiService.updateObjective(objectiveId, payload);
@@ -82,14 +82,21 @@ function UpdateProgressPage() {
             toast.error(`${t('toast.objectiveCreateErrorPrefix')} ${errorMessage}`);
         } finally { setIsSubmitting(false); }
     };
-    
+
+    // Mover la definición de isQuantitative al principio, antes de cualquier return condicional.
+    const isQuantitative = useMemo(() => {
+        if (!goalData) return false;
+        const target = goalData.targetValue; // CAMBIO: Usar targetValue
+        return target != null && target !== '' && !isNaN(Number(target));
+    }, [goalData]);
+
     const progressPercentage = useMemo(() => {
         if (!goalData) return 0;
-        const initial = Number(goalData.valor_inicial_numerico || 0);
-        const target = Number(goalData.valor_cuantitativo);
+        const initial = Number(goalData.initialValue || 0); // CAMBIO: Usar initialValue
+        const target = Number(goalData.targetValue); // CAMBIO: Usar targetValue
         if (isNaN(target)) return 0;
-        const isLower = goalData.es_menor_mejor;
-        const current = newProgressValue !== '' && !isNaN(parseFloat(newProgressValue)) ? parseFloat(newProgressValue) : Number(goalData.valor_actual ?? initial);
+        const isLower = goalData.isLowerBetter;
+        const current = newProgressValue !== '' && !isNaN(parseFloat(newProgressValue)) ? parseFloat(newProgressValue) : Number(goalData.currentValue ?? initial); // CAMBIO: Usar currentValue
         if (isNaN(initial) || isNaN(current)) return 0;
         if (initial === target) return (isLower ? current <= target : current >= target) ? 100 : 0;
         let prog = isLower ? ((initial - current) / (initial - target)) * 100 : ((current - initial) / (target - initial)) * 100;
@@ -104,24 +111,35 @@ function UpdateProgressPage() {
 
     const displayCurrentValue = useMemo(() => {
         if (!goalData) return '0.0';
-        let valueToShow = newProgressValue !== '' && !isNaN(parseFloat(newProgressValue)) ? parseFloat(newProgressValue) : Number(goalData.valor_actual ?? goalData.valor_inicial_numerico ?? 0);
+        let valueToShow = newProgressValue !== '' && !isNaN(parseFloat(newProgressValue)) ? parseFloat(newProgressValue) : Number(goalData.currentValue ?? goalData.initialValue ?? 0); // CAMBIO: Usar currentValue, initialValue
         return valueToShow.toFixed(1);
     }, [newProgressValue, goalData]);
-    
+
+    // Retornos tempranos deben ir DESPUÉS de todos los Hooks
     if (loading) return (<div className={styles.updateProgressPage}><LoadingSpinner size='large' text={t('loaders.loadingObjectiveForEdit')}/></div>);
     if (error && !goalData) return (<div className={`${styles.updateProgressPage} ${styles.updateProgressPageError}`}><p>{error}</p><Button onClick={() => navigate('/')}>{t('common.backToDashboard')}</Button></div>);
     if (!goalData) return (<div className={styles.updateProgressPage}><p>{t('errors.objectiveNotFound')}</p><Button onClick={() => navigate('/')}>{t('common.backToDashboard')}</Button></div>);
 
-    const isQuantitative = goalData.valor_cuantitativo != null && !isNaN(Number(goalData.valor_cuantitativo));
-
-    if (!isQuantitative) return ( <div className={`${styles.updateProgressPage} ${styles.nonQuantitativeMessage}`}><h2 className={styles.nonQuantitativeMessageTitle}>{t('updateProgressPage.title', { name: goalData.nombre })}</h2><p className={styles.nonQuantitativeMessageText}>{t('updateProgressPage.notQuantitative')}</p><p className={styles.nonQuantitativeMessageText}>{t('updateProgressPage.notQuantitativeSuggestion')}</p><div className={styles.nonQuantitativeMessageActions}><Button onClick={() => navigate(`/objectives/${objectiveId}`)} variant="secondary">{t('updateProgressPage.backToObjective')}</Button><Button onClick={() => navigate(`/objectives/edit/${objectiveId}`)}>{t('common.edit')}</Button></div></div>);
+    // Ahora, si el objetivo no es cuantitativo (después de que goalData ya se cargó), mostramos el mensaje.
+    // La variable isQuantitative ya se calculó arriba usando useMemo.
+    if (!isQuantitative) return ( 
+        <div className={`${styles.updateProgressPage} ${styles.nonQuantitativeMessage}`}>
+            <h2 className={styles.nonQuantitativeMessageTitle}>{t('updateProgressPage.title', { name: goalData.name })}</h2> {/* CAMBIO: goalData.name */}
+            <p className={styles.nonQuantitativeMessageText}>{t('updateProgressPage.notQuantitative')}</p>
+            <p className={styles.nonQuantitativeMessageText}>{t('updateProgressPage.notQuantitativeSuggestion')}</p>
+            <div className={styles.nonQuantitativeMessageActions}>
+                <Button onClick={() => navigate(`/objectives/${objectiveId}`)} variant="secondary">{t('updateProgressPage.backToObjective')}</Button>
+                <Button onClick={() => navigate(`/objectives/edit/${objectiveId}`)}>{t('common.edit')}</Button>
+            </div>
+        </div>
+    );
 
     return (
         <div className={styles.updateProgressPage}>
             <div className={styles.updateProgressCard}>
                 <div className={styles.updateProgressHeader}>
-                    <h1 className={styles.goalTitle}>{goalData.nombre}</h1>
-                    <p className={styles.goalDescription}>{goalData.descripcion || t('common.noDescription')}</p>
+                    <h1 className={styles.goalTitle}>{goalData.name}</h1> {/* CAMBIO: goalData.name */}
+                    <p className={styles.goalDescription}>{goalData.description || t('common.noDescription')}</p> {/* CAMBIO: goalData.description */}
                 </div>
                 <div className={styles.progressSection}>
                     <h2 className={styles.sectionHeading}>{t('updateProgressPage.progressPreviewTitle')}</h2>
@@ -130,15 +148,15 @@ function UpdateProgressPage() {
                         <div className={styles.progressBar}><div className={`${styles.progressBarFill} ${progressPercentage < 33 ? styles.progressFillLow : progressPercentage < 66 ? styles.progressFillMedium : styles.progressFillHigh}`} style={{ width: `${progressPercentage}%` }}></div></div>
                     </div>
                     <div className={styles.progressDetails}>
-                        <div className={styles.detailItem}><span className={styles.detailLabel}>{t('updateProgressPage.newValueLabel')}</span><span className={styles.detailValue}>{displayCurrentValue} {goalData.unidad_medida || ''}</span></div>
-                        <div className={styles.detailItem}><span className={styles.detailLabel}>{t('updateProgressPage.targetValueLabel')}</span><span className={styles.detailValue}>{Number(goalData.valor_cuantitativo || 0).toFixed(goalData.unidad_medida?.toLowerCase() === '%' ? 0 : 1)} {goalData.unidad_medida || ''}</span></div>
+                        <div className={styles.detailItem}><span className={styles.detailLabel}>{t('updateProgressPage.newValueLabel')}</span><span className={styles.detailValue}>{displayCurrentValue} {goalData.unit || ''}</span></div> {/* CAMBIO: goalData.unit */}
+                        <div className={styles.detailItem}><span className={styles.detailLabel}>{t('updateProgressPage.targetValueLabel')}</span><span className={styles.detailValue}>{Number(goalData.targetValue || 0).toFixed(goalData.unit?.toLowerCase() === '%' ? 0 : 1)} {goalData.unit || ''}</span></div> {/* CAMBIO: goalData.targetValue, goalData.unit */}
                     </div>
                     <p className={styles.lastUpdateInfo}>{t('updateProgressPage.lastUpdateInfo')}<span className={styles.lastUpdateDate}>{lastUpdateDate}</span></p>
                 </div>
                 <form onSubmit={handleSubmit} className={styles.updateForm}>
                     <div className={styles.formGroup}>
                         <label htmlFor="newProgressValue" className={styles.formLabel}>{t('updateProgressPage.newProgressValueLabel')}</label>
-                        <input type="text" id="newProgressValue" inputMode="decimal" className={styles.formInput} value={newProgressValue} onChange={handleValueChange} placeholder={t('updateProgressPage.newProgressValuePlaceholder', { unit: goalData.unidad_medida || 'unidades' })} autoFocus />
+                        <input type="text" id="newProgressValue" inputMode="decimal" className={styles.formInput} value={newProgressValue} onChange={handleValueChange} placeholder={t('updateProgressPage.newProgressValuePlaceholder', { unit: goalData.unit || 'unidades' })} autoFocus /> {/* CAMBIO: goalData.unit */}
                     </div>
                     <div className={styles.formGroup}>
                         <label htmlFor="notes" className={styles.formLabel}>{t('updateProgressPage.notesLabel')}</label>

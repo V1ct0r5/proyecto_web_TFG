@@ -1,6 +1,20 @@
+// backend/src/middlewares/transactionMiddleware.js
 const db = require("../config/database");
 
+/**
+ * Middleware de transacción AUTOMÁTICA SÓLO PARA ENTORNO DE PRUEBAS (TESTING).
+ *
+ * Propósito:
+ * Este middleware envuelve cada petición de prueba en una transacción de Sequelize.
+ * Al finalizar la petición, realiza un COMMIT si la respuesta fue exitosa (status < 400)
+ * o un ROLLBACK si hubo un error. Esto asegura que la base de datos se mantenga limpia
+ * entre cada caso de prueba de integración, ya que los cambios de cada prueba se deshacen.
+ *
+ * IMPORTANTE: No activar este middleware en entornos de desarrollo o producción,
+ * ya que la gestión explícita de transacciones en los servicios es más segura y robusta.
+ */
 const transactionMiddleware = async (req, res, next) => {
+    // Se ejecuta únicamente en el entorno 'test'.
     if (process.env.NODE_ENV !== "test") {
         return next();
     }
@@ -8,30 +22,25 @@ const transactionMiddleware = async (req, res, next) => {
     let transaction;
     try {
         transaction = await db.sequelize.transaction();
-        req.transaction = transaction;
+        req.transaction = transaction; // Adjunta la transacción al objeto de la petición
 
+        // Escucha el evento 'finish', que se dispara cuando la respuesta se ha enviado.
         res.on('finish', async () => {
+            // Asegurarse de que la transacción no haya sido finalizada previamente.
             if (transaction && !transaction.finished) {
-                // Es crucial que res.locals_error sea establecido por un manejador de errores
-                // si un error ocurre antes de que se envíe la respuesta pero el status es < 400.
-                if (res.statusCode < 400 && !res.locals_error) {
-                    try {
+                try {
+                    // Si el código de estado indica éxito, confirma la transacción.
+                    if (res.statusCode < 400) {
                         await transaction.commit();
-                    } catch (commitError) {
-                        console.error("[Transaction Middleware] Error committing transaction:", commitError, "for request:", req.path);
-                        if (!transaction.finished) {
-                            try {
-                                await transaction.rollback();
-                            } catch (finalRollbackError) {
-                                console.error("[Transaction Middleware] Error rolling back after commit error for request:", req.path, finalRollbackError);
-                            }
-                        }
-                    }
-                } else {
-                    try {
+                    } else {
+                        // Si hubo un error, revierte la transacción.
                         await transaction.rollback();
-                    } catch (rollbackError) {
-                        console.error("[Transaction Middleware] Error rolling back transaction:", rollbackError, "for request:", req.path);
+                    }
+                } catch (transactionError) {
+                    console.error("[Transaction Middleware] Error al finalizar la transacción:", transactionError);
+                    // Intento final de rollback si el commit falla.
+                    if (!transaction.finished) {
+                        await transaction.rollback();
                     }
                 }
             }
@@ -40,15 +49,11 @@ const transactionMiddleware = async (req, res, next) => {
         next();
 
     } catch (error) {
-        console.error("[Transaction Middleware] Error starting transaction:", error, "for request:", req.path);
+        console.error("[Transaction Middleware] Error al iniciar la transacción:", error);
         if (transaction && !transaction.finished) {
-            try {
-                await transaction.rollback();
-            } catch (rollbackError) {
-                console.error("[Transaction Middleware] Error rolling back transaction after start error:", rollbackError, "for request:", req.path);
-            }
+            await transaction.rollback();
         }
-        next(error);
+        next(error); // Pasa el error al manejador global.
     }
 };
 

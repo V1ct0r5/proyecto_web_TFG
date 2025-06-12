@@ -1,67 +1,79 @@
+// backend/src/api/models/objective.js
 const { DataTypes } = require('sequelize');
 
+/**
+ * Defines the Objective model.
+ * @param {Sequelize} sequelize - The Sequelize instance.
+ * @returns {ModelCtor<Model>} The Objective model.
+ */
 module.exports = (sequelize) => {
-    const Objetivo = sequelize.define("Objetivo", {
-        id_objetivo: {
+    const Objective = sequelize.define("Objective", {
+        id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
+            field: 'id_objetivo'
         },
-        nombre: {
+        name: {
             type: DataTypes.STRING(255),
             allowNull: false,
-            validate: {
-                notEmpty: {
-                    msg: "El nombre no puede estar vacío"
-                }
-            }
+            validate: { notEmpty: { msg: "El nombre no puede estar vacío." } },
+            field: 'nombre'
         },
-        descripcion: {
+        description: {
             type: DataTypes.TEXT,
+            field: 'descripcion'
         },
-        tipo_objetivo: {
-            type: DataTypes.ENUM('Salud', 'Finanzas', 'Desarrollo personal', 'Relaciones', 'Carrera profesional', 'Otros'),
+        category: {
+            type: DataTypes.ENUM('HEALTH', 'FINANCE', 'PERSONAL_DEV', 'RELATIONSHIPS', 'CAREER', 'OTHER'),
             allowNull: false,
+            field: 'tipo_objetivo'
         },
-        valor_inicial_numerico: {
+        initialValue: {
             type: DataTypes.DECIMAL,
             allowNull: true,
+            field: 'valor_inicial_numerico'
         },
-        valor_actual: {
+        currentValue: {
             type: DataTypes.DECIMAL,
             allowNull: true,
             defaultValue: 0,
+            field: 'valor_actual'
         },
-        valor_cuantitativo: {
+        targetValue: {
             type: DataTypes.DECIMAL,
             allowNull: true,
+            field: 'valor_cuantitativo'
         },
-        es_menor_mejor: {
+        isLowerBetter: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false, // Por defecto, un valor mayor es mejor (ej. más dinero, más km recorridos)
+            defaultValue: false,
+            field: 'es_menor_mejor'
         },
-        unidad_medida: {
+        unit: {
             type: DataTypes.STRING(50),
+            field: 'unidad_medida'
         },
-        fecha_inicio: {
+        startDate: {
             type: DataTypes.DATEONLY,
+            field: 'fecha_inicio'
         },
-        fecha_fin: {
+        endDate: {
             type: DataTypes.DATEONLY,
+            field: 'fecha_fin'
         },
-        estado: {
-            type: DataTypes.ENUM('Pendiente', 'En progreso', 'Completado', 'Archivado', 'Fallido'),
-            defaultValue: 'Pendiente',
+        status: {
+            type: DataTypes.ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'ARCHIVED', 'FAILED'),
+            defaultValue: 'PENDING',
             allowNull: false,
+            field: 'estado'
         },
-        id_usuario: {
+        userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: {
-                model: 'Usuarios',
-                key: 'id'
-            }
+            references: { model: 'Usuarios', key: 'id' },
+            field: 'id_usuario'
         },
     }, {
         tableName: 'Objetivos',
@@ -69,19 +81,10 @@ module.exports = (sequelize) => {
         underscored: true,
     });
 
-    Objetivo.associate = (models) => {
-        Objetivo.belongsTo(models.Usuario, { // Un objetivo pertenece a un usuario
-            foreignKey: 'id_usuario',
-            as: 'usuario',
-            onDelete: 'CASCADE'
-        });
-        // Si un Objetivo tiene muchos Progress, también iría aquí:
-        Objetivo.hasMany(models.Progress, {
-            foreignKey: 'id_objetivo',
-            as: 'progresos',
-            onDelete: 'CASCADE'
-        });
+    Objective.associate = (models) => {
+        Objective.belongsTo(models.User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE' });
+        Objective.hasMany(models.Progress, { foreignKey: 'objectiveId', as: 'progressEntries', onDelete: 'CASCADE' });
     };
 
-    return Objetivo;
+    return Objective;
 };

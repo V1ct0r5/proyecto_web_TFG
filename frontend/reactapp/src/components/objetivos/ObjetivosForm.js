@@ -9,13 +9,13 @@ import { format, isValid, parseISO } from 'date-fns';
 import { toast } from 'react-toastify';
 import { useTranslation } from "react-i18next";
 
-function ObjetivosForm({ 
-    initialData = null, 
-    onSubmit: handleFormSubmit, 
-    buttonText, // Quitado valor por defecto para que lo gestione el componente
-    isFirstObjective = false, 
-    isEditMode = false, 
-    onCancel 
+function ObjectiveForm({
+    initialData = null,
+    onSubmit: handleFormSubmit,
+    buttonText,
+    isFirstObjective = false,
+    isEditMode = false,
+    onCancel
 }) {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
@@ -30,115 +30,111 @@ function ObjetivosForm({
         setValue
     } = useForm({
         defaultValues: {
-            nombre: initialData?.nombre || '',
-            descripcion: initialData?.descripcion || '',
-            tipoObjetivo: initialData?.tipo_objetivo || '',
-            valorMeta: initialData?.valor_cuantitativo !== undefined ? initialData.valor_cuantitativo : '',
-            valorInicial: initialData?.valor_inicial_numerico !== undefined ? initialData.valor_inicial_numerico : '',
-            valorActual: initialData?.valor_actual !== undefined ? initialData.valor_actual : '',
-            unidadMedida: initialData?.unidad_medida || '',
-            fechaInicio: initialData?.fecha_inicio ? parseISO(initialData.fecha_inicio) : null,
-            fechaFin: initialData?.fecha_fin ? parseISO(initialData.fecha_fin) : null,
-            estado: initialData?.estado || 'Pendiente',
-            es_menor_mejor: initialData?.es_menor_mejor === true,
+            name: initialData?.name || '',
+            description: initialData?.description || '',
+            category: initialData?.category || '',
+            targetValue: initialData?.targetValue !== undefined ? initialData.targetValue : '',
+            initialValue: initialData?.initialValue !== undefined ? initialData.initialValue : '',
+            currentValue: initialData?.currentValue !== undefined ? initialData.currentValue : '',
+            unit: initialData?.unit || '',
+            startDate: initialData?.startDate ? parseISO(initialData.startDate) : null,
+            endDate: initialData?.endDate ? parseISO(initialData.endDate) : null,
+            status: initialData?.status || 'PENDING',
+            isLowerBetter: initialData?.isLowerBetter === true,
         }
     });
 
-    const fechaInicioValue = watch("fechaInicio");
-    const valorMetaValue = watch("valorMeta"); // Usado para mostrar condicionalmente el checkbox 'es_menor_mejor'
-    
+    const startDateValue = watch("startDate");
+    const targetValueWatch = watch("targetValue");
+
     // Mapeo de valores de backend/formulario a claves de traducción
-    const tipoObjetivoKeyMap = {
-        "Salud": "health",
-        "Finanzas": "finance",
-        "Desarrollo personal": "personalDevelopment",
-        "Relaciones": "relationships",
-        "Carrera profesional": "career",
-        "Otros": "other",
+    const categoryKeyMap = {
+        'HEALTH': "health",
+        'FINANCE': "finance",
+        'PERSONAL_DEV': "personalDevelopment",
+        'RELATIONSHIPS': "relationships",
+        'CAREER': "career",
+        'OTHER': "other",
     };
-    const tipoObjetivoOptions = Object.values(tipoObjetivoKeyMap);
-    
+
     const statusKeyMap = {
-        "Pendiente": "pending",
-        "En progreso": "inProgress",
-        "Completado": "completed",
-        "Archivado": "archived",
-        "Fallido": "failed",
+        'PENDING': "pending",
+        'IN_PROGRESS': "inProgress",
+        'COMPLETED': "completed",
+        'ARCHIVED': "archived",
+        'FAILED': "failed",
     };
-    const statusOptions = Object.values(statusKeyMap);
 
     useEffect(() => {
-        const defaultFormValues = {
-            nombre: '',
-            descripcion: '',
-            tipoObjetivo: '',
-            valorMeta: '',
-            valorInicial: '',
-            valorActual: '', // Se maneja en onSubmitInternal para creación
-            unidadMedida: '',
-            fechaInicio: null,
-            fechaFin: null,
-            estado: 'Pendiente',
-            es_menor_mejor: false,
-        };
-
         if (initialData) {
             reset({
-                nombre: initialData.nombre || '',
-                descripcion: initialData.descripcion || '',
-                tipoObjetivo: initialData.tipo_objetivo || '',
-                valorMeta: initialData.valor_cuantitativo !== undefined ? initialData.valor_cuantitativo : '',
-                valorInicial: initialData.valor_inicial_numerico !== undefined ? initialData.valor_inicial_numerico : '',
-                valorActual: initialData.valor_actual !== undefined ? initialData.valor_actual : '',
-                unidadMedida: initialData.unidad_medida || '',
-                fechaInicio: initialData.fecha_inicio ? parseISO(initialData.fecha_inicio) : null,
-                fechaFin: initialData.fecha_fin ? parseISO(initialData.fecha_fin) : null,
-                estado: initialData.estado || 'Pendiente',
-                es_menor_mejor: initialData.es_menor_mejor === true,
+                name: initialData.name || '',
+                description: initialData.description || '',
+                category: initialData.category || '',
+                targetValue: initialData.targetValue !== undefined ? initialData.targetValue : '',
+                initialValue: initialData.initialValue !== undefined ? initialData.initialValue : '',
+                currentValue: initialData.currentValue !== undefined ? initialData.currentValue : '',
+                unit: initialData.unit || '',
+                startDate: initialData.startDate ? parseISO(initialData.startDate) : null,
+                endDate: initialData.endDate ? parseISO(initialData.endDate) : null,
+                status: initialData.status || 'PENDING',
+                isLowerBetter: initialData.isLowerBetter === true,
             });
         } else {
-            reset(defaultFormValues);
+            reset({
+                name: '',
+                description: '',
+                category: '',
+                targetValue: '',
+                initialValue: '',
+                currentValue: '',
+                unit: '',
+                startDate: null,
+                endDate: null,
+                status: 'PENDING',
+                isLowerBetter: false,
+            });
         }
     }, [initialData, reset]);
 
     const onSubmitInternal = async (data) => {
         setLoading(true);
 
+        // Construye el objeto de datos que coincide con el modelo de Sequelize
         const objectiveData = {
-            id_objetivo: isEditMode ? initialData?.id_objetivo : undefined,
-            nombre: data.nombre,
-            descripcion: data.descripcion || null,
-            tipo_objetivo: data.tipoObjetivo,
-            unidad_medida: data.unidadMedida || null,
-            fecha_inicio: data.fechaInicio && isValid(data.fechaInicio) ? format(data.fechaInicio, 'yyyy-MM-dd') : null,
-            fecha_fin: data.fechaFin && isValid(data.fechaFin) ? format(data.fechaFin, 'yyyy-MM-dd') : null,
-            estado: isEditMode ? data.estado : "Pendiente", // Estado solo se envía/modifica en edición desde el form
-            es_menor_mejor: data.es_menor_mejor,
+            id: isEditMode ? initialData?.id : undefined,
+            name: data.name,
+            description: data.description || null,
+            category: data.category,
+            unit: data.unit || null,
+            startDate: data.startDate && isValid(data.startDate) ? format(data.startDate, 'yyyy-MM-dd') : null,
+            endDate: data.endDate && isValid(data.endDate) ? format(data.endDate, 'yyyy-MM-dd') : null,
+            status: isEditMode ? data.status : "PENDING",
+            isLowerBetter: data.isLowerBetter,
+            // Los valores numéricos se parsean a Float
+            targetValue: (data.targetValue !== '' && data.targetValue !== null && !isNaN(data.targetValue)) ? parseFloat(data.targetValue) : null,
         };
 
         if (!isEditMode) { // Modo Creación
-            objectiveData.valor_inicial_numerico = (data.valorInicial !== '' && data.valorInicial !== null && !isNaN(data.valorInicial)) ? parseFloat(data.valorInicial) : null;
-            objectiveData.valor_cuantitativo = (data.valorMeta !== '' && data.valorMeta !== null && !isNaN(data.valorMeta)) ? parseFloat(data.valorMeta) : null;
-            // En creación, valor_actual se inicializa igual al valor_inicial_numerico
-            objectiveData.valor_actual = objectiveData.valor_inicial_numerico; 
+            objectiveData.initialValue = (data.initialValue !== '' && data.initialValue !== null && !isNaN(data.initialValue)) ? parseFloat(data.initialValue) : null;
+            // En creación, currentValue se inicializa igual que initialValue
+            objectiveData.currentValue = objectiveData.initialValue;
         } else { // Modo Edición
-            objectiveData.valor_actual = (data.valorActual !== '' && data.valorActual !== null && !isNaN(data.valorActual)) ? parseFloat(data.valorActual) : null;
-            objectiveData.valor_cuantitativo = (data.valorMeta !== '' && data.valorMeta !== null && !isNaN(data.valorMeta)) ? parseFloat(data.valorMeta) : null;
+            objectiveData.currentValue = (data.currentValue !== '' && data.currentValue !== null && !isNaN(data.currentValue)) ? parseFloat(data.currentValue) : null;
+             // En edición, el valor inicial no se modifica, por lo que no se envía.
         }
 
         try {
-            await handleFormSubmit(objectiveData); // La función handleFormSubmit viene del componente padre
-            if (!isEditMode) { // Solo resetea si es creación y fue exitoso
-                reset({ // Resetea a valores vacíos explícitos
-                    nombre: '', descripcion: '', tipoObjetivo: '', valorMeta: '',
-                    valorInicial: '', valorActual: '', unidadMedida: '',
-                    fechaInicio: null, fechaFin: null, estado: 'Pendiente', es_menor_mejor: false,
+            await handleFormSubmit(objectiveData);
+            if (!isEditMode) {
+                reset({
+                    name: '', description: '', category: '', targetValue: '',
+                    initialValue: '', currentValue: '', unit: '',
+                    startDate: null, endDate: null, status: 'PENDING', isLowerBetter: false,
                 });
             }
         } catch (err) {
-            // El error es (o debería ser) manejado por el componente padre que pasa handleFormSubmit
-            // o por el interceptor de errores de apiService.
-            // No se muestra toast aquí para evitar duplicados si el padre ya lo hace.
+            // El error es manejado por el componente padre
         } finally {
             setLoading(false);
         }
@@ -146,14 +142,13 @@ function ObjetivosForm({
 
     const handleCancelClick = () => {
         if (onCancel) {
-            onCancel(); // Ejecuta la función onCancel provista por el padre
+            onCancel();
         } else {
-            // Comportamiento por defecto si no hay onCancel: resetear y notificar
-            reset(); // Resetea a los defaultValues que consideran initialData o vacío
+            reset();
             toast.info(t('objectivesForm.formCleared'));
         }
     };
-    
+
     const finalButtonText = buttonText || (isEditMode ? t('objectivesForm.updateButton') : t('objectivesForm.createButton'));
 
     const buttonContainerClass = [objetivosStyles.buttonContainer];
@@ -167,128 +162,128 @@ function ObjetivosForm({
         <div className={objetivosStyles.formContainer}>
             <form onSubmit={handleSubmit(onSubmitInternal)} noValidate>
                 <div className={objetivosStyles.formGroupContainer}>
-                    <FormGroup label={t('objectivesForm.nameLabel')} htmlFor="nombre" required={true} error={errors.nombre?.message}>
+                    <FormGroup label={t('objectivesForm.nameLabel')} htmlFor="name" required={true} error={errors.name?.message}>
                         <Input
-                            type="text" id="nombre" placeholder={t('objectivesForm.namePlaceholder')}
-                            {...register("nombre", {
+                            type="text" id="name" placeholder={t('objectivesForm.namePlaceholder')}
+                            {...register("name", {
                                 required: t('formValidation.nameRequired'),
                                 minLength: { value: 3, message: t('formValidation.nameMinLength', { count: 3 }) },
                             })}
-                            disabled={loading} isError={!!errors.nombre}
+                            disabled={loading} isError={!!errors.name}
                         />
                     </FormGroup>
-                    <FormGroup label={t('objectivesForm.descriptionLabel')} htmlFor="descripcion" error={errors.descripcion?.message}>
+
+                    <FormGroup label={t('objectivesForm.descriptionLabel')} htmlFor="description" error={errors.description?.message}>
                         <Input
-                            type="textarea" id="descripcion" placeholder={t('objectivesForm.descriptionPlaceholder')}
-                            {...register("descripcion")}
-                            disabled={loading} isError={!!errors.descripcion}
+                            type="textarea" id="description" placeholder={t('objectivesForm.descriptionPlaceholder')}
+                            {...register("description")}
+                            disabled={loading} isError={!!errors.description}
                         />
                     </FormGroup>
-                    <FormGroup label={t('objectivesForm.typeLabel')} htmlFor="tipoObjetivo" required={true} error={errors.tipoObjetivo?.message}>
+
+                    <FormGroup label={t('objectivesForm.typeLabel')} htmlFor="category" required={true} error={errors.category?.message}>
                         <Input
-                            type="select" id="tipoObjetivo"
-                            {...register("tipoObjetivo", {
-                                required: t('formValidation.typeRequired'),
-                                validate: (value) => value !== "" || t('formValidation.typeRequired'),
+                            type="select" id="category"
+                            {...register("category", {
+                                required: t('formValidation.categoryRequired'),
+                                validate: (value) => value !== "" || t('formValidation.categoryRequired'),
                             })}
-                            disabled={loading} isError={!!errors.tipoObjetivo}
+                            disabled={loading} isError={!!errors.category}
                         >
                             <option value="" disabled>{t('objectivesForm.selectType')}</option>
-                            {Object.entries(tipoObjetivoKeyMap).map(([key, value]) => (
-                                <option key={value} value={key}>{t(`categories.${value}`)}</option>
+                            {Object.entries(categoryKeyMap).map(([key, value]) => (
+                                <option key={key} value={key}>{t(`categories.${value}`)}</option>
                             ))}
                         </Input>
                     </FormGroup>
 
                     <div className={objetivosStyles.formGrid}>
                         {!isEditMode && (
-                            <FormGroup label={t('objectivesForm.initialValueLabel')} htmlFor="valorInicial" required={true} error={errors.valorInicial?.message}>
+                            <FormGroup label={t('objectivesForm.initialValueLabel')} htmlFor="initialValue" required={true} error={errors.initialValue?.message}>
                                 <Input
-                                    type="number" id="valorInicial" step="any" placeholder="Ej. 78"
-                                    {...register("valorInicial", {
+                                    type="number" id="initialValue" step="any" placeholder="Ej. 78"
+                                    {...register("initialValue", {
                                         valueAsNumber: true,
                                         required: t('formValidation.initialValueRequired'),
                                         min: { value: 0, message: t('formValidation.initialValuePositive') },
-                                        validate: (value) => value === '' || value === null || (!isNaN(value) && isFinite(value)) || t('formValidation.mustBeNumber'),
+                                        validate: (value) => value === '' || value === null || !isNaN(value) || t('formValidation.mustBeNumber'),
                                     })}
-                                    disabled={loading} isError={!!errors.valorInicial}
+                                    disabled={loading} isError={!!errors.initialValue}
                                 />
                             </FormGroup>
                         )}
                         {isEditMode && (
-                            <FormGroup label={t('objectivesForm.currentValueLabel')} htmlFor="valorActual" required={true} error={errors.valorActual?.message}>
+                            <FormGroup label={t('objectivesForm.currentValueLabel')} htmlFor="currentValue" required={true} error={errors.currentValue?.message}>
                                 <Input
-                                    type="number" id="valorActual" step="any" placeholder="Ej. 79"
-                                    {...register("valorActual", {
+                                    type="number" id="currentValue" step="any" placeholder="Ej. 79"
+                                    {...register("currentValue", {
                                         valueAsNumber: true,
                                         required: t('formValidation.currentValueRequired'),
                                         min: { value: 0, message: t('formValidation.valuePositive') },
-                                        validate: (value) => value === '' || value === null || (!isNaN(value) && isFinite(value)) || t('formValidation.mustBeNumber'),
+                                        validate: (value) => value === '' || value === null || !isNaN(value) || t('formValidation.mustBeNumber'),
                                     })}
-                                    disabled={loading} isError={!!errors.valorActual}
+                                    disabled={loading} isError={!!errors.currentValue}
                                 />
                             </FormGroup>
                         )}
-                        <FormGroup label={t('objectivesForm.targetValueLabel')} htmlFor="valorMeta" required={true} error={errors.valorMeta?.message}>
+                        <FormGroup label={t('objectivesForm.targetValueLabel')} htmlFor="targetValue" required={true} error={errors.targetValue?.message}>
                             <Input
-                                type="number" id="valorMeta" step="any" placeholder="Ej. 81"
-                                {...register("valorMeta", {
+                                type="number" id="targetValue" step="any" placeholder="Ej. 81"
+                                {...register("targetValue", {
                                     valueAsNumber: true,
-                                    min: { value: 0, message: t('formValidation.targetValuePositive') },
                                     required: t('formValidation.targetValueRequired'),
-                                    validate: (value) => value === '' || value === null || (!isNaN(value) && isFinite(value)) || t('formValidation.mustBeValidNonNegativeNumber'),
+                                    min: { value: 0, message: t('formValidation.targetValuePositive') },
+                                    validate: (value) => value === '' || value === null || !isNaN(value) || t('formValidation.mustBeValidNonNegativeNumber'),
                                 })}
-                                disabled={loading} isError={!!errors.valorMeta}
+                                disabled={loading} isError={!!errors.targetValue}
                             />
                         </FormGroup>
-                        <FormGroup label={t('objectivesForm.unitLabel')} htmlFor="unidadMedida" error={errors.unidadMedida?.message}>
+                        <FormGroup label={t('objectivesForm.unitLabel')} htmlFor="unit" error={errors.unit?.message}>
                             <Input
-                                type="text" id="unidadMedida" placeholder={t('objectivesForm.unitPlaceholder')}
-                                {...register("unidadMedida")}
-                                disabled={loading} isError={!!errors.unidadMedida}
+                                type="text" id="unit" placeholder={t('objectivesForm.unitPlaceholder')}
+                                {...register("unit")}
+                                disabled={loading} isError={!!errors.unit}
                             />
                         </FormGroup>
-                        {(valorMetaValue !== null && valorMetaValue !== '' && !isNaN(parseFloat(valorMetaValue))) && ( // Asegurar que valorMetaValue es parseable a número
-                            <FormGroup htmlFor="es_menor_mejor">
+                        {(targetValueWatch !== null && targetValueWatch !== '' && !isNaN(parseFloat(targetValueWatch))) && (
+                            <FormGroup htmlFor="isLowerBetter">
                                 <label className={objetivosStyles.checkboxLabel}>
-                                    <input type="checkbox" id="es_menor_mejor" {...register("es_menor_mejor")} disabled={loading} />
+                                    <input type="checkbox" id="isLowerBetter" {...register("isLowerBetter")} disabled={loading} />
                                     <span>{t('objectivesForm.lowerIsBetter')}</span>
                                 </label>
-                                {errors.es_menor_mejor && (<p className={objetivosStyles.errorText}>{errors.es_menor_mejor.message}</p>)}
+                                {errors.isLowerBetter && (<p className={objetivosStyles.errorText}>{errors.isLowerBetter.message}</p>)}
                             </FormGroup>
                         )}
                     </div>
 
                     <div className={objetivosStyles.dateFieldsGrid}>
-                        <FormGroup label={t('objectivesForm.startDateLabel')} htmlFor="fechaInicio" error={errors.fechaInicio?.message}>
+                        <FormGroup label={t('objectivesForm.startDateLabel')} htmlFor="startDate" error={errors.startDate?.message}>
                             <Controller
-                                name="fechaInicio" control={control}
+                                name="startDate" control={control}
                                 rules={{ validate: (value) => !value || isValid(value) || t('formValidation.invalidStartDate') }}
                                 render={({ field }) => (
                                     <DatePicker
                                         {...field} selected={field.value}
-                                        onChange={(date) => setValue('fechaInicio', date, { shouldValidate: true, shouldDirty: true })}
-                                        placeholder={t('common.selectDate')} disabled={loading} isError={!!errors.fechaInicio}
+                                        onChange={(date) => setValue('startDate', date, { shouldValidate: true, shouldDirty: true })}
+                                        placeholder={t('common.selectDate')} disabled={loading} isError={!!errors.startDate}
                                     />
                                 )}
                             />
                         </FormGroup>
-                        <FormGroup label={t('objectivesForm.endDateLabel')} htmlFor="fechaFin" required={true} error={errors.fechaFin?.message}>
+                        <FormGroup label={t('objectivesForm.endDateLabel')} htmlFor="endDate" required={true} error={errors.endDate?.message}>
                             <Controller
-                                name="fechaFin" control={control}
+                                name="endDate" control={control}
                                 rules={{
                                     required: t('formValidation.endDateRequired'),
                                     validate: (value) => {
                                         if (!value) return t('formValidation.endDateRequired');
                                         if (!isValid(value)) return t('formValidation.invalidEndDate');
-                                        const endDate = value;
-                                        const startDate = watch("fechaInicio");
-                                        if (startDate && isValid(startDate) && endDate < startDate) {
+                                        if (startDateValue && isValid(startDateValue) && value < startDateValue) {
                                             return t('formValidation.endDateAfterStart');
                                         }
                                         if (!isEditMode) {
                                             const today = new Date(); today.setHours(0,0,0,0);
-                                            const selectedEndDate = new Date(endDate); selectedEndDate.setHours(0,0,0,0);
+                                            const selectedEndDate = new Date(value); selectedEndDate.setHours(0,0,0,0);
                                             if (selectedEndDate < today) return t('formValidation.endDateNotInPast');
                                         }
                                         return true;
@@ -297,19 +292,19 @@ function ObjetivosForm({
                                 render={({ field }) => (
                                     <DatePicker
                                         {...field} selected={field.value}
-                                        onChange={(date) => setValue('fechaFin', date, { shouldValidate: true, shouldDirty: true })}
-                                        placeholder={t('common.selectDate')} disabled={loading} isError={!!errors.fechaFin}
-                                        minDate={fechaInicioValue && isValid(fechaInicioValue) ? fechaInicioValue : null}
+                                        onChange={(date) => setValue('endDate', date, { shouldValidate: true, shouldDirty: true })}
+                                        placeholder={t('common.selectDate')} disabled={loading} isError={!!errors.endDate}
+                                        minDate={startDateValue && isValid(startDateValue) ? startDateValue : null}
                                     />
                                 )}
                             />
                         </FormGroup>
                     </div>
                     {isEditMode && (
-                        <FormGroup label={t('common.status')} htmlFor="estado" required={true} error={errors.estado?.message}>
-                            <Input type="select" id="estado" {...register("estado", { required: t('formValidation.statusRequired') })} disabled={loading} isError={!!errors.estado}>
+                        <FormGroup label={t('common.status')} htmlFor="status" required={true} error={errors.status?.message}>
+                            <Input type="select" id="status" {...register("status", { required: t('formValidation.statusRequired') })} disabled={loading} isError={!!errors.status}>
                                 {Object.entries(statusKeyMap).map(([key, value]) => (
-                                    <option key={value} value={key}>{t(`status.${value}`)}</option>
+                                    <option key={key} value={key}>{t(`status.${value}`)}</option>
                                 ))}
                             </Input>
                         </FormGroup>
@@ -330,4 +325,4 @@ function ObjetivosForm({
     );
 }
 
-export default ObjetivosForm;
+export default ObjectiveForm;

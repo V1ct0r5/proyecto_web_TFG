@@ -15,12 +15,7 @@ function LoginForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { t } = useTranslation();
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        setError
-    } = useForm({
+    const { register, handleSubmit, formState: { errors }, setError } = useForm({
         mode: "onBlur"
     });
 
@@ -32,47 +27,23 @@ function LoginForm() {
         setIsSubmitting(true);
         try {
             const responseData = await api.login({
-                correo_electronico: data.email,
-                contrasena: data.password,
+                email: data.email,
+                password: data.password,
             });
 
-            if (responseData.token && responseData.usuario) {
-                contextLogin(responseData.token, responseData.usuario);
-                toast.success(t('loginForm.welcomeBack', { user: responseData.usuario.nombre_usuario }));
+            if (responseData.token && responseData.user) {
+                contextLogin(responseData.token, responseData.user);
+                toast.success(t('loginForm.welcomeBack', { user: responseData.user.username }));
 
                 const from = location.state?.from?.pathname;
-                const fromIsValidRedirect = from && from !== '/login' && from !== '/register' && from !== '/';
-
-                if (fromIsValidRedirect) {
-                    navigate(from, { replace: true });
-                } else if (responseData.hasObjectives === false) {
-                    navigate("/objectives", { replace: true });
-                    toast.info(t('loginForm.createFirstObjective'));
-                } else {
-                    navigate("/dashboard", { replace: true });
-                }
-            } else {
-                toast.error(t('loginForm.errors.unexpectedResponse'));
+                const isValidRedirect = from && from !== '/login' && from !== '/register';
+                navigate(isValidRedirect ? from : (responseData.user.hasObjectives ? "/dashboard" : "/objectives"), { replace: true });
             }
         } catch (error) {
-            const displayMessage = error.data?.message || error.message || t('loginForm.errors.defaultLoginError');
-            if (error.status !== 401 && error.status !== 403) {
-                toast.error(displayMessage);
-            }
-            
             if (error.status === 401 || error.status === 400) {
-                if (typeof setError === 'function') {
-                    setError("email", { type: "server", message: " " });
-                    setError("password", { type: "server", message: t('loginForm.errors.incorrectCredentials') });
-                }
-            } else if (error.data?.errors && Array.isArray(error.data.errors) && typeof setError === 'function') {
-                error.data.errors.forEach(err => {
-                    const fieldName = err.path || err.param || (err.field ? err.field.toLowerCase() : null);
-                    const reactHookFormField = fieldName === 'correo_electronico' ? 'email' : fieldName;
-                    if (reactHookFormField) {
-                        setError(reactHookFormField, { type: "server", message: err.msg || err.message });
-                    }
-                });
+                setError("password", { type: "server", message: t('loginForm.errors.incorrectCredentials') });
+            } else {
+                toast.error(error.message || t('loginForm.errors.defaultLoginError'));
             }
         } finally {
             setIsSubmitting(false);
@@ -81,51 +52,35 @@ function LoginForm() {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FormGroup
-                label={t('common.emailLabel')}
-                htmlFor="login-email"
-                required
-                error={errors.email?.message}
-            >
+            <FormGroup label={t('common.emailLabel')} htmlFor="login-email" required error={errors.email?.message}>
                 <Input
                     type="email"
                     id="login-email"
-                    placeholder={t('common.emailPlaceholder')}
+                    autoComplete="email"
+                    placeholder={t('common.emailPlaceholderExample')}
                     {...register("email", {
                         required: t('formValidation.emailRequired'),
-                        pattern: {
-                            value: /^\S+@\S+\.\S+$/i,
-                            message: t('formValidation.emailInvalid'),
-                        },
+                        pattern: { value: /^\S+@\S+\.\S+$/i, message: t('formValidation.emailInvalid') },
                     })}
                     disabled={isSubmitting}
                     isError={!!errors.email}
-                    aria-invalid={errors.email ? "true" : "false"}
                 />
             </FormGroup>
 
-            <FormGroup
-                label={t('common.passwordLabel')}
-                htmlFor="login-password"
-                required
-                error={errors.password?.message}
-            >
+            <FormGroup label={t('common.passwordLabel')} htmlFor="login-password" required error={errors.password?.message}>
                 <Input
                     type="password"
                     id="login-password"
-                    placeholder={t('common.passwordPlaceholder')}
-                    {...register("password", {
-                        required: t('formValidation.passwordRequired'),
-                    })}
                     autoComplete="current-password"
+                    placeholder={t('common.passwordPlaceholder')}
+                    {...register("password", { required: t('formValidation.passwordRequired') })}
                     disabled={isSubmitting}
                     isError={!!errors.password}
-                    aria-invalid={errors.password ? "true" : "false"}
                 />
             </FormGroup>
 
-            <Button type="submit" disabled={isSubmitting} variant="primary" className="full-width-button">
-                {isSubmitting ? <LoadingSpinner size="small" color="white" /> : t('loginForm.submitButton')}
+            <Button type="submit" disabled={isSubmitting} variant="primary" style={{ width: '100%' }}>
+                {isSubmitting ? <LoadingSpinner size="small" /> : t('loginForm.submitButton')}
             </Button>
         </form>
     );

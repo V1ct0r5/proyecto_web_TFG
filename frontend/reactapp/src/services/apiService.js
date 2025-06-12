@@ -8,203 +8,118 @@ const apiService = axios.create({
     baseURL: API_BASE_URL,
 });
 
-const createLogoutEvent = (details) => new CustomEvent('logoutUser', { detail: details });
+let isLogoutProcessInitiated = false;
 
-let logoutProcessInitiated = false;
-
+// Interceptor para añadir el token de autenticación a las cabeceras
 apiService.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
-        if (token && config.url !== '/auth/login' && config.url !== '/auth/register') {
+        if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => {
-        console.error("Error en configuración de petición Axios:", error);
+    (error) => Promise.reject(error)
+);
+
+// Interceptor para manejar globalmente las respuestas y los errores
+apiService.interceptors.response.use(
+    response => response.data, // Devuelve directamente la data de la respuesta
+    async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response) {
+            const { status, data } = error.response;
+
+            // Si el error es 401/403 y no es un reintento, cerrar la sesión.
+            if ((status === 401 || status === 403) && !originalRequest._retry) {
+                originalRequest._retry = true;
+                if (!isLogoutProcessInitiated) {
+                    isLogoutProcessInitiated = true;
+                    toast.error('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.', { position: "top-center" });
+                    // Dispara un evento global para que el AuthContext pueda reaccionar
+                    window.dispatchEvent(new CustomEvent('logoutUser'));
+                    setTimeout(() => { isLogoutProcessInitiated = false; }, 5000);
+                }
+            }
+
+            // Propagar un error formateado para que los componentes puedan usarlo
+            const errorMessage = data?.message || (Array.isArray(data?.errors) ? data.errors.map(e => e.msg).join(', ') : 'Ocurrió un error.');
+            const errorToThrow = new Error(errorMessage);
+            errorToThrow.data = data;
+            errorToThrow.status = status;
+            return Promise.reject(errorToThrow);
+        }
+
+        if (error.request) {
+            toast.error('Error de red. No se pudo conectar con el servidor.', { position: "top-center" });
+        }
+        
         return Promise.reject(error);
     }
 );
 
-apiService.interceptors.response.use(
-    response => response, 
-    async error => {
-        const originalRequest = error.config;
-        const isLoginAttempt = originalRequest.url === '/auth/login';
-
-        if (error.response) { 
-            const { status, data } = error.response;
-
-            if ((status === 401 || status === 403) && !isLoginAttempt && !originalRequest._retry) {
-                originalRequest._retry = true; 
-                
-                if (!logoutProcessInitiated) {
-                    logoutProcessInitiated = true;
-                    toast.error('Tu sesión ha expirado o el acceso ha sido denegado. Por favor, inicia sesión de nuevo.', {
-                        position: "top-center", autoClose: 4000,
-                    });
-                    
-                    window.dispatchEvent(createLogoutEvent({ reason: 'apiAuthError', notifyBackend: false }));
-                    
-                    setTimeout(() => { logoutProcessInitiated = false; }, 5000);
-                }
-                return Promise.reject(new Error(data?.message || error.message || 'Error de Autenticación: Sesión expirada o token inválido'));
-            }
-
-            const errorMessage = data?.message || 
-                                 (data?.errors && Array.isArray(data.errors) ? data.errors.map(e => e.msg || e.message).join(', ') : null) || 
-                                 error.message || 
-                                 'Ocurrió un error en la respuesta del servidor.';
-            
-            const errorToThrow = new Error(errorMessage);
-            errorToThrow.data = data; 
-            errorToThrow.status = status; 
-            return Promise.reject(errorToThrow);
-
-        } else if (error.request) {
-            toast.error('Error de red. Por favor, verifica tu conexión e inténtalo de nuevo.', { position: "top-center" });
-            return Promise.reject(new Error('Error de red. No se pudo conectar con el servidor.'));
-        } else {
-            toast.error('Error al configurar la petición al servidor.', { position: "top-center" });
-            return Promise.reject(new Error(`Error en la configuración de la petición: ${error.message}`));
-        }
-    }
-);
-
+/**
+ * Objeto que contiene todos los métodos para interactuar con la API del backend.
+ * Nota: El interceptor ya extrae 'res.data', por lo que podemos simplificar los '.then()'.
+ */
 const api = {
-    // --- Autenticación ---
-    register: async (userData) => {
-        const response = await apiService.post('/auth/register', userData);
-        return response.data;
-    },
-    login: async (credentials) => {
-        const response = await apiService.post('/auth/login', credentials);
-        return response.data;
-    },
-    logout: async () => {
-        try {
-            const response = await apiService.delete('/auth/logout');
-            return response.data;
-        } catch (error) {
-            console.warn("apiService: Falló la llamada al endpoint /auth/logout del backend, pero se procederá con logout local.", error.message);
-            throw error; 
-        }
-    },
+    // --- Auth ---
+    register: (userData) => apiService.post('/auth/register', userData),
+    login: (credentials) => apiService.post('/auth/login', credentials),
+    logout: () => apiService.post('/auth/logout'),
 
-    // --- Objetivos ---
-    // --- INICIO DE LA CORRECCIÓN: Se reemplaza getObjectives por getObjectivesFiltered ---
-    getObjectivesFiltered: async (filters = {}) => {
-        const params = new URLSearchParams();
-        if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
-        if (filters.category && filters.category !== 'all') params.append('category', filters.category);
-        if (filters.sortBy) params.append('sortBy', filters.sortBy);
-        if (filters.includeArchived) params.append('includeArchived', String(filters.includeArchived));
-        
-        const response = await apiService.get(`/objectives?${params.toString()}`);
-        return response.data;
-    },
-    // --- FIN DE LA CORRECCIÓN ---
-    getObjectiveById: async (objectiveId) => {
-        const response = await apiService.get(`/objectives/${objectiveId}`);
-        return response.data;
-    },
-    createObjective: async (objectiveData) => {
-        const response = await apiService.post('/objectives', objectiveData);
-        return response.data;
-    },
-    updateObjective: async (objectiveId, dataToUpdate) => {
-        const response = await apiService.put(`/objectives/${objectiveId}`, dataToUpdate);
-        return response.data;
-    },
-    deleteObjective: async (objectiveId) => {
-        const response = await apiService.delete(`/objectives/${objectiveId}`);
-        return response.data;
-    },
+    // --- Objectives ---
+    getObjectives: (filters) => apiService.get('/objectives', { params: filters }).then(res => res.data.objectives),
+    getObjectiveById: (id) => apiService.get(`/objectives/${id}`).then(res => res.data.objective),
+    createObjective: (data) => apiService.post('/objectives', data).then(res => res.data.objective),
+    updateObjective: (id, data) => apiService.put(`/objectives/${id}`, data).then(res => res.data.objective),
+    deleteObjective: (id) => apiService.delete(`/objectives/${id}`),
 
     // --- Dashboard ---
-    getDashboardSummaryStats: async () => {
-        const response = await apiService.get('/dashboard/summary-stats');
-        return response.data;
-    },
-    getDashboardRecentObjectives: async (limit = 4) => {
-        const response = await apiService.get(`/dashboard/recent-objectives?limit=${limit}`);
-        return response.data;
-    },
-    getDashboardRecentActivities: async (limit = 5) => {
-        const response = await apiService.get(`/dashboard/recent-activities?limit=${limit}`);
-        return response.data;
-    },
+    getDashboardSummary: () => apiService.get('/dashboard/summary-stats').then(res => res.data),
+    getRecentObjectives: (limit = 4) => apiService.get(`/dashboard/recent-objectives?limit=${limit}`).then(res => res.data),
+    getRecentActivities: (limit = 5) => apiService.get(`/dashboard/recent-activities?limit=${limit}`).then(res => res.data),
 
-    // --- Análisis ---
-    getAnalysisSummary: async (params) => {
-        const response = await apiService.get('/analysis/summary', { params });
-        return response.data;
-    },
-    getCategoryDistribution: async (params) => { const response = await apiService.get('/analysis/distribution/category', { params }); return response.data; },
-    getObjectiveStatusDistribution: async (params) => { const response = await apiService.get('/analysis/distribution/status', { params }); return response.data; },
-    getMonthlyProgress: async (params) => { const response = await apiService.get('/analysis/progress/monthly', { params }); return response.data; },
-    getObjectivesProgressChartData: async (params) => { const response = await apiService.get('/analysis/objectives-progress', { params }); return response.data; },
-    getRankedObjectives: async (params) => { const response = await apiService.get('/analysis/ranked-objectives', { params }); return response.data; },
-    getCategoryAverageProgress: async (params) => { const response = await apiService.get('/analysis/category-average-progress', { params }); return response.data; },
-    getDetailedObjectivesByCategory: async (params) => { const response = await apiService.get('/analysis/objectives-by-category-detailed', { params }); return response.data; },
+    // --- Analysis ---
+    getAnalysisSummary: (params) => apiService.get('/analysis/summary', { params }).then(res => res.data),
+    getCategoryDistribution: (params) => apiService.get('/analysis/category-distribution', { params }).then(res => res.data),
+    getObjectiveStatusDistribution: (params) => apiService.get('/analysis/status-distribution', { params }).then(res => res.data),
+    getMonthlyProgress: (params) => apiService.get('/analysis/monthly-progress', { params }).then(res => res.data),
+    getObjectivesProgressChartData: (params) => apiService.get('/analysis/objective-progress-chart-data', { params }).then(res => res.data),
+    getRankedObjectives: (params) => apiService.get('/analysis/ranked-objectives', { params }).then(res => res.data),
+    getCategoryAverageProgress: (params) => apiService.get('/analysis/category-average-progress', { params }).then(res => res.data),
+    getDetailedObjectivesByCategory: (params) => apiService.get('/analysis/detailed-by-category', { params }).then(res => res.data),
 
+    // --- Profile (SECCIÓN CORREGIDA) ---
+    /**
+     * Obtiene los datos del perfil del usuario.
+     * GET /api/profile
+     */
+    getUserProfile: () => apiService.get('/profile').then(res => res.data),
 
-    // --- Perfil de Usuario ---
-    getUserProfile: async () => {
-        const response = await apiService.get('/profile/details');
-        return response.data;
-    },
-    getUserProfileStats: async () => {
-        const response = await apiService.get('/profile/stats');
-        return response.data;
-    },
-    getUserAchievements: async () => {
-        const response = await apiService.get('/profile/achievements');
-        return response.data;
-    },
-    updateUserProfile: async (profileData) => {
-        const response = await apiService.put('/profile/details', profileData);
-        return response.data;
-    },
-    uploadAvatar: async (formData) => {
-        const response = await apiService.post('/profile/avatar', formData);
-        return response.data;
-    },
+    /**
+     * Actualiza el perfil del usuario (texto y/o avatar).
+     * Envía todos los datos en un único FormData.
+     * PATCH /api/profile
+     * @param {FormData} formData - Objeto FormData con los campos de texto y el archivo 'avatar' opcional.
+     */
+    updateUserProfile: (formData) => apiService.patch('/profile', formData).then(res => res.data),
 
-    // --- Configuración ---
-    getUserSettings: async () => {
-        const response = await apiService.get('/settings');
-        return response.data;
-    },
-    updateUserSettings: async (settingsData) => {
-        const response = await apiService.put('/settings', settingsData);
-        return response.data;
-    },
-    changePassword: async (passwordData) => {
-        const response = await apiService.put('/settings/change-password', passwordData);
-        return response.data;
-    },
-    exportUserData: async () => {
-        const response = await apiService.get('/settings/export-data', { responseType: 'json' });
-        return response.data;
-    },
-    deleteAccount: async () => {
-        const response = await apiService.delete('/settings/account');
-        return response.data;
-    },
+    /**
+     * Obtiene las estadísticas del perfil del usuario.
+     * GET /api/profile/stats
+     */
+    getUserProfileStats: () => apiService.get('/profile/stats').then(res => res.data),
+
+    // La función 'uploadAvatar' ya no es necesaria y se puede eliminar.
+
+    // --- Settings ---
+    getUserSettings: () => apiService.get('/settings').then(res => res.data),
+    updateUserSettings: (data) => apiService.put('/settings', data),
+    changePassword: (data) => apiService.put('/settings/change-password', data),
+    exportUserData: () => apiService.get('/settings/export-data'),
+    deleteAccount: () => apiService.delete('/settings/account'),
 };
-
-for (const key in api) {
-    if (typeof api[key] === 'function') {
-        const originalFunction = api[key];
-        api[key] = async (...args) => {
-            try {
-                return await originalFunction(...args);
-            } catch (error) {
-                throw error;
-            }
-        };
-    }
-}
 
 export default api;

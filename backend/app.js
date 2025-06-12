@@ -10,71 +10,91 @@ const YAML = require('yamljs');
 const path = require('path');
 
 const AppError = require('./src/utils/AppError');
+const errorHandler = require('./src/middlewares/errorHandler');
+
+// Importar todas las rutas
 const userRoutes = require('./src/api/routes/userRoutes');
 const objectivesRoutes = require('./src/api/routes/objectivesRoutes');
 const dashboardRoutes = require('./src/api/routes/dashboardRoutes');
 const analysisRoutes = require('./src/api/routes/analysisRoutes');
 const profileRoutes = require('./src/api/routes/profileRoutes');
 const settingsRoutes = require('./src/api/routes/settingsRoutes');
-const errorHandler = require('./src/middlewares/errorHandler');
 
 const app = express();
 
+// --- Middlewares Esenciales ---
+
+// Opciones de CORS más seguras
 const corsOptions = {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-    optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 
-app.use(helmet({ crossOriginResourcePolicy: false }));
+// Configuración de Helmet, permitiendo que los recursos sean de origen cruzado (necesario para el avatar)
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
-app.use('/uploads', (req, res, next) => {
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    next();
-});
-app.use('/uploads', express.static(path.join(__dirname, '..', 'public', 'uploads')));
+// Middlewares de parseo de JSON y URL-encoded con límites de payload
+app.use(express.json({ limit: '50kb' })); // Aumentado ligeramente por si hay descripciones largas
+app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+// Middleware de compresión de respuestas
 app.use(compression());
 
+// Middleware de logging para el entorno de desarrollo
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
 
+// --- Rutas Estáticas y de Documentación ---
+
+// Servir archivos estáticos del directorio de subidas (avatares)
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Servir documentación de la API con Swagger
 try {
     const swaggerDocumentPath = path.join(__dirname, '../docs/api/swagger.yaml');
     const swaggerDocument = YAML.load(swaggerDocumentPath);
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 } catch (e) {
-    console.error("[API Docs] Error al cargar el archivo swagger.yaml:", e.message);
+    console.error("[API Docs] Error al cargar swagger.yaml:", e.message);
 }
 
-app.use('/api', userRoutes);
-app.use('/api', objectivesRoutes);
-app.use('/api', dashboardRoutes);
-app.use('/api/analysis', analysisRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/settings', settingsRoutes);
+// --- Rutas de la API ---
 
+app.use('/api/auth', require('./src/api/routes/authRoutes'));
+app.use('/api/users', require('./src/api/routes/userRoutes'));
+app.use('/api/objectives', require('./src/api/routes/objectivesRoutes'));
+app.use('/api/dashboard', require('./src/api/routes/dashboardRoutes'));
+app.use('/api/analysis', require('./src/api/routes/analysisRoutes'));
+app.use('/api/profile', require('./src/api/routes/profileRoutes'));
+app.use('/api/settings', require('./src/api/routes/settingsRoutes'));
+
+// Endpoint raíz de la API
 app.get('/api', (req, res) => {
     res.status(200).json({
         status: 'success',
-        message: 'API de Seguimiento de Metas Personales funcionando correctamente. Documentación en /api-docs'
+        message: 'API de Seguimiento de Metas Personales funcionando. Documentación disponible en /api-docs'
     });
 });
 
+// Endpoint raíz del servidor
 app.get('/', (req, res) => {
-    res.send('Servidor Backend TFG. Accede a /api para los endpoints o /api-docs para la documentación.');
+    res.send('Servidor Backend TFG. Acceda a /api para los endpoints o /api-docs para la documentación.');
 });
 
+
+// --- Manejo de Errores ---
+
+// Middleware para rutas no encontradas (404)
 app.all('*', (req, res, next) => {
     next(new AppError(`La ruta ${req.originalUrl} no se ha encontrado en este servidor.`, 404));
 });
 
+// Middleware de manejo de errores global
 app.use(errorHandler);
 
 module.exports = app;

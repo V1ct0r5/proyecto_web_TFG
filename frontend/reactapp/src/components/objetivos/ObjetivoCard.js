@@ -1,225 +1,141 @@
-// frontend/src/components/objetivos/ObjetivoCard.js
+// frontend/reactapp/src/components/objetivos/ObjetivoCard.js
 import React from 'react';
 import styles from './ObjetivoCard.module.css';
 import { useNavigate } from 'react-router-dom';
-import {
-    FaArrowRight, FaHeartbeat, FaPiggyBank,
-    FaUserGraduate, FaUsers, FaBriefcase, FaStar, 
-    FaEdit, FaEye, FaCalendarAlt, FaRegDotCircle, FaArchive
-} from 'react-icons/fa';
-import { formatDateByPreference } from '../../utils/dateUtils';
-import { useSettings } from '../../context/SettingsContext';
 import { useTranslation } from 'react-i18next';
-import api from '../../services/apiService';
 import { toast } from 'react-toastify';
+import api from '../../services/apiService';
 
-const categoryKeyMap = {
-    'Salud': 'categories.health',
-    'Finanzas': 'categories.finance',
-    'Desarrollo personal': 'categories.personalDevelopment',
-    'Relaciones': 'categories.relationships',
-    'Carrera profesional': 'categories.career',
-};
+// Utilidades y Componentes UI
+import { getCategoryIcon, getStatusInfo } from '../../utils/ObjectiveUtils';
+import Button from '../ui/Button';
+import { FaEdit, FaEye, FaArchive, FaCalendarAlt } from 'react-icons/fa'; // Import FaCalendarAlt
+import { formatDateByPreference } from '../../utils/dateUtils'; // Import formatDateByPreference
+import { useSettings } from '../../context/SettingsContext'; // Import useSettings
 
-const getCategoryIcon = (category, isListItem = false) => {
-    const iconProps = isListItem ? { className: styles.listItemTypeIcon } : {};
-    switch (category) {
-        case 'Salud': return <FaHeartbeat {...iconProps} />;
-        case 'Finanzas': return <FaPiggyBank {...iconProps} />;
-        case 'Desarrollo personal': return <FaUserGraduate {...iconProps} />;
-        case 'Relaciones': return <FaUsers {...iconProps} />;
-        case 'Carrera profesional': return <FaBriefcase {...iconProps} />;
-        default: return isListItem ? <FaRegDotCircle {...iconProps} /> : <FaStar {...iconProps} />;
-    }
-};
-
-// --- CORRECCIÓN: La firma del componente ahora acepta 'onObjectiveArchived' y 'onObjectiveDeleted'
-function ObjetivoCard({ objective, isListItemStyle = false, onObjectiveArchived, onObjectiveDeleted }) {
-    const { settings } = useSettings();
+/**
+ * Muestra una tarjeta de resumen para un objetivo.
+ * @param {object} objective - El objeto del objetivo con datos.
+ * @param {function} onObjectiveArchived - Callback que se ejecuta cuando el objetivo es archivado exitosamente.
+ */
+function ObjetivoCard({ objective, onObjectiveArchived }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { settings } = useSettings(); // Use settings for date formatting
 
-    const translatedCategory = categoryKeyMap[objective.tipo_objetivo] 
-        ? t(categoryKeyMap[objective.tipo_objetivo]) 
-        : (objective.tipo_objetivo || t('categories.other'));
+    // El servicio ya nos da el progreso calculado, solo lo redondeamos.
+    const progressPercentage = Math.round(objective.progressPercentage || 0);
 
-    const translatedStatus = t(objective.estadoKey || objective.estado);
+    // Obtenemos la información de estado (traducción y clase CSS) desde la utilidad.
+    const { translatedStatus, statusClassName } = getStatusInfo(objective.status, t);
+console.log('Status Class Name:', statusClassName);
 
-    const progressPercentage = objective.progreso_calculado !== undefined && objective.progreso_calculado !== null
-        ? Math.round(objective.progreso_calculado)
-        : 0;
+    // Determine if objective has quantifiable values (initialValue, targetValue, currentValue)
+    // The objective object passed from backend should now have `initialValue`, `targetValue`, `currentValue` from the service
+    // and `unit` for measurement unit.
+    const hasQuantitativeValues = objective.initialValue != null && objective.targetValue != null;
 
+    const currentValueDisplay = hasQuantitativeValues && objective.currentValue != null
+        ? `${objective.currentValue.toLocaleString(settings.language)} ${objective.unit || ''}`
+        : 'N/A';
+
+    const targetValueDisplay = hasQuantitativeValues && objective.targetValue != null
+        ? `${objective.targetValue.toLocaleString(settings.language)} ${objective.unit || ''}`
+        : 'N/A';
+
+    // Last Updated Date logic
     const lastUpdated = objective.updatedAt
         ? formatDateByPreference(objective.updatedAt, settings.dateFormat, settings.language)
         : 'N/A';
+    
+    // --- Manejadores de Eventos ---
 
-    const handleCardClick = () => {
-        navigate(`/objectives/${objective.id_objetivo}`);
+    // Navega a la página de detalles (acción principal de la tarjeta)
+    const handleViewDetails = () => navigate(`/objectives/${objective.id}`);
+
+    // Edita el objetivo
+    const handleEdit = (e) => {
+        e.stopPropagation(); // Evita que se active el click de la tarjeta
+        navigate(`/objectives/edit/${objective.id}`);
     };
-
-    // --- INICIO DE LA CORRECCIÓN: Lógica para archivar ---
+    
+    // Archiva el objetivo
     const handleArchive = async (e) => {
-        e.stopPropagation(); // Evita que el clic se propague a la tarjeta y navegue
-        if (window.confirm(t('confirmationDialog.archiveObjective', { name: objective.nombre }))) {
+        e.stopPropagation(); // Evita que el clic se propague
+        if (window.confirm(t('confirmationDialog.archiveObjective', { name: objective.name }))) {
             try {
-                await api.updateObjective(objective.id_objetivo, { estado: 'Archivado' });
+                await api.updateObjective(objective.id, { status: 'ARCHIVED' });
                 toast.success(t('toast.objectiveArchiveSuccess'));
+                // Notifica al componente padre para que refresque la lista
                 if (onObjectiveArchived) {
-                    onObjectiveArchived(); // Llama a la función del padre para refrescar la lista
+                    onObjectiveArchived();
                 }
             } catch (error) {
-                toast.error(t('toast.objectiveArchiveError', { error: error.message }));
+                toast.error(error.message || t('toast.objectiveArchiveError'));
             }
         }
     };
-    // --- FIN DE LA CORRECCIÓN ---
-
-    if (isListItemStyle) {
-        const objectiveTypeIcon = getCategoryIcon(objective.tipo_objetivo, true);
-        return (
-            <div
-                className={styles.objetivoCardListItemStyle}
-                onClick={handleCardClick}
-                role="button"
-                tabIndex="0"
-                onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
-                aria-label={t('objectiveCard.viewDetailsAria', { name: objective.nombre })}
-            >
-                <div className={styles.listItemIconContainer}>
-                    {objectiveTypeIcon}
-                </div>
-                <div className={styles.listItemDetails}>
-                    <h4 className={styles.listItemTitle}>{objective.nombre}</h4>
-                    <p className={styles.listItemUpdateDate}>{t('objectiveCard.updated', { date: lastUpdated })}</p>
-                </div>
-                <div className={styles.listItemProgress}>
-                    <span className={styles.listItemProgressText}>{t('common.progress')}</span>
-                    <span className={styles.listItemProgressPercentage}>{progressPercentage}%</span>
-                </div>
-                <button
-                    className={styles.listItemArrowButton}
-                    onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
-                    aria-label={t('objectiveCard.viewDetailsAria', { name: objective.nombre })}
-                >
-                    <FaArrowRight />
-                </button>
-            </div>
-        );
-    }
-
-    let showProgressBar = false;
-    let initialValue = NaN, targetValue = NaN, currentValue = NaN;
-    let hasQuantitativeValues = false;
-
-    const isPotentiallyQuantitative =
-        objective.valor_inicial_numerico !== null && typeof objective.valor_inicial_numerico !== 'undefined' &&
-        objective.valor_cuantitativo !== null && typeof objective.valor_cuantitativo !== 'undefined';
-
-    if (isPotentiallyQuantitative) {
-        initialValue = parseFloat(objective.valor_inicial_numerico);
-        targetValue = parseFloat(objective.valor_cuantitativo);
-        currentValue = (objective.valor_actual !== null && typeof objective.valor_actual !== 'undefined' && !isNaN(parseFloat(objective.valor_actual)))
-            ? parseFloat(objective.valor_actual)
-            : initialValue;
-        if (!isNaN(initialValue) && !isNaN(targetValue) && !isNaN(currentValue)) {
-            hasQuantitativeValues = true;
-        }
-    }
-    
-    if (objective.estado === 'Completado' || hasQuantitativeValues) {
-        showProgressBar = true;
-    }
-
-    const statusClassName = `status-${objective.estado?.toLowerCase().replace(/\s/g, '')}`;
 
     return (
-        <div className={styles.objetivoCard}>
+        <article className={styles.objetivoCard} onClick={handleViewDetails} role="link" tabIndex="0" aria-label={`Ver detalles de ${objective.name}`}>
             <div className={styles.cardContent}>
-                <div className={styles.cardHeaderContent}>
-                    <h3 className={styles.cardTitle}>{objective.nombre}</h3>
+                <header className={styles.cardHeader}>
+                    <h3 className={styles.cardTitle}>{objective.name}</h3>
                     <div className={styles.categoryBadge}>
-                        <span className={styles.categoryBadgeIcon}>{getCategoryIcon(objective.tipo_objetivo)}</span>
-                        <span className={styles.categoryBadgeName}>{translatedCategory}</span>
+                        {getCategoryIcon(objective.category)}
+                        <span>{t(`categories.${objective.category.toLowerCase()}`, objective.category)}</span>
                     </div>
-                </div>
-                {objective.descripcion && <p className={styles.cardDescription}>{objective.descripcion}</p>}
+                </header>
+
+                {objective.description && <p className={styles.cardDescription}>{objective.description}</p>}
                 
-                {showProgressBar && (
+                {hasQuantitativeValues && ( // Only show progress bar for quantifiable objectives
                     <div className={styles.progressContainer}>
                         <div className={styles.progressHeader}>
-                            <span className={styles.progressLabel}>{t('common.progress')}</span>
-                            <span className={styles.progressPercentage}>{progressPercentage}%</span>
+                            <span>{t('common.progress')}</span>
+                            <span>{progressPercentage}%</span>
                         </div>
                         <div className={styles.progressBar}>
-                            <div
-                                className={`${styles.progressFill} ${
-                                    progressPercentage < 33 ? styles.progressFillLow :
-                                    progressPercentage < 66 ? styles.progressFillMedium :
-                                    styles.progressFillHigh
-                                }`}
-                                style={{ width: `${progressPercentage}%` }}
-                            ></div>
+                            <div className={`${styles.progressFill} ${
+                                progressPercentage < 33 ? styles.progressFillLow :
+                                progressPercentage < 66 ? styles.progressFillMedium :
+                                styles.progressFillHigh
+                            }`} style={{ width: `${progressPercentage}%` }} />
                         </div>
-                    </div>
-                )}
-
-                {showProgressBar && hasQuantitativeValues && (
-                    <div className={styles.progressValues}>
-                        <div className={styles.progressValueBox}>
-                            <div className={styles.progressValueLabel}>{t('objectiveCard.current')}</div>
-                            <div className={styles.progressValueNumber}>
-                                {isNaN(currentValue) ? (initialValue !== null && typeof initialValue !== 'undefined' && !isNaN(parseFloat(initialValue)) ? parseFloat(initialValue).toLocaleString(settings.language) : 'N/A') : currentValue.toLocaleString(settings.language)} {objective.unidad_medida || ''}
+                        <div className={styles.progressValues}>
+                            <div className={styles.progressValueBox}>
+                                <div className={styles.progressValueLabel}>{t('objectiveCard.current')}</div>
+                                <div className={styles.progressValueNumber}>{currentValueDisplay}</div>
                             </div>
-                        </div>
-                        <div className={styles.progressValueBox}>
-                            <div className={styles.progressValueLabel}>{t('objectiveCard.target')}</div>
-                            <div className={styles.progressValueNumber}>
-                                {isNaN(targetValue) ? 'N/A' : targetValue.toLocaleString(settings.language)} {objective.unidad_medida || ''}
+                            <div className={styles.progressValueBox}>
+                                <div className={styles.progressValueLabel}>{t('objectiveCard.target')}</div>
+                                <div className={styles.progressValueNumber}>{targetValueDisplay}</div>
                             </div>
                         </div>
                     </div>
                 )}
-
+                
                 <div className={styles.progressDate}>
                     <FaCalendarAlt className={styles.dataIcon} />
                     <span className={styles.dataLabel}>{t('common.updatedLabel')}</span>
                     <span className={styles.dataValue}>{lastUpdated}</span>
                 </div>
+
                 <div className={`${styles.cardStatus} ${styles[statusClassName]}`}>
                     {translatedStatus}
                 </div>
             </div>
-            <div className={styles.cardFooter}>
+
+            <footer className={styles.cardFooter}>
                 <div className={styles.cardActions}>
-                    <button
-                        className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`}
-                        onClick={(e) => {e.stopPropagation(); navigate(`/objectives/edit/${objective.id_objetivo}`)}}
-                        aria-label={t('common.edit')}
-                    >
-                        <FaEdit className={styles.buttonIcon} />
-                        {t('common.edit')}
-                    </button>
-                    <button
-                        className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`}
-                        onClick={(e) => {e.stopPropagation(); handleCardClick()}}
-                        aria-label={t('common.details')}
-                    >
-                        <FaEye className={styles.buttonIcon} />
-                        {t('common.details')}
-                    </button>
-                    {/* --- INICIO DE LA CORRECCIÓN: Botón de Archivar --- */}
-                    <button
-                        className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall} ${styles.buttonArchive}`}
-                        onClick={handleArchive}
-                        aria-label={t('common.archive')}
-                    >
-                        <FaArchive className={styles.buttonIcon} />
-                        {t('common.archive')}
-                    </button>
-                    {/* --- FIN DE LA CORRECCIÓN --- */}
+                    <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleEdit} leftIcon={<FaEdit />}>{t('common.edit')}</Button>
+                    {objective.status !== 'ARCHIVED' && (
+                        <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleArchive} leftIcon={<FaArchive />}>{t('common.archive')}</Button>
+                    )}
+                    <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall} ${styles.buttonArchive}`} variant="outline" size="small" onClick={handleViewDetails} leftIcon={<FaEye />}>{t('common.details')}</Button>
                 </div>
-            </div>
-        </div>
+            </footer>
+        </article>
     );
 }
 

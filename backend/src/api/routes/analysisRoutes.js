@@ -1,3 +1,4 @@
+// backend/src/api/routes/analysisRoutes.js
 const express = require('express');
 const router = express.Router();
 const analysisController = require('../controllers/analysisController');
@@ -5,16 +6,16 @@ const authMiddleware = require('../../middlewares/authMiddleware');
 
 router.use(authMiddleware);
 
-// Rutas existentes
-router.get('/summary', analysisController.getSummaryStats);
-router.get('/distribution/category', analysisController.getCategoryDistribution);
-router.get('/distribution/status', analysisController.getObjectiveStatusDistribution);
-router.get('/progress/monthly', analysisController.getMonthlyProgress);
-
-// Nuevas rutas para análisis avanzado
-router.get('/objectives-progress', analysisController.getObjectivesProgressData);
+router.get('/summary', analysisController.getSummary);
+router.get('/category-distribution', analysisController.getCategoryDistribution);
+router.get('/status-distribution', analysisController.getObjectiveStatusDistribution);
+router.get('/monthly-progress', analysisController.getMonthlyProgress);
 router.get('/ranked-objectives', analysisController.getRankedObjectives);
-router.get('/category-average-progress', analysisController.getCategoryAverageProgressData);
-router.get('/objectives-by-category-detailed', analysisController.getDetailedObjectivesByCategory);
+router.get('/category-average-progress', analysisController.getCategoryAverageProgress);
+router.get('/detailed-by-category', analysisController.getDetailedObjectivesByCategory);
+
+// NUEVO: Ruta añadida para el gráfico de progreso por objetivo.
+// Esta ruta debe coincidir con la que llama 'apiService.js' en el frontend.
+router.get('/objective-progress-chart-data', analysisController.getObjectivesProgressChartData);
 
 module.exports = router;

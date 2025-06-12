@@ -3,6 +3,16 @@ import styles from './ConfirmationDialog.module.css';
 import Button from './Button';
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Un diálogo modal accesible para confirmar acciones del usuario.
+ * Implementa "focus trapping" y cierre con la tecla Escape.
+ * @param {boolean} isOpen - Controla la visibilidad del diálogo.
+ * @param {function} onClose - Función a llamar para cerrar el diálogo.
+ * @param {function} onConfirm - Función a llamar cuando el usuario confirma la acción.
+ * @param {string} title - El título del diálogo.
+ * @param {string} message - El mensaje o pregunta del diálogo.
+ */
+
 function ConfirmationDialog({
     isOpen,
     onClose,

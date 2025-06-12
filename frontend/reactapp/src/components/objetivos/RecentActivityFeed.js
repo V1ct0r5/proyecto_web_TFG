@@ -24,12 +24,6 @@ const RecentActivityFeed = ({ activities }) => {
     const dateFnsLocales = { es: es, en: enUS };
     const currentLocale = dateFnsLocales[i18n.language] || enUS;
 
-    // =================================================================
-    // ======> ESTA ES LA LÍNEA MÁS IMPORTANTE PARA DEPURAR <======
-    console.log('Verificando datos de actividades que llegan al componente:', activities);
-    console.log('Verificando las CLAVES (keys):', activities.map(act => act.id_log));
-    // =================================================================
-
     if (!activities || activities.length === 0) {
         return <p className={styles.noData}>{t('activityFeed.noRecentActivity')}</p>;
     }
@@ -38,13 +32,15 @@ const RecentActivityFeed = ({ activities }) => {
         <div className={styles.feedContainer}>
             <ul className={styles.feedList}>
                 {activities.map(act => {
-                    const translationKey = act.descripcion;
+                    // CORRECCIÓN: Usar los nombres de propiedad en camelCase
+                    const translationKey = act.descriptionKey;
                     let params = {};
                     try {
-                        if (typeof act.detalles_adicionales === 'string') {
-                            params = JSON.parse(act.detalles_adicionales);
+                        // CORRECIÓN: Usar 'additionalDetails'
+                        if (typeof act.additionalDetails === 'string') {
+                            params = JSON.parse(act.additionalDetails);
                         } else {
-                            params = act.detalles_adicionales || {};
+                            params = act.additionalDetails || {};
                         }
                     } catch (e) {
                         console.error("Error al parsear detalles_adicionales:", e);
@@ -60,17 +56,18 @@ const RecentActivityFeed = ({ activities }) => {
 
                     const translatedDescription = t(translationKey, params);
                     
-                    const timestamp = act.createdAt || act.timestamp;
-                    const date = timestamp ? parseISO(timestamp) : null;
+                    const date = act.createdAt ? parseISO(act.createdAt) : null;
                     let timeAgo = '';
                     if (date && isValid(date)) {
                         timeAgo = formatDistanceToNow(date, { addSuffix: true, locale: currentLocale });
                     }
 
                     return (
-                        <li key={act.id_log} className={styles.feedItem}>
+                        // CORRECIÓN: Usar 'act.id' para la key
+                        <li key={act.id} className={styles.feedItem}>
                             <div className={styles.activityIcon}>
-                                {activityIcons[act.tipo_actividad] || activityIcons.DEFAULT}
+                                {/* CORRECIÓN: Usar 'act.activityType' */}
+                                {activityIcons[act.activityType] || activityIcons.DEFAULT}
                             </div>
                             <div className={styles.activityContent}>
                                 <p className={styles.activityDescription}>
@@ -80,6 +77,7 @@ const RecentActivityFeed = ({ activities }) => {
                                     <span className={styles.activityTime}>
                                         {timeAgo}
                                     </span>
+
                                 )}
                             </div>
                         </li>

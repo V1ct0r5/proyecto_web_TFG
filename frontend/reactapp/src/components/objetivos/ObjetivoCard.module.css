@@ -25,12 +25,12 @@
     flex-grow: 1;
 }
 
-.cardHeaderContent {
+.cardHeader{
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    flex-wrap: wrap;
+    justify-content: space-between; /* Pushes title to left, badge to right */
+    align-items: flex-start; /* Aligns items to the top if they have different heights */
+    gap: 1rem; /* Space between title and badge */
+    flex-wrap: wrap; /* Allows wrapping if space is insufficient */
 }
 
 .cardTitle {
@@ -236,30 +236,33 @@
     margin-top: 0.5rem;
 }
 
-.status-pendiente, .status-pending {
-    color: var(--warning-foreground);
-    background-color: color-mix(in srgb, var(--warning) 20%, transparent);
+.statusPendiente, .statusPending {
+    color: var(--warning-foreground-strong); /* Usar un color de texto fuerte para el warning suave */
+    background-color: var(--warning-background-soft); /* Color de fondo suave para warning */
+    border: 1px solid var(--warning-border); /* Añadir un borde sutil para definirlo mejor */
 }
 
-.status-enprogreso, .status-inprogress {
-    color: var(--primary);
-    background-color: color-mix(in srgb, var(--primary) 20%, transparent);
+.statusEnprogreso, .statusInprogress {
+    color: var(--primary); /* El texto primario puede ser el mismo azul */
+    background-color: var(--primary-soft-bg); /* Color de fondo suave para primary */
+    border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent); /* Un borde que combine */
 }
 
-.status-completado, .status-completed {
-    color: var(--success-foreground);
-    background-color: color-mix(in srgb, var(--success) 20%, transparent);
+.statusCompletado, .statusCompleted {
+    color: var(--success-strong-text); /* Usar un color de texto fuerte para el success suave */
+    background-color: var(--success-soft-bg); /* Color de fondo suave para success */
+    border: 1px solid color-mix(in srgb, var(--success) 20%, transparent); /* Un borde que combine */
 }
 
-/* --- INICIO DE CORRECCIÓN: Estilos para Fallido y Archivado --- */
-.status-fallido, .status-failed {
-    color: var(--destructive-foreground);
-    background-color: color-mix(in srgb, var(--destructive) 20%, transparent);
+.statusFallido, .statusFailed { /* Corregido de .statusfFallido a .statusFallido */
+    color: var(--destructive); /* El texto destructivo puede ser el mismo rojo */
+    background-color: var(--destructive-soft-bg); /* Color de fondo suave para destructive */
+    border: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent); /* Un borde que combine */
 }
 
-.status-archivado, .status-archived {
-    color: var(--muted-foreground);
-    background-color: var(--muted);
-    border: 1px dashed var(--border);
+.statusArchivado, .statusArchived { /* Corregido de .status-archivado a .statusArchived para consistencia en las clases JS */
+    color: var(--muted-foreground); /* Un color de texto neutro */
+    background-color: var(--muted); /* Fondo más suave, similar al muted */
+    border: 1px solid var(--border-light); /* Borde claro para un look más "archivado" */
 }
 /* --- FIN DE LA CORRECCIÓN --- */

@@ -1,22 +1,22 @@
+// backend/src/api/routes/profileRoutes.js
 const express = require('express');
 const router = express.Router();
 const profileController = require('../controllers/profileController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const avatarUploadMiddleware = require('../../middlewares/uploadMiddleware');
 
-// Aplicar autenticación a todas las rutas de perfil primero
 router.use(authMiddleware);
 
-router.get('/details', profileController.getProfileDetails);
-router.get('/stats', profileController.getProfileStats);
-router.get('/achievements', profileController.getProfileAchievements);
-router.put('/details', profileController.updateProfileDetails);
+// --- Rutas GET ---
+router.get('/', profileController.getUserProfile); //
+router.get('/stats', profileController.getUserStats); //
 
-// Ruta para subir avatar
-router.post(
-    '/avatar',
-    avatarUploadMiddleware,   // Tu middleware de Multer para procesar el archivo 'avatar'
-    profileController.uploadAvatar // Tu controlador final
+// --- Ruta ÚNICA para Actualizar Perfil (Texto y/o Avatar) ---
+// El middleware procesa el archivo primero, y luego el controlador recibe tanto req.body como req.file.
+router.patch(
+    '/',
+    avatarUploadMiddleware, // 1. Procesa el archivo y los campos de texto.
+    profileController.updateUserProfile // 2. El controlador actualiza la base de datos.
 );
 
 module.exports = router;

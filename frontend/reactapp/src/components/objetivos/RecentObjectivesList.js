@@ -22,25 +22,30 @@ const RecentObjectivesList = ({ objectives }) => {
         <div className={styles.listContainer}>
             <ul className={styles.list}>
                 {objectives.map(obj => (
-                    <li key={obj.id_objetivo} className={styles.listItem}>
+                    // CORRECCIÓN: Usar obj.id para la key
+                    <li key={obj.id} className={styles.listItem}>
                         <div className={styles.objectiveIcon}>
                             <FaChartLine />
                         </div>
                         <div className={styles.objectiveInfo}>
-                            <Link to={`/objectives/${obj.id_objetivo}`} className={styles.objectiveNameLink}>
-                                {obj.nombre}
+                            {/* CORRECCIÓN: Usar obj.id para el enlace y obj.name para el texto */}
+                            <Link to={`/objectives/${obj.id}`} className={styles.objectiveNameLink}>
+                                {obj.name}
                             </Link>
                             <span className={styles.lastUpdate}>
                                 {t('recentObjectives.updatedAgo', { distance: formatDistanceToNow(new Date(obj.updatedAt), { addSuffix: false, locale: currentLocale }) })}
                             </span>
                         </div>
                         <div className={styles.objectiveActions}>
-                            <span className={styles.progressPercent}>{obj.progreso_calculado}%</span>
+                            {/* CORRECCIÓN: Usar obj.progressPercentage */}
+                            <span className={styles.progressPercent}>{obj.progressPercentage}%</span>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => navigate(`/objectives/${obj.id_objetivo}`)}
-                                aria-label={t('recentObjectives.viewDetailsAria', {name: obj.nombre})}
+                                // CORRECCIÓN: Usar obj.id para la navegación
+                                onClick={() => navigate(`/objectives/${obj.id}`)}
+                                // CORRECCIÓN: Usar obj.name para el aria-label
+                                aria-label={t('recentObjectives.viewDetailsAria', {name: obj.name})}
                                 className={styles.detailsButton}
                             >
                                 <FaArrowRight />

@@ -1,103 +1,56 @@
 // frontend/reactapp/src/App.js
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { SettingsProvider, useSettings } from './context/SettingsContext';
 
+// Importaciones de Páginas
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegistroPage';
+import DashboardPage from './pages/DashboardPage';
+// ... (el resto de las importaciones de páginas)
 import CreateGoalPage from './pages/CreateGoalPage';
 import MyObjectivesPage from './pages/MyObjectivesPage';
 import EditGoalPage from './pages/EditGoalPage';
 import GoalDetailPage from './pages/GoalDetailPage';
 import UpdateProgressPage from './pages/UpdateProgressPage';
-import NewDashboardPage from './pages/DashboardPage';
 import AnalysisPage from './pages/AnalysisPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 
+
+// Importaciones de Layouts y Componentes UI
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import AuthLayout from './layouts/AuthLayout';
 import AppHeader from './layouts/AppHeader';
 import Sidebar from './layouts/SideBar/SideBar';
 import FullPageLoader from './components/ui/FullPageLoader';
 
-import './styles/index.css';
-import 'react-toastify/dist/ReactToastify.css';
-import 'react-calendar/dist/Calendar.css';
-
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { SettingsProvider, useSettings } from './context/SettingsContext';
-
+// El componente principal que contiene la lógica de enrutamiento y layout
 function AppContent() {
-    const { isAuthenticated, isLoading: isAuthLoading, logout: contextLogout } = useAuth();
-    const { isLoadingSettings, isApplyingTheme } = useSettings();
-    const { t } = useTranslation();
+    const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+    const { isLoadingSettings } = useSettings();
     const location = useLocation();
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const isLoggingOutRef = useRef(isLoggingOut);
-
-    useEffect(() => {
-        isLoggingOutRef.current = isLoggingOut;
-    }, [isLoggingOut]);
-
-    useEffect(() => {
-        const handleLogoutEvent = (event) => {
-            if (!isAuthenticated || isLoggingOutRef.current) {
-                return;
-            }
-            setIsLoggingOut(true);
-            const notifyBackend = event.detail?.notifyBackend !== undefined ? event.detail.notifyBackend : true;
-            contextLogout({ notifyBackend })
-                .catch(err => {
-                    console.error("AppContent: Error durante contextLogout:", err);
-                });
-        };
-        window.addEventListener('logoutUser', handleLogoutEvent);
-        return () => {
-            window.removeEventListener('logoutUser', handleLogoutEvent);
-        };
-    }, [contextLogout, isAuthenticated]);
-
-    useEffect(() => {
-        if (location.pathname === '/login' && !isAuthenticated && !isAuthLoading) {
-            if (isLoggingOut) {
-                setIsLoggingOut(false);
-            }
-        }
-    }, [location.pathname, isAuthenticated, isAuthLoading, isLoggingOut]);
+    const { t } = useTranslation();
 
     const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
 
-    if ((isAuthLoading || (isAuthenticated && isLoadingSettings) || isApplyingTheme) && !isAuthRoute) {
-        const message = isAuthLoading ? t('loaders.initializing')
-                      : (isLoadingSettings ? t('loaders.loadingSettings') 
-                      : t('loaders.applyingTheme'));
-        return <FullPageLoader message={message} />;
+    // Muestra un loader mientras se verifica el estado de autenticación o se cargan las configuraciones
+    if (isAuthLoading || (isAuthenticated && isLoadingSettings)) {
+        return <FullPageLoader message={t('loaders.initializing')} />;
     }
 
-    return (
-        <div className="App">
-            {isLoggingOut && location.pathname !== '/login' && (
-                <FullPageLoader message={t('loaders.sessionEnded')} />
-            )}
-
-            {isAuthenticated && !isAuthRoute && <Sidebar />}
-
-            <div className={`main-layout-content ${isAuthenticated && !isAuthRoute ? "with-sidebar" : ""}`}>
-                {isAuthenticated && !isAuthRoute && <AppHeader />}
-                <main className={isAuthenticated && !isAuthRoute ? "main-content-area" : "main-content-centered"}>
-                    <Routes>
-                        <Route
-                            path="/"
-                            element={isAuthLoading ? <FullPageLoader message={t('loaders.loading')} /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)}
-                        />
-                        <Route element={isAuthLoading ? <FullPageLoader message={t('loaders.verifyingSession')} /> : <AuthLayout />}>
-                            <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
-                            <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
-                        </Route>
-                        <Route element={<ProtectedRoute />}>
-                            <Route path="/dashboard" element={<NewDashboardPage />} />
+    // Si el usuario está autenticado, renderiza el layout principal con Sidebar y Header
+    if (isAuthenticated) {
+        return (
+            <div className="App">
+                <Sidebar />
+                <div className="main-layout-content">
+                    <AppHeader />
+                    <main className="main-content-area">
+                        <Routes>
+                            <Route path="/dashboard" element={<DashboardPage />} />
                             <Route path="/objectives" element={<CreateGoalPage />} />
                             <Route path="/mis-objetivos" element={<MyObjectivesPage />} />
                             <Route path="/analisis" element={<AnalysisPage />} />
@@ -106,18 +59,31 @@ function AppContent() {
                             <Route path="/objectives/edit/:id" element={<EditGoalPage />} />
                             <Route path="/objectives/:id" element={<GoalDetailPage />} />
                             <Route path="/objectives/:id/update-progress" element={<UpdateProgressPage />} />
-                        </Route>
-                        <Route
-                            path="*"
-                            element={isAuthLoading ? <FullPageLoader message={t('loaders.loading')} /> : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />)}
-                        />
-                    </Routes>
-                </main>
+                            {/* Redirigir cualquier otra ruta al dashboard */}
+                            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                        </Routes>
+                    </main>
+                </div>
             </div>
+        );
+    }
+
+    // Si no está autenticado, renderiza solo las rutas públicas
+    return (
+        <div className="App">
+            <main className="main-centered-auth">
+                <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
+            </main>
         </div>
     );
 }
 
+
+// El componente raíz que envuelve todo con los proveedores de contexto
 function App() {
     return (
         <AuthProvider>
@@ -125,19 +91,19 @@ function App() {
                 <BrowserRouter>
                     <AppContent />
                 </BrowserRouter>
+                <ToastContainer
+                    position="bottom-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="colored"
+                />
             </SettingsProvider>
-            <ToastContainer
-                position="bottom-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="colored"
-            />
         </AuthProvider>
     );
 }

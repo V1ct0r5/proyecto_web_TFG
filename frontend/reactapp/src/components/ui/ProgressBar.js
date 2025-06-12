@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styles from './ProgressBar.module.css';
 import { FaChartLine, FaArrowDown, FaMinus } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
@@ -7,53 +7,54 @@ const ProgressBar = ({ percentage }) => {
     const { t } = useTranslation();
     const clampedPercentage = Math.max(0, Math.min(100, parseFloat(percentage) || 0));
 
-    let progressStatusText;
-    let StatusIconComponent;
-    let progressFillColor;
-
-    if (clampedPercentage >= 75) {
-        progressStatusText = t('progressBar.excellent');
-        StatusIconComponent = <FaChartLine className={`${styles.statusIcon} ${styles.iconUp}`} />;
-        progressFillColor = 'var(--progress-excellent, #20c997)';
-    } else if (clampedPercentage >= 50) {
-        progressStatusText = t('progressBar.good');
-        StatusIconComponent = <FaChartLine className={`${styles.statusIcon} ${styles.iconUp}`} />;
-        progressFillColor = 'var(--progress-good, #28a745)';
-    } else if (clampedPercentage >= 25) {
-        progressStatusText = t('progressBar.regular');
-        StatusIconComponent = <FaMinus className={`${styles.statusIcon} ${styles.iconNeutral}`} />;
-        progressFillColor = 'var(--progress-regular, #6f42c1)';
-    } else if (clampedPercentage > 0){
-        progressStatusText = t('progressBar.poor');
-        StatusIconComponent = <FaArrowDown className={`${styles.statusIcon} ${styles.iconDown}`} />;
-        progressFillColor = 'var(--progress-poor, #ffc107)';
-    } else {
-        progressStatusText = t('progressBar.none');
-        StatusIconComponent = <FaMinus className={`${styles.statusIcon} ${styles.iconNeutral}`} />;
-        progressFillColor = 'var(--progress-none, #6c757d)';
-    }
+    // Lógica para determinar el texto, el icono y la CLASE CSS del estado
+    const { statusText, StatusIcon, statusClass } = useMemo(() => {
+        if (clampedPercentage >= 75) {
+            return {
+                statusText: t('progressBar.excellent'),
+                StatusIcon: <FaChartLine className={`${styles.statusIcon} ${styles.iconUp}`} />,
+                statusClass: styles.excellent,
+            };
+        }
+        if (clampedPercentage >= 50) {
+            return {
+                statusText: t('progressBar.good'),
+                StatusIcon: <FaChartLine className={`${styles.statusIcon} ${styles.iconUp}`} />,
+                statusClass: styles.good,
+            };
+        }
+        if (clampedPercentage >= 25) {
+            return {
+                statusText: t('progressBar.regular'),
+                StatusIcon: <FaMinus className={`${styles.statusIcon} ${styles.iconNeutral}`} />,
+                statusClass: styles.regular,
+            };
+        }
+        return {
+            statusText: t('progressBar.poor'),
+            StatusIcon: <FaArrowDown className={`${styles.statusIcon} ${styles.iconDown}`} />,
+            statusClass: styles.poor,
+        };
+    }, [clampedPercentage, t]);
     
     return (
         <div className={styles.progressBarContainer}>
             <div className={styles.progressBarTrack}>
                 <div 
-                    className={styles.progressBarFill} 
-                    style={{ 
-                        width: `${clampedPercentage}%`,
-                        backgroundColor: progressFillColor
-                    }}
-                >
-                </div>
+                    // Se aplica la clase de estado directamente
+                    className={`${styles.progressBarFill} ${statusClass}`} 
+                    style={{ width: `${clampedPercentage}%` }}
+                />
             </div>
             <div className={styles.progressLabels}>
                 <span>0%</span>
                 <span>50%</span>
                 <span>100%</span>
             </div>
-            {progressStatusText && (
+            {statusText && (
                 <div className={styles.statusText}>
-                    {StatusIconComponent}
-                    <span>{progressStatusText}</span>
+                    {StatusIcon}
+                    <span>{statusText}</span>
                 </div>
             )}
         </div>

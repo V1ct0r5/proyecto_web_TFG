@@ -1,69 +1,70 @@
+// backend/src/api/models/progress.js
 const { DataTypes } = require('sequelize');
 
+/**
+ * Defines the Progress model for tracking objective progress entries.
+ * @param {Sequelize} sequelize - The Sequelize instance.
+ * @returns {ModelCtor<Model>} The Progress model.
+ */
 module.exports = (sequelize) => {
     const Progress = sequelize.define('Progress', {
-        id_progreso: {
+        id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
-            allowNull: false
+            allowNull: false,
+            field: 'id_progreso'
         },
-        id_objetivo: {
+        objectiveId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: {
-                model: 'Objetivos',
-                key: 'id_objetivo'
-            }
+            references: { model: 'Objetivos', key: 'id_objetivo' },
+            field: 'id_objetivo'
         },
-        id_usuario: {
+        userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: {
-                model: 'Usuarios',
-                key: 'id'
-            }
+            references: { model: 'Usuarios', key: 'id' },
+            field: 'id_usuario'
         },
-        fecha_registro: {
-            type: DataTypes.DATEONLY, // Solo la fecha, sin la hora
+        entryDate: {
+            type: DataTypes.DATEONLY,
             allowNull: false,
-            defaultValue: DataTypes.NOW, // Establece la fecha actual por defecto al crear
-            validate: {
-                isDate: { msg: 'La fecha de registro debe ser una fecha válida.' }
-            }
+            defaultValue: DataTypes.NOW,
+            validate: { isDate: { msg: 'La fecha de registro debe ser una fecha válida.' } },
+            field: 'fecha_registro'
         },
-        valor_actual: {
-            type: DataTypes.DECIMAL(10, 2), // Para precisión, ej. 10 dígitos totales, 2 después del decimal
+        value: {
+            type: DataTypes.DECIMAL(10, 2),
             allowNull: false,
             validate: {
-                isDecimal: { msg: 'El valor actual debe ser un número decimal.' },
-                min: {
-                    args: [0],
-                    msg: 'El valor actual no puede ser negativo.' // Mensaje para la validación 'min'
-                }
-            }
+                isDecimal: { msg: 'El valor debe ser un número decimal.' },
+                min: { args: [0], msg: 'El valor no puede ser negativo.' }
+            },
+            field: 'valor_actual'
         },
-        comentarios: {
-            type: DataTypes.TEXT, // TEXT permite comentarios más largos que STRING(500)
-            allowNull: true
+        notes: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            field: 'comentarios'
         }
     }, {
-        tableName: 'Progresos', // Nombre explícito de la tabla
-        timestamps: true,       // Habilita createdAt y updatedAt
-        underscored: true       // Usa snake_case para los nombres de columna autogenerados (ej. created_at)
+        tableName: 'Progresos',
+        timestamps: true,
+        underscored: true
     });
 
     Progress.associate = (models) => {
-        Progress.belongsTo(models.Objetivo, { // Asumiendo que 'Objetivo' es el nombre del modelo en models
-            foreignKey: 'id_objetivo',     // Clave foránea en la tabla Progresos que referencia a Objective
-            as: 'objetivo',                // Alias para la asociación
-            onDelete: 'CASCADE'            // Si se elimina un Objetivo, se eliminan sus Progresos asociados
+        Progress.belongsTo(models.Objective, {
+            foreignKey: 'objectiveId',
+            as: 'objective',
+            onDelete: 'CASCADE'
         });
 
-        Progress.belongsTo(models.Usuario, { // Asumiendo que 'Usuario' es el nombre del modelo en models
-            foreignKey: 'id_usuario',      // Clave foránea en la tabla Progresos que referencia a User
-            as: 'usuario',                 // Alias para la asociación
-            onDelete: 'CASCADE'            // Si se elimina un Usuario, se eliminan sus Progresos asociados
+        Progress.belongsTo(models.User, {
+            foreignKey: 'userId',
+            as: 'user',
+            onDelete: 'CASCADE'
         });
     };
     return Progress;

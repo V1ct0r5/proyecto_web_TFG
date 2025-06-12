@@ -1,160 +1,158 @@
 // backend/src/api/controllers/userController.js
 const userService = require('../services/userService');
-const objectivesService = require('../services/objectivesService'); // Para verificar si el usuario tiene objetivos
-const { validationResult } = require('express-validator');
-const AppError = require('../../utils/AppError'); // Para un manejo de errores consistente
+const objectivesService = require('../services/objectivesService'); // Mantenemos para el flag `hasObjectives`
+const AppError = require('../../utils/AppError');
 
-exports.obtenerUsuarios = async (req, res, next) => {
-    try {
-        const usuarios = await userService.obtenerUsuarios();
-        // Asegurar que las contraseñas no se envíen en la lista
-        const usuariosSinContrasena = usuarios.map(u => {
-            const { contrasena, ...resto } = u.toJSON ? u.toJSON() : { ...u };
-            return resto;
-        });
-        res.status(200).json(usuariosSinContrasena);
-    } catch (error) {
-        next(error); // Delegar al errorHandler global
+/**
+ * Utility function to get the authenticated user ID from the request object.
+ * Throws an AppError if the user ID is not found.
+ * @param {object} req - The Express request object.
+ * @returns {number} The user ID.
+ */
+const getAuthUserId = (req) => {
+    const userId = req.user?.id;
+    if (!userId) {
+        throw new AppError('Error de autenticación: ID de usuario no encontrado en la petición.', 401);
     }
+    return userId;
 };
 
-// Registra un nuevo usuario y devuelve el usuario y un token.
-exports.registrarUsuario = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        // Considerar usar next(new AppError('Errores de validación', 400, errors.array())) para consistencia
-        return res.status(400).json({ errors: errors.array() });
-    }
-    
-    const usuarioData = req.body;
+
+// --- Authentication Controllers ---
+
+/**
+ * Handles user registration. Creates a user and returns a JWT.
+ */
+exports.register = async (req, res, next) => {
     try {
-        const nuevoUsuario = await userService.crearUsuario(usuarioData);
-        const token = userService.generarTokenAutenticacion(nuevoUsuario);
+        const newUser = await userService.createUser(req.body);
+        const token = userService.generateAuthToken(newUser);
         
-        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON ? nuevoUsuario.toJSON() : { ...nuevoUsuario };
-        res.status(201).json({ 
-            message: "Usuario registrado con éxito.",
+        const { password, ...userForResponse } = newUser.toJSON();
+
+        res.status(201).json({
+            status: 'success',
+            message: 'Usuario registrado con éxito.',
             token,
-            ...usuarioSinContrasena
+            user: userForResponse
         });
-    } catch (error) {
-        next(error); // Errores (ej. 409 por duplicado) son manejados por el servicio y pasados al errorHandler
-    }
-};
-
-// Crea un usuario (potencialmente por un admin, no devuelve token como registrarUsuario).
-// NOTA: El nombre 'crearUsuario' está duplicado. Esto funcionará si se usan en diferentes rutas
-// o si el router importa específicamente una u otra con un alias.
-// Por claridad, sería mejor nombres de exportación únicos si las funcionalidades difieren.
-exports.crearUsuario = async (req, res, next) => { // Función duplicada, ver nota
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    const usuarioData = req.body;
-    try {
-        const nuevoUsuario = await userService.crearUsuario(usuarioData);
-        const { contrasena, ...usuarioSinContrasena } = nuevoUsuario.toJSON ? nuevoUsuario.toJSON() : { ...nuevoUsuario };
-        res.status(201).json(usuarioSinContrasena);
     } catch (error) {
         next(error);
     }
 };
 
-// Obtiene un usuario por ID (protegido para que solo el propio usuario pueda acceder).
-exports.obtenerUsuarioPorId = async (req, res, next) => {
-    const userIdAuth = req.user.id; 
-    const userIdParam = req.params.id;
-
+/**
+ * Handles user login. Validates credentials and returns a JWT.
+ */
+exports.login = async (req, res, next) => {
     try {
-        if (String(userIdAuth) !== String(userIdParam)) {
+        const { email, password } = req.body;
+        const { token, user } = await userService.login(email, password);
+        
+        const hasObjectives = await objectivesService.userHasObjectives(user.id);
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Inicio de sesión exitoso.',
+            token,
+            user: { ...user, hasObjectives }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles user logout.
+ * En una implementación basada en JWT, esto es principalmente simbólico.
+ * Se podría añadir lógica de blacklisting de tokens si fuera necesario.
+ */
+exports.logout = (req, res, next) => {
+    // Aquí podría ir la lógica para invalidar el token en el servidor si se implementa una blacklist.
+    res.status(200).json({ status: 'success', message: 'Sesión cerrada con éxito.' });
+};
+
+
+// --- Admin/CRUD Controllers ---
+
+/**
+ * Creates a user (e.g., by an admin). Does not return a token.
+ */
+exports.createUser = async (req, res, next) => {
+    try {
+        const newUser = await userService.createUser(req.body);
+        const { password, ...userForResponse } = newUser.toJSON();
+        res.status(201).json({
+            status: 'success',
+            data: { user: userForResponse }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Gets a single user by their ID.
+ * Ensures the authenticated user can only get their own profile.
+ */
+exports.getUserById = async (req, res, next) => {
+    try {
+        const authUserId = getAuthUserId(req);
+        const requestedUserId = req.params.id;
+
+        if (String(authUserId) !== String(requestedUserId)) {
             return next(new AppError('Acceso denegado. No puedes obtener información de otros usuarios.', 403));
         }
-        const usuario = await userService.obtenerUsuarioPorId(userIdParam);
-        // El servicio ya lanza AppError 404 si no se encuentra
-        const { contrasena, ...usuarioSinContrasena } = usuario.toJSON ? usuario.toJSON() : { ...usuario };
-        res.status(200).json(usuarioSinContrasena);
+
+        const user = await userService.getUserById(requestedUserId);
+        res.status(200).json({
+            status: 'success',
+            data: { user }
+        });
     } catch (error) {
         next(error);
     }
 };
 
-// Actualiza un usuario (protegido para que solo el propio usuario pueda actualizarse).
-exports.actualizarUsuario = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    const userIdAuth = req.user.id;
-    const userIdToUpdate = req.params.id;
-    const usuarioData = req.body;
-
+/**
+ * Updates a user.
+ * Ensures the authenticated user can only update their own profile.
+ */
+exports.updateUser = async (req, res, next) => {
     try {
-        if (String(userIdAuth) !== String(userIdToUpdate)) {
+        const authUserId = getAuthUserId(req);
+        const userIdToUpdate = req.params.id;
+
+        if (String(authUserId) !== String(userIdToUpdate)) {
             return next(new AppError('Acceso denegado. No puedes actualizar la información de otros usuarios.', 403));
         }
-        const usuarioActualizado = await userService.actualizarUsuario(userIdToUpdate, usuarioData);
-        // El servicio maneja errores 404 y 409.
-        const { contrasena, ...usuarioSinContrasena } = usuarioActualizado.toJSON ? usuarioActualizado.toJSON() : { ...usuarioActualizado };
+        
+        const updatedUser = await userService.updateUser(userIdToUpdate, req.body);
         res.status(200).json({
-            message: "Usuario actualizado con éxito.",
-            usuario: usuarioSinContrasena
+            status: 'success',
+            message: 'Usuario actualizado con éxito.',
+            data: { user: updatedUser }
         });
     } catch (error) {
         next(error);
     }
 };
 
-// Elimina un usuario (protegido para que solo el propio usuario pueda eliminarse).
-exports.eliminarUsuario = async (req, res, next) => {
-    const userIdAuth = req.user.id;
-    const userIdToDelete = req.params.id;
-
+/**
+ * Deletes a user.
+ * Ensures the authenticated user can only delete their own profile.
+ */
+exports.deleteUser = async (req, res, next) => {
     try {
-        if (String(userIdAuth) !== String(userIdToDelete)) {
+        const authUserId = getAuthUserId(req);
+        const userIdToDelete = req.params.id;
+
+        if (String(authUserId) !== String(userIdToDelete)) {
             return next(new AppError('Acceso denegado. No puedes eliminar a otros usuarios.', 403));
         }
-        await userService.eliminarUsuario(userIdToDelete);
-        // El servicio maneja el error 404.
-        res.status(204).send(); // No Content
-    } catch (error) {
-        next(error);
-    }
-};
-
-// Inicia sesión de un usuario.
-exports.iniciarSesionUsuario = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { correo_electronico, contrasena } = req.body;
-    try {
-        const { token, usuario } = await userService.loginUsuario(correo_electronico, contrasena);
-        // userService.loginUsuario lanza AppError 401 si las credenciales son incorrectas.
         
-        const tieneObjetivos = await objectivesService.usuarioTieneObjetivos(usuario.id);
-        const { contrasena: _, ...usuarioSinContrasena } = usuario.toJSON ? usuario.toJSON() : { ...usuario };
-
-        res.status(200).json({
-            message: "Inicio de sesión exitoso",
-            usuario: usuarioSinContrasena,
-            token,
-            hasObjectives: tieneObjetivos
-        });
-    } catch (error) {
-        next(error); // El servicio o errorHandler global manejan los detalles.
-    }
-};
-
-// Cierra la sesión de un usuario (principalmente una operación del lado del cliente para JWT).
-exports.cerrarSesionUsuario = async (req, res, next) => {
-    try {
-        // Lógica de invalidación de token en servidor (blacklist) podría ir aquí si se implementa.
-        res.status(200).json({ message: 'Sesión cerrada exitosamente.' });
+        await userService.deleteUser(userIdToDelete);
+        res.status(204).send(); // No Content
     } catch (error) {
         next(error);
     }

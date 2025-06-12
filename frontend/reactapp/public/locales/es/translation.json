@@ -36,7 +36,7 @@
     "noDescription": "Sin descripción.",
     "saveChanges": "Guardar Cambios",
     "saving": "Guardando...",
-    "backToDashboard": "Volver al Dashboard",
+    "backToDashboard": "Volver al Panel de Control",
     "backToMyObjectives": "Volver a mis objetivos",
     "revert": "Revertir"
   },
@@ -434,7 +434,7 @@
   },
   "sidebar": {
     "newObjective": "Nuevo Objetivo",
-    "dashboard": "Dashboard",
+    "dashboard": "Panel de Control",
     "myObjectives": "Mis Objetivos",
     "analysis": "Análisis",
     "myProfile": "Mi Perfil",

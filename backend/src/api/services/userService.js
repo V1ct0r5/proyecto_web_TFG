@@ -1,158 +1,132 @@
 // backend/src/api/services/userService.js
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-require('dotenv').config(); // Cargar variables de entorno
+require('dotenv').config();
 
 const userRepository = require('../repositories/userRepository');
-const AppError = require('../../utils/AppError'); // Clase de error personalizada
+const AppError = require('../../utils/AppError');
 
-// Constantes para mensajes de error comunes
-const INVALID_CREDENTIALS_MESSAGE = 'Correo electrónico o contraseña incorrectos.';
-const AUTH_CONFIG_ERROR_MESSAGE = 'Error de configuración interna: JWT_SECRET no está definido.';
-const TOKEN_EXPIRED_MESSAGE = 'Token expirado. Por favor, inicia sesión de nuevo.';
-const TOKEN_INVALID_MESSAGE = 'Token inválido o la autenticación ha fallado.';
-const TOKEN_VERIFICATION_ERROR_MESSAGE = 'Error al verificar la autenticación del token.';
+// --- Service-level Constants for Error Messages ---
+const AUTH_CONFIG_ERROR = 'Error de configuración interna del servidor.';
+const INVALID_CREDENTIALS_ERROR = 'El correo electrónico o la contraseña son incorrectos.';
 
-exports.obtenerUsuarios = async () => {
-    try {
-        return await userRepository.findAll();
-    } catch (error) {
-        // Errores de base de datos se propagan para ser manejados por el errorHandler global
-        throw error; 
-    }
-};
-
-exports.crearUsuario = async (usuarioData) => {
-    try {
-        const hashedPassword = await bcrypt.hash(usuarioData.contrasena, 10);
-        const newUser = await userRepository.create({
-            nombre_usuario: usuarioData.nombre_usuario,
-            correo_electronico: usuarioData.correo_electronico,
-            contrasena: hashedPassword
-        });
-        // El controlador decidirá qué datos del usuario devolver (sin la contraseña)
-        return newUser;
-    } catch (error) {
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            const field = error.fields && Object.keys(error.fields).length > 0 ? Object.keys(error.fields)[0] : 'un campo';
-            let friendlyMessage = `El valor para '${field}' ya está en uso.`;
-            if (field === 'correo_electronico') {
-                friendlyMessage = 'El correo electrónico proporcionado ya está registrado.';
-            } else if (field === 'nombre_usuario') {
-                friendlyMessage = 'El nombre de usuario proporcionado ya está en uso.';
-            }
-            throw new AppError(friendlyMessage, 409); // 409 Conflict
-        }
-        throw error; // Para otros errores, propagar al errorHandler
-    }
-};
-
-exports.obtenerUsuarioPorId = async (id) => {
-    try {
-        const usuario = await userRepository.findById(id);
-        if (!usuario) {
+/**
+ * Service layer for user-related business logic.
+ */
+class UserService {
+    /**
+     * Retrieves a user by their ID.
+     * @param {number} userId - The ID of the user.
+     * @returns {Promise<User>} The user object without the password.
+     */
+    async getUserById(userId) {
+        const user = await userRepository.findById(userId);
+        if (!user) {
             throw new AppError('Usuario no encontrado.', 404);
         }
-        return usuario;
-    } catch (error) {
-        if (error instanceof AppError) throw error;
-        throw error;
+        // Excluir la contraseña en el objeto devuelto
+        const { password, ...userWithoutPassword } = user.toJSON();
+        return userWithoutPassword;
     }
-};
 
-exports.actualizarUsuario = async (id, usuarioData) => {
-    try {
-        const usuarioExistente = await userRepository.findById(id);
-        if (!usuarioExistente) {
+    /**
+     * Creates a new user.
+     * @param {object} userData - User data (username, email, password).
+     * @returns {Promise<User>} The newly created user object.
+     */
+    async createUser(userData) {
+        // Validación para evitar duplicados de correo electrónico o nombre de usuario.
+        if (await userRepository.findByEmail(userData.email)) {
+            throw new AppError('El correo electrónico proporcionado ya está registrado.', 409);
+        }
+        if (await userRepository.findByUsername(userData.username)) {
+            throw new AppError('El nombre de usuario ya está en uso.', 409);
+        }
+
+        // Pasa los datos directamente al repositorio. El hook del modelo se encargará de hashear la contraseña.
+        // NO SE HASHEA LA CONTRASEÑA AQUÍ para evitar el doble hasheo.
+        const newUser = await userRepository.create(userData);
+        return newUser;
+    }
+
+    /**
+     * Authenticates a user and returns a JWT.
+     * @param {string} email - User's email.
+     * @param {string} password - User's password.
+     * @returns {Promise<{token: string, user: object}>} An object with the token and user data.
+     */
+    async login(email, password) {
+        const user = await userRepository.findByEmail(email);
+        if (!user) {
+            throw new AppError(INVALID_CREDENTIALS_ERROR, 401);
+        }
+
+        const isPasswordCorrect = await user.comparePassword(password);
+        if (!isPasswordCorrect) {
+            throw new AppError(INVALID_CREDENTIALS_ERROR, 401);
+        }
+
+        const token = this.generateAuthToken(user);
+        const { password: _, ...userWithoutPassword } = user.toJSON();
+        
+        return { token, user: userWithoutPassword };
+    }
+
+    /**
+     * Updates a user's information.
+     * @param {number} userId - The ID of the user to update.
+     * @param {object} userData - The data to update.
+     * @returns {Promise<User>} The updated user object.
+     */
+    async updateUser(userId, userData) {
+        const user = await userRepository.findById(userId);
+        if (!user) {
             throw new AppError('Usuario no encontrado para actualizar.', 404);
         }
 
-        const datosActualizar = { ...usuarioData };
-        if (usuarioData.contrasena) {
-            datosActualizar.contrasena = await bcrypt.hash(usuarioData.contrasena, 10);
-        }
+        // Si se actualiza la contraseña, se pasa en texto plano. El hook del modelo la hasheará.
+        const updatedCount = await userRepository.update(userId, userData);
 
-        const [updatedRowsCount, updatedUsersArray] = await userRepository.update(id, datosActualizar);
+        if (updatedCount > 0) {
+            // Refresca los datos del usuario para devolver el objeto actualizado.
+            const updatedUser = await this.getUserById(userId);
+            return updatedUser;
+        }
         
-        if (updatedRowsCount === 0 && usuarioExistente) {
-            return usuarioExistente; 
-        }
-        return updatedUsersArray && updatedUsersArray.length > 0 ? updatedUsersArray[0] : usuarioExistente;
-    } catch (error) {
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            const field = error.fields && Object.keys(error.fields).length > 0 ? Object.keys(error.fields)[0] : 'un campo';
-            throw new AppError(`El nuevo valor para '${field}' ya está en uso por otro usuario.`, 409);
-        }
-        if (error instanceof AppError) throw error;
-        throw error;
+        // Si no se actualizó ninguna fila, devuelve el usuario sin cambios.
+        const { password, ...userWithoutPassword } = user.toJSON();
+        return userWithoutPassword;
     }
-};
 
-exports.eliminarUsuario = async (id) => {
-    try {
-        const deletedCount = await userRepository.delete(id);
+    /**
+     * Deletes a user.
+     * @param {number} userId - The ID of the user to delete.
+     * @returns {Promise<{message: string}>} A confirmation message.
+     */
+    async deleteUser(userId) {
+        const deletedCount = await userRepository.delete(userId);
         if (deletedCount === 0) {
             throw new AppError('Usuario no encontrado para eliminar.', 404);
         }
-        return { message: 'Usuario eliminado con éxito.', count: deletedCount };
-    } catch (error) {
-        if (error instanceof AppError) throw error;
-        throw error;
+        return { message: 'Usuario eliminado con éxito.' };
     }
-};
 
-exports.generarTokenAutenticacion = (usuario) => {
-    const payload = { 
-        id: usuario.id, 
-        correo_electronico: usuario.correo_electronico, 
-        nombre_usuario: usuario.nombre_usuario 
-    };
-    const secret = process.env.JWT_SECRET;
+    /**
+     * Generates a JWT for a given user.
+     * @param {User} user - The user instance.
+     * @returns {string} The generated JWT.
+     */
+    generateAuthToken(user) {
+        const payload = { id: user.id, username: user.username, email: user.email };
+        const secret = process.env.JWT_SECRET;
+        const options = { expiresIn: process.env.JWT_EXPIRES_IN || '7d' };
 
-    if (!secret) {
-        throw new AppError(AUTH_CONFIG_ERROR_MESSAGE, 500);
-    }
-    return jwt.sign(payload, secret, { expiresIn: process.env.JWT_EXPIRES_IN || '1h' });
-};
-
-exports.loginUsuario = async (correo_electronico, contrasena) => {
-    try {
-        const usuarioInstance = await userRepository.findByEmail(correo_electronico);
-        if (!usuarioInstance) {
-            throw new AppError(INVALID_CREDENTIALS_MESSAGE, 401);
+        if (!secret) {
+            console.error("FATAL: JWT_SECRET no está definido en las variables de entorno.");
+            throw new AppError(AUTH_CONFIG_ERROR, 500);
         }
-
-        const isMatch = await bcrypt.compare(contrasena, usuarioInstance.contrasena);
-        if (!isMatch) {
-            throw new AppError(INVALID_CREDENTIALS_MESSAGE, 401);
-        }
-
-        const token = this.generarTokenAutenticacion(usuarioInstance);
-        const { contrasena: _, ...usuarioSinContrasena } = usuarioInstance.toJSON ? usuarioInstance.toJSON() : usuarioInstance;
-
-        return { token, usuario: usuarioSinContrasena }; 
-    } catch (error) {
-        if (error instanceof AppError) throw error;
-        throw new AppError('Error interno durante el proceso de inicio de sesión.', 500); 
+        
+        return jwt.sign(payload, secret, options);
     }
-};
+}
 
-exports.verificarAutenticacionToken = (token) => {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-        throw new AppError(AUTH_CONFIG_ERROR_MESSAGE, 500);
-    }
-
-    try {
-        const decoded = jwt.verify(token, secret);
-        return decoded;
-    } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            throw new AppError(TOKEN_EXPIRED_MESSAGE, 401);
-        }
-        if (error.name === 'JsonWebTokenError') {
-            throw new AppError(TOKEN_INVALID_MESSAGE, 403);
-        }
-        throw new AppError(TOKEN_VERIFICATION_ERROR_MESSAGE, 500); 
-    }
-};
+module.exports = new UserService();
