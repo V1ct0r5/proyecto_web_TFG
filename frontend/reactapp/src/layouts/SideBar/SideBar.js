@@ -5,11 +5,7 @@ import styles from './SideBar.module.css';
 import { FaPlus, FaHome, FaBullseye, FaChartBar, FaUser, FaCog } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 
-/**
- * Componente de la barra de navegación lateral principal de la aplicación.
- * Muestra el logo y los enlaces de navegación a las diferentes secciones.
- */
-const Sidebar = () => {
+const Sidebar = ({ isSidebarOpen }) => {
     const { t } = useTranslation();
 
     const navItems = [
@@ -21,7 +17,7 @@ const Sidebar = () => {
     ];
 
     return (
-        <aside className={styles.sidebar}>
+        <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarVisible : ''}`}>
             <div className={styles.logoContainer}>
                 <div className={styles.appLogoCircle}>
                     <span>G</span>

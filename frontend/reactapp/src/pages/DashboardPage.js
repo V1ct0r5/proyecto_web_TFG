@@ -1,4 +1,3 @@
-// frontend/reactapp/src/pages/DashboardPage.js
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './DashboardPage.module.css';
@@ -6,7 +5,7 @@ import api from '../services/apiService';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 
-// Importaciones de Componentes
+// Componentes
 import StatsCard from '../components/objetivos/StatsCard';
 import CategoryDonutChart from '../components/charts/CategoryDonutChart';
 import RecentObjectivesList from '../components/objetivos/RecentObjectivesList';
@@ -15,7 +14,7 @@ import ProgressBar from '../components/ui/ProgressBar';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Button from '../components/ui/Button';
 
-// Mapeo de los valores ENUM del backend a las claves de traducción del frontend
+// Mapeo de valores ENUM del backend a claves de i18next para la UI
 const CATEGORY_MAP = {
     'HEALTH': 'categories.health',
     'FINANCE': 'categories.finance',
@@ -33,9 +32,6 @@ const STATUS_MAP = {
     'ARCHIVED': { key: 'status.archived', color: 'var(--muted-foreground)' }
 };
 
-/**
- * Página principal del Dashboard. Muestra un resumen del estado y actividad del usuario.
- */
 function DashboardPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -45,33 +41,29 @@ function DashboardPage() {
     const [recentActivities, setRecentActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // Ref para asegurar que la redirección por "sin objetivos" ocurra solo una vez.
     const hasBeenRedirectedRef = useRef(false);
 
     const fetchDashboardData = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
+            // --- CAMBIO 1: Se usa el nombre de función correcto de la API ---
             const [summaryRes, objectivesRes, activitiesRes] = await Promise.allSettled([
                 api.getDashboardSummary(),
                 api.getRecentObjectives(4),
                 api.getRecentActivities(5)
             ]);
 
-            if (summaryRes.status === 'fulfilled') {
+            if (summaryRes.status === 'fulfilled' && summaryRes.value) {
                 const summary = summaryRes.value;
                 setSummaryData(summary);
-                // Si el usuario no tiene objetivos, lo guiamos para crear el primero.
                 if (summary.totalObjectives === 0 && !hasBeenRedirectedRef.current) {
                     hasBeenRedirectedRef.current = true;
                     toast.info(t('toast.welcomeCreateFirst'));
                     navigate('/objectives', { replace: true });
-                    return; // Detenemos la ejecución para evitar más `setLoading(false)`
+                    return;
                 }
-            } else {
-                throw summaryRes.reason;
-            }
+            } else { throw summaryRes.reason; }
 
             if (objectivesRes.status === 'fulfilled') setRecentObjectives(objectivesRes.value || []);
             if (activitiesRes.status === 'fulfilled') setRecentActivities(activitiesRes.value || []);
@@ -87,20 +79,19 @@ function DashboardPage() {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
-    // Pre-procesa los datos de categorías para el gráfico de dona, aplicando traducciones.
+    // --- CAMBIO 2: Se procesa la nueva estructura de datos para el gráfico ---
     const categoryChartData = useMemo(() => {
         if (!summaryData?.categories) return [];
+        // La API devuelve un array de { category: 'HEALTH', count: 1 }
         return summaryData.categories.map(item => ({
-            ...item,
-            name: t(CATEGORY_MAP[item.category] || item.category)
+            name: t(CATEGORY_MAP[item.category] || item.category), // Se usa item.category para obtener la clave de traducción
+            value: item.count
         }));
     }, [summaryData, t]);
 
-
-    // Componente para renderizar la lista de estados
     const renderStatusList = () => (
         <ul className={styles.statusList}>
-            {Object.entries(summaryData.statusCounts).map(([status, count]) => {
+            {Object.entries(summaryData.statusCounts || {}).map(([status, count]) => {
                 const statusInfo = STATUS_MAP[status];
                 if (!statusInfo || count === 0) return null;
                 return (
@@ -127,7 +118,7 @@ function DashboardPage() {
         );
     }
 
-    if (!summaryData) return null; // No renderizar nada si los datos aún no están listos
+    if (!summaryData) return null;
 
     return (
         <div className={styles.dashboardPageLayout}>
@@ -135,24 +126,22 @@ function DashboardPage() {
                 <StatsCard title={t('dashboard.stats.totalObjectives')} value={String(summaryData.totalObjectives)} linkTo="/mis-objetivos">
                     {summaryData.totalObjectives > 0 ? renderStatusList() : <p className={styles.noStatusData}>{t('dashboard.stats.noObjectives')}</p>}
                 </StatsCard>
-
                 <StatsCard title={t('dashboard.stats.averageProgress')} value={summaryData.averageProgress} valueDescription="%" decimalPlacesToShow={0}>
                     <ProgressBar percentage={summaryData.averageProgress} />
                 </StatsCard>
-
                 <StatsCard title={t('dashboard.stats.dueSoon')} value={String(summaryData.dueSoonCount)} valueDescription={t('dashboard.stats.objectives')} details={t('dashboard.stats.dueSoonDetails')} />
-
+                
                 <StatsCard title={t('dashboard.stats.categories')} linkTo="/analisis">
+                    {/* El gráfico ahora recibe los datos en el formato correcto */}
                     <CategoryDonutChart data={categoryChartData} />
                 </StatsCard>
             </section>
-
             <section className={styles.bottomSectionsGrid}>
-                <div className={styles.sectionCard}> {/* Clase corregida */}
+                <div className={styles.sectionCard}>
                     <h3 className={styles.sectionTitle}>{t('dashboard.sections.keyObjectives')}</h3>
                     <RecentObjectivesList objectives={recentObjectives} />
                 </div>
-                <div className={styles.sectionCard}> {/* Clase corregida */}
+                <div className={styles.sectionCard}>
                     <h3 className={styles.sectionTitle}>{t('dashboard.sections.recentActivity')}</h3>
                     <RecentActivityFeed activities={recentActivities} />
                 </div>

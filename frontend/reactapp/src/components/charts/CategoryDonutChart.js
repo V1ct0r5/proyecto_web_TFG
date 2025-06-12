@@ -4,7 +4,7 @@ import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { useTranslation } from 'react-i18next';
 import { getCategoryChartColors } from '../../utils/ChartColors';
-import { getDefaultDonutOptions } from '../../utils/chartUtils'; // <-- Importamos la utilidad
+import { getDefaultDonutOptions } from '../../utils/chartUtils';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -16,9 +16,10 @@ const CategoryDonutChart = ({ data }) => {
     const { t } = useTranslation();
 
     const chartData = useMemo(() => {
-        if (!data || data.length === 0) return { labels: [], datasets: [] };
-
-        const labels = data.map(item => item.name); // Ya viene traducido del componente padre
+        if (!data || data.length === 0) {
+            return { labels: [], datasets: [] };
+        }
+        const labels = data.map(item => item.name);
         const values = data.map(item => item.value);
         const { backgroundColors, borderColors } = getCategoryChartColors(data);
 
@@ -34,17 +35,19 @@ const CategoryDonutChart = ({ data }) => {
         };
     }, [data, t]);
 
+    // Las opciones se obtienen de chartUtils.js, que ya incluye maintainAspectRatio: false
     const chartOptions = useMemo(() => getDefaultDonutOptions(t), [t]);
 
     if (!data || data.length === 0) {
-        return <p>{t('charts.noCategoryData')}</p>;
+        return <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{t('charts.noCategoryData')}</p>;
     }
-
     return (
-        <div style={{ height: '100%', minHeight: '250px', position: 'relative' }}>
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             <Doughnut data={chartData} options={chartOptions} />
         </div>
     );
+    // <-- FIN DE LA CORRECCIÓN FINAL -->
+    // ==================================================================
 };
 
 export default CategoryDonutChart;

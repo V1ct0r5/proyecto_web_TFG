@@ -25,7 +25,7 @@ describe('Objectives Routes', () => {
             correo_electronico: 'test@example.com',
             contrasena: 'password123',
         });
-        token = jwt.sign({ id_usuario: user.id_usuario }, process.env.JWT_SECRET_TEST, { expiresIn: '1h' });
+        token = jwt.sign({ id_usuario: user.id_usuario }, process.env.JWT_SECRET_TEST, { expiresIn: JWT_EXPIRATION_TIME });
     });
 
     afterAll(async () => {

@@ -141,7 +141,7 @@
     flex-grow: 1;
 }
 .chartContainerFullWidth {
-    min-height: 350px;
+    min-height: 200px;
 }
 
 .noDataText {

@@ -4,18 +4,17 @@ import { useNavigate, useLocation, matchPath } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import styles from './AppHeader.module.css';
-import buttonStyles from '../components/ui/Button.module.css'; // Asegúrate de que la ruta es correcta
+import buttonStyles from '../components/ui/Button.module.css';
 import { useTranslation } from 'react-i18next';
-import { ROUTE_PATHS } from '../utils/routePaths'; // <-- Importamos las constantes
+import { ROUTE_PATHS } from '../utils/routePaths';
 
-const AppHeader = () => {
+const AppHeader = ({ onMenuClick }) => {
     const { user, logout } = useAuth();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
 
     const getHeaderTitle = (pathname) => {
-        // Mapeo de rutas a claves de traducción
         const titleMap = {
             [ROUTE_PATHS.DASHBOARD]: t('pageTitles.dashboard'),
             [ROUTE_PATHS.NEW_OBJECTIVE]: t('pageTitles.createObjective'),
@@ -25,17 +24,12 @@ const AppHeader = () => {
             [ROUTE_PATHS.SETTINGS]: t('pageTitles.settings'),
         };
         
-        // Comprobar rutas estáticas primero
-        if (titleMap[pathname]) {
-            return titleMap[pathname];
-        }
-
-        // Comprobar rutas dinámicas
+        if (titleMap[pathname]) return titleMap[pathname];
         if (matchPath(ROUTE_PATHS.EDIT_OBJECTIVE, pathname)) return t('pageTitles.editObjective');
         if (matchPath(ROUTE_PATHS.UPDATE_PROGRESS, pathname)) return t('pageTitles.updateProgress');
         if (matchPath(ROUTE_PATHS.VIEW_OBJECTIVE, pathname)) return t('pageTitles.objectiveDetails');
 
-        return t('common.appName'); // Fallback
+        return t('common.appName');
     };
     
     const pageTitle = getHeaderTitle(location.pathname);
@@ -48,7 +42,14 @@ const AppHeader = () => {
 
     return (
         <header className={styles.header}>
-            <h1 className={styles.headerPageTitle}>{pageTitle}</h1>
+            <div className={styles.leftContent}>
+                <button className={styles.menuButton} onClick={onMenuClick} aria-label="Abrir menú">
+                    <span className={styles.menuIconBar}></span>
+                    <span className={styles.menuIconBar}></span>
+                    <span className={styles.menuIconBar}></span>
+                </button>
+                <h1 className={styles.headerPageTitle}>{pageTitle}</h1>
+            </div>
             {user && (
                 <div className={styles.rightContent}>
                     <span className={styles.userInfo}>

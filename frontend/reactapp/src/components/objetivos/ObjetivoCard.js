@@ -28,7 +28,6 @@ function ObjetivoCard({ objective, onObjectiveArchived }) {
 
     // Obtenemos la información de estado (traducción y clase CSS) desde la utilidad.
     const { translatedStatus, statusClassName } = getStatusInfo(objective.status, t);
-console.log('Status Class Name:', statusClassName);
 
     // Determine if objective has quantifiable values (initialValue, targetValue, currentValue)
     // The objective object passed from backend should now have `initialValue`, `targetValue`, `currentValue` from the service

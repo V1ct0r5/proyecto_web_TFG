@@ -73,6 +73,13 @@
 .childrenContainer { 
     margin-top: auto; /* Empuja el contenido de children hacia abajo si hay espacio */
     padding-top: 0.5rem; /* Espacio antes del contenido children */
+    flex-grow: 1; /* Permite que el contenedor crezca y ocupe el espacio vertical disponible */
+    position: relative; /* Necesario para que las librerías de gráficos se posicionen correctamente */
+    width: 100%;
+    min-height: 150px; /* Asegura una altura mínima para el gráfico */
+    display: flex;
+    flex-direction: column; /* Asegura que los hijos se alineen verticalmente */
+    justify-content:flex-end;
 }
 
 .link {

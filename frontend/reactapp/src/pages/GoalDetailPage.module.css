@@ -454,3 +454,39 @@ html[data-theme='dark'] {
         border: 1px solid var(--border-light); /* Differentiated border in dark mode */
     }
 }
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start; /* Título y botones se alinean a la izquierda */
+        gap: 1rem;
+    }
+
+    .headerActions {
+        width: 100%; /* Botones ocupan todo el ancho */
+    }
+
+    .editButton, 
+    .updateProgressButton, 
+    .deleteButton {
+        flex-grow: 1; /* Botones comparten espacio equitativamente */
+        text-align: center;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .topCardsGrid {
+        /* --- AÑADIDO: Fuerza una sola columna en tablets verticales y móviles --- */
+        grid-template-columns: 1fr; 
+    }
+}
+
+@media (max-width: 480px) {
+    .pageContainer {
+        padding: 0.8rem; /* Menos padding en móviles pequeños */
+    }
+
+    .goalName {
+        font-size: 1.4rem;
+    }
+}

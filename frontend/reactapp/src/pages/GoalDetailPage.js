@@ -1,20 +1,17 @@
-// frontend/reactapp/src/pages/GoalDetailPage.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import { differenceInDays, parseISO, format, isValid, isPast, subDays } from 'date-fns';
+import { differenceInDays, parseISO, format, isValid, isPast, subDays, startOfDay } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 
 // Utilidades y Servicios
 import api from '../services/apiService';
 import { calculateProgressPercentage } from '../utils/progressUtils';
 
-// Iconos
+// Iconos y Componentes
 import { FaCalendarAlt, FaFlagCheckered, FaExclamationTriangle, FaEdit, FaPlusCircle, FaTrashAlt } from 'react-icons/fa';
-import { FiTrendingUp, FiTrendingDown, FiClock } from 'react-icons/fi';
-
-// Componentes
+import { FiTrendingUp, FiClock } from 'react-icons/fi';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Button from '../components/ui/Button';
 import GoalProgressChart from '../components/charts/GoalProgressChart';
@@ -22,14 +19,10 @@ import DistributionBarChart from '../components/charts/DistributionBarChart';
 import ProgressLineChart from '../components/charts/ProgressLineChart';
 import styles from './GoalDetailPage.module.css';
 
-// Mapeo de categorías para traducción
 const CATEGORY_I18N_KEYS = {
-    HEALTH: 'categories.health',
-    FINANCE: 'categories.finance',
-    PERSONAL_DEV: 'categories.personalDevelopment',
-    RELATIONSHIPS: 'categories.relationships',
-    CAREER: 'categories.career',
-    OTHER: 'categories.other'
+    HEALTH: 'categories.health', FINANCE: 'categories.finance', 
+    PERSONAL_DEV: 'categories.personalDevelopment', RELATIONSHIPS: 'categories.relationships', 
+    CAREER: 'categories.career', OTHER: 'categories.other'
 };
 
 function GoalDetailPage() {
@@ -54,8 +47,6 @@ function GoalDetailPage() {
             .finally(() => setLoading(false));
     }, [id, t]);
     
-    // --- Cálculos Derivados ---
-
     const isQuantitative = useMemo(() => (
         objective?.targetValue != null && !isNaN(Number(objective.targetValue))
     ), [objective]);
@@ -66,29 +57,36 @@ function GoalDetailPage() {
     }, [objective, isQuantitative]);
 
     const derivedData = useMemo(() => {
-        const defaults = { daysRemaining: 'N/A', isPastDue: false, trend: t('goalDetail.trends.notApplicable') };
+        const defaults = { daysRemaining: t('common.notAvailable'), isPastDue: false, trendText: t('goalDetail.trends.notApplicable') };
         if (!objective || !objective.endDate) return defaults;
         
         const endDate = parseISO(objective.endDate);
         if (!isValid(endDate)) return defaults;
 
-        const isPastDue = isPast(endDate) && progressPercentage < 100;
-        defaults.isPastDue = isPastDue;
-        defaults.daysRemaining = isPastDue ? t('goalDetail.overdue') : differenceInDays(endDate, new Date());
+        const today = new Date();
+        const isCompleted = objective.status === 'COMPLETED';
+        const isPastDueCalc = isPast(endDate) && !isCompleted;
         
-        // Lógica de tendencia
-        if (isQuantitative && objective.startDate) {
+        defaults.isPastDue = isPastDueCalc;
+
+        if(isCompleted) {
+            defaults.daysRemaining = t('common.completed');
+        } else if (isPastDueCalc) {
+            defaults.daysRemaining = t('goalDetail.overdue');
+        } else {
+            defaults.daysRemaining = differenceInDays(endDate, today);
+        }
+        
+        if (isQuantitative && objective.startDate && !isCompleted) {
             const startDate = parseISO(objective.startDate);
             const totalDuration = differenceInDays(endDate, startDate);
-            const elapsedDuration = differenceInDays(new Date(), startDate);
-            if (totalDuration > 0 && elapsedDuration > 0 && !isPastDue) {
+            const elapsedDuration = differenceInDays(today, startDate);
+            if (totalDuration > 0 && elapsedDuration > 0 && !isPastDueCalc) {
                 const expectedProgress = (elapsedDuration / totalDuration) * 100;
-                if (progressPercentage >= expectedProgress) {
-                    defaults.trend = t('goalDetail.trends.onTrack');
-                } else {
-                    defaults.trend = t('goalDetail.trends.behind');
-                }
+                defaults.trendText = progressPercentage >= expectedProgress ? t('goalDetail.trends.onTrack') : t('goalDetail.trends.behind');
             }
+        } else if (isCompleted) {
+            defaults.trendText = t('goalDetail.trends.completed');
         }
         return defaults;
     }, [objective, progressPercentage, isQuantitative, t]);
@@ -97,17 +95,15 @@ function GoalDetailPage() {
         if (!objective?.progressEntries) return [];
         if (timeframe === 'all_time') return objective.progressEntries;
 
-        const today = new Date();
+        const today = startOfDay(new Date());
         let startDateFilter;
         switch (timeframe) {
             case '7_days': startDateFilter = subDays(today, 6); break;
             case '30_days': startDateFilter = subDays(today, 29); break;
             default: return objective.progressEntries;
         }
-        return objective.progressEntries.filter(entry => parseISO(entry.entryDate) >= startDateFilter);
+        return objective.progressEntries.filter(entry => isValid(parseISO(entry.entryDate)) && startOfDay(parseISO(entry.entryDate)) >= startDateFilter);
     }, [objective, timeframe]);
-
-    // --- Manejadores de Acciones ---
 
     const handleDelete = async () => {
         if (window.confirm(t('confirmationDialog.deleteObjective', { name: objective.name }))) {
@@ -121,8 +117,6 @@ function GoalDetailPage() {
         }
     };
     
-    // --- Renderizado ---
-
     if (loading) return <div className={styles.pageContainer}><LoadingSpinner size='large' text={t('loaders.loadingDetails')} /></div>;
     if (error) return <div className={`${styles.pageContainer} ${styles.errorContainer}`}><p>{error}</p></div>;
     if (!objective) return <div className={styles.pageContainer}><p>{t('errors.objectiveNotFound')}</p></div>;
@@ -150,9 +144,7 @@ function GoalDetailPage() {
                 {isQuantitative && (
                     <div className={`${styles.card} ${styles.progressCard}`}>
                         <h2 className={styles.cardTitle}>{t('goalDetail.cards.progress')}</h2>
-                        <div className={styles.progressChartWrapper}>
-                            <GoalProgressChart progressPercentage={progressPercentage} />
-                        </div>
+                        <div className={styles.progressChartWrapper}><GoalProgressChart progressPercentage={progressPercentage} /></div>
                         <div className={styles.progressValues}>
                             <div className={styles.progressValueItem}>
                                 <span className={styles.valueLabel}>{t('goalDetail.dataLabels.current')}</span>
@@ -165,23 +157,19 @@ function GoalDetailPage() {
                         </div>
                     </div>
                 )}
-
                 <div className={`${styles.card} ${styles.dataCard}`}>
                     <h2 className={styles.cardTitle}>{t('goalDetail.cards.keyData')}</h2>
                     <div className={styles.dataList}>
                         <div className={styles.dataListItem}><FaCalendarAlt className={styles.icon} /><span>{t('goalDetail.dataLabels.startDate')}</span><span>{objective.startDate ? format(parseISO(objective.startDate), 'PPP', { locale: dateLocale }) : 'N/A'}</span></div>
                         <div className={styles.dataListItem}><FaFlagCheckered className={styles.icon} /><span>{t('goalDetail.dataLabels.deadline')}</span><span>{objective.endDate ? format(parseISO(objective.endDate), 'PPP', { locale: dateLocale }) : 'N/A'}</span></div>
                         <div className={styles.dataListItem}><FiClock className={styles.icon} /><span>{t('goalDetail.dataLabels.daysRemaining')}</span><span>{derivedData.daysRemaining}</span></div>
-                        {isQuantitative && <div className={styles.dataListItem}><FiTrendingUp className={`${styles.icon} ${styles.trendUp}`} /><span>{t('goalDetail.dataLabels.trend')}</span><span>{derivedData.trend}</span></div>}
+                        {isQuantitative && <div className={styles.dataListItem}><FiTrendingUp className={`${styles.icon} ${styles.trendUp}`} /><span>{t('goalDetail.dataLabels.trend')}</span><span>{derivedData.trendText}</span></div>}
                     </div>
                 </div>
-
                 {isQuantitative && (
                     <div className={`${styles.card} ${styles.distributionCard}`}>
                         <h2 className={styles.cardTitle}>{t('goalDetail.cards.progressDistribution')}</h2>
-                        <div className={styles.chartContainer}>
-                            <DistributionBarChart completedPercentage={progressPercentage} remainingPercentage={100 - progressPercentage} />
-                        </div>
+                        <div className={styles.chartContainer}><DistributionBarChart completedPercentage={progressPercentage} remainingPercentage={100 - progressPercentage} /></div>
                     </div>
                 )}
             </div>
@@ -198,7 +186,13 @@ function GoalDetailPage() {
                     </div>
                     <div className={styles.chartArea}>
                         {filteredProgressHistory.length >= 2 ? (
-                            <ProgressLineChart progressHistory={filteredProgressHistory} unitMeasure={objective.unit} targetValue={parseFloat(objective.targetValue)} isLowerBetter={objective.isLowerBetter} />
+                            <ProgressLineChart
+                                // --- ESTA ES LA ÚNICA LÍNEA CORREGIDA ---
+                                progressHistory={filteredProgressHistory}
+                                unitMeasure={objective.unit}
+                                targetValue={parseFloat(objective.targetValue)}
+                                isLowerBetter={objective.isLowerBetter}
+                            />
                         ) : (<p className={styles.noDataMessage}>{t('goalDetail.noData.notEnoughEvolutionData')}</p>)}
                     </div>
                 </div>
@@ -207,4 +201,4 @@ function GoalDetailPage() {
     );
 }
 
-export default GoalDetailPage;  
+export default GoalDetailPage;

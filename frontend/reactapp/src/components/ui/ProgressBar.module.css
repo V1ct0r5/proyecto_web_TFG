@@ -7,22 +7,18 @@
 }
 
 .progressBarTrack {
-    background-color: #e9ecef; /* GRIS CLARO: Este es el color de "lo que falta para el 100%" */
-    border-radius: 5px;
+    background-color: var(--muted); 
+    border-radius: var(--radius);
     height: 12px;
-    position: relative; /* Útil si en el futuro el fill necesitara ser absoluto, pero no es estrictamente necesario aquí */
-    overflow: hidden;   /* Para que el relleno respete los bordes redondeados del track */
+    position: relative;
+    overflow: hidden;
 }
 
 .progressBarFill {
-    /* El color de fondo se establecerá dinámicamente desde el componente JS */
-    /* background-color: #6f42c1; /* Color por defecto si no se establece dinámicamente */
     height: 100%;
     display: block;
-    border-radius: 5px; /* Redondea todos los bordes del relleno */
-    /* Si el porcentaje es 0, el ancho será 0 y no se verá.
-       Si es 100%, el ancho será 100% y cubrirá todo el track,
-       y como tiene border-radius: 5px, se verá correcto. */
+    /* --- CORREGIDO: Usar variable de radio --- */
+    border-radius: var(--radius); 
     transition: width 0.4s ease-in-out, background-color 0.4s ease-in-out;
 }
 
@@ -30,7 +26,8 @@
     display: flex;
     justify-content: space-between;
     font-size: 0.8rem;
-    color: #6c757d;
+    /* --- CORREGIDO: Usar variable para el color de texto atenuado --- */
+    color: var(--muted-foreground); 
     margin-top: 0.3rem;
     padding: 0 2px; 
 }
@@ -38,7 +35,8 @@
 .statusText {
     margin-top: 0.6rem;
     font-size: 0.85rem;
-    color: #495057;
+    /* --- CORREGIDO: Usar variable para el color de texto principal --- */
+    color: var(--foreground); 
     display: flex;
     align-items: center;
 }
@@ -50,24 +48,18 @@
     font-size: 1.1em;
 }
 
-/* Colores específicos para los iconos de estado/tendencia */
+/* --- CORREGIDO: Usar variables de tema para los iconos de estado --- */
 .iconUp {
-    color: var(--success-color, #28a745);
+    color: var(--success);
 }
 .iconDown {
-    color: var(--destructive-color, #dc3545);
+    color: var(--destructive);
 }
 .iconNeutral {
-    color: var(--warning-color, #ffc107);
+    color: var(--warning);
 }
 
-.progressBarFill {
-    height: 100%;
-    border-radius: inherit;
-    transition: width 0.4s ease-in-out;
-}
-
-/* Clases de estado para los colores */
+/* Clases de estado para los colores de la barra de progreso (esto ya estaba bien) */
 .excellent { background-color: var(--success); }
 .good { background-color: var(--primary); }
 .regular { background-color: var(--warning); }

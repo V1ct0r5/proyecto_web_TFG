@@ -25,6 +25,10 @@
     flex-grow: 1;
 }
 
+.cardContent:last-child {
+    gap: 0; /* Espacio entre el contenido y el pie de la tarjeta */
+}
+
 .cardHeader{
     display: flex;
     justify-content: space-between; /* Pushes title to left, badge to right */

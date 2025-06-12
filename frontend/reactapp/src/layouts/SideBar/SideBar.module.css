@@ -1,4 +1,4 @@
-/* frontend/src/components/Sidebar/Sidebar.module.css */
+/* frontend/src/layouts/SideBar/SideBar.module.css */
 
 .sidebar {
     width: 250px;
@@ -8,14 +8,30 @@
     padding: 1.5rem 1rem;
     display: flex;
     flex-direction: column;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
     height: 100vh;
-    position: sticky;
+    overflow-y: auto;
+    flex-shrink: 0;
+    
+    position: fixed;
     top: 0;
     left: 0;
-    overflow-y: auto;
-    z-index: 20;
-    flex-shrink: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.sidebarVisible {
+    transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+    .sidebar {
+        position: sticky;
+        transform: translateX(0);
+        z-index: 20;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    }
 }
 
 .logoContainer {
@@ -60,7 +76,7 @@
     cursor: pointer;
     transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     text-align: center;
-    text-decoration: none; /* Asegura que no haya subrayado por defecto */
+    text-decoration: none;
     margin-bottom: 2.5rem;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
@@ -68,19 +84,8 @@
 .createButton:hover {
     background-color: var(--primary-hover);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    text-decoration: none; /* Asegura que no aparezca el subrayado en hover */
+    text-decoration: none;
 }
-
-.createButton:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 50%, transparent);
-}
-
-.activeCreateButton {
-    background-color: var(--primary-hover);
-    text-decoration: none; /* Asegura que no haya subrayado en estado activo */
-}
-
 
 .navigation {
     display: flex;
@@ -96,7 +101,7 @@
     color: var(--sidebar-foreground);
     font-size: 1.05rem;
     font-weight: 500;
-    text-decoration: none; /* Asegura que los navItems no tengan subrayado */
+    text-decoration: none;
     border-radius: var(--radius);
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
@@ -104,12 +109,7 @@
 .navItem:hover {
     background-color: var(--sidebar-accent);
     color: var(--sidebar-accent-foreground);
-    text-decoration: none; /* Asegura que los navItems no tengan subrayado en hover */
-}
-
-.navItem:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent);
+    text-decoration: none;
 }
 
 .icon {
@@ -121,7 +121,7 @@
     background-color: var(--sidebar-accent);
     color: var(--sidebar-primary);
     font-weight: 600;
-    text-decoration: none; /* Asegura que los navItems no tengan subrayado en estado activo */
+    text-decoration: none;
 }
 
 .activeNavItem .icon {

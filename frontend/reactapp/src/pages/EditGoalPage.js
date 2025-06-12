@@ -63,6 +63,11 @@ function EditGoalPage() {
         }
     };
 
+    const handleCancelEdit = () => {
+        navigate('/mis-objetivos'); // Navega a la página de la lista de objetivos
+    };
+
+
     if (loading) {
         return <div className={styles.loadingState}><LoadingSpinner size="large" text={t('loaders.loadingObjectiveForEdit')} /></div>;
     }
@@ -79,6 +84,8 @@ function EditGoalPage() {
                     initialData={objective}
                     onSubmit={handleEditObjective}
                     isEditMode={true}
+                    onCancel={handleCancelEdit}
+
                 />
             )}
         </div>

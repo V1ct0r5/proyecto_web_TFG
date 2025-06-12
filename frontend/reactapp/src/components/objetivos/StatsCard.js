@@ -34,10 +34,10 @@ const StatsCard = ({
                 ) : (
                     value 
                 )}
-
                 {valueDescription && <span className={styles.valueDescription}>{valueDescription}</span>}
-
                 {details && !children && <p className={styles.details}>{details}</p>}
+                
+                {/* Esta línea es clave: renderiza el gráfico en su contenedor */}
                 {children && <div className={styles.childrenContainer}>{children}</div>}
             </div>
 
