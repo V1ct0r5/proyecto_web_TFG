@@ -33,7 +33,7 @@ function RegistroForm() {
                 confirmPassword: data.confirmPassword,
             });
 
-            toast.success(t('registroForm.success'));
+            toast.success(t('registroForm.success', { user: responseData.user.username }));
             if (responseData.token && responseData.user) {
                 contextLogin(responseData.token, responseData.user);
                 navigate("/dashboard", { replace: true });
