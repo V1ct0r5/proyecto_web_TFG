@@ -185,8 +185,8 @@ function ObjectiveForm({
                         <Input
                             type="select" id="category"
                             {...register("category", {
-                                required: t('formValidation.categoryRequired'),
-                                validate: (value) => value !== "" || t('formValidation.categoryRequired'),
+                                required: t('formValidation.typeRequired'),
+                                validate: (value) => value !== "" || t('formValidation.typeRequired'),
                             })}
                             disabled={loading} isError={!!errors.category}
                         >

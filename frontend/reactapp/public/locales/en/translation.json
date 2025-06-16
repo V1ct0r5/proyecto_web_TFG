@@ -176,7 +176,7 @@
   },
   "registroForm": {
     "submitButton": "Create account",
-    "success": "Registration successful! Logging you in...",
+    "success": "Welcome to GoalMaster, {{user}}! Your account has been created successfully.",
     "errors": {
       "autoLoginFailed": "Registration successful, but there was a problem logging you in automatically. Please try to log in manually.",
       "defaultRegisterError": "Error during registration. Please try again."

@@ -1,0 +1,11 @@
+{
+    "data": {
+      "totalObjectives": 25,
+      "activeObjectives": 18,
+      "completedObjectives": 7,
+      "averageProgress": 55,
+      "categoryCount": 3,
+      "categories": [{ "name": "CAREER" }, { "name": "FINANCE" }, { "name": "HEALTH" }],
+      "trend": { "type": "neutral", "textKey": "analysis.trends.stable" }
+    }
+  }

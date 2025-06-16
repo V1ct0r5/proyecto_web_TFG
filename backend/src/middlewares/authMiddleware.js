@@ -1,4 +1,3 @@
-// backend/src/middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
 const AppError = require('../utils/AppError');
 require('dotenv').config();
@@ -26,7 +25,19 @@ const authMiddleware = (req, res, next) => {
         return next(new AppError('Acceso denegado. Token no encontrado en la cabecera.', 401));
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decodedUserPayload) => {
+    // --- CORRECCIÓN ---
+    // Hacemos que la carga del secreto sea consciente del entorno.
+    const secret = process.env.NODE_ENV === 'test' 
+        ? process.env.JWT_SECRET_TEST 
+        : process.env.JWT_SECRET;
+
+    if (!secret) {
+        // Añadimos una comprobación de seguridad por si el secreto no está definido
+        console.error("FATAL: JWT_SECRET no está definido para la verificación en el entorno actual.");
+        return next(new AppError('Error de configuración del servidor de autenticación.', 500));
+    }
+
+    jwt.verify(token, secret, (err, decodedUserPayload) => {
         if (err) {
             if (err.name === 'TokenExpiredError') {
                 return next(new AppError('Token expirado. Por favor, inicie sesión de nuevo.', 401));

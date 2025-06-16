@@ -1,0 +1,12 @@
+{
+    "data": {
+      "language": "es",
+      "themePreference": "dark",
+      "dateFormat": "dd/MM/yyyy",
+      "notifications": {
+        "email": true,
+        "push": false
+      }
+    }
+  }
+  

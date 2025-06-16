@@ -1,0 +1,12 @@
+{
+    "data": {
+      "totalObjectives": 15,
+      "statusCounts": { "IN_PROGRESS": 8, "COMPLETED": 5, "PENDING": 2 },
+      "averageProgress": 65,
+      "dueSoonCount": 3,
+      "categories": [
+        { "category": "CAREER", "count": 5 },
+        { "category": "PERSONAL_DEV", "count": 10 }
+      ]
+    }
+  }

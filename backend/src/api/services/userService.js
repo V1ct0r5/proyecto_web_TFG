@@ -117,7 +117,9 @@ class UserService {
      */
     generateAuthToken(user) {
         const payload = { id: user.id, username: user.username, email: user.email };
-        const secret = process.env.JWT_SECRET;
+        const secret = process.env.NODE_ENV === 'test' 
+            ? process.env.JWT_SECRET_TEST 
+            : process.env.JWT_SECRET;
         const options = { expiresIn: process.env.JWT_EXPIRES_IN || '7d' };
 
         if (!secret) {

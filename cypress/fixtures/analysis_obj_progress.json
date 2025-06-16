@@ -1,0 +1,6 @@
+{
+    "data": [
+      { "id": 1, "name": "Get promotion", "progressPercentage": 80, "category": "CAREER" },
+      { "id": 2, "name": "Save $5000", "progressPercentage": 30, "category": "FINANCE" }
+    ]
+  }

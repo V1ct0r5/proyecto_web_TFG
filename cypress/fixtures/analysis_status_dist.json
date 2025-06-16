@@ -1,0 +1,7 @@
+{
+    "data": [
+      { "name": "IN_PROGRESS", "value": 15 },
+      { "name": "COMPLETED", "value": 7 },
+      { "name": "PENDING", "value": 3 }
+    ]
+  }

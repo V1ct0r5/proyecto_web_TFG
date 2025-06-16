@@ -1,0 +1,6 @@
+{
+    "data": [
+      { "id": 101, "description": "You updated the progress for \"Learn Advanced React\"", "createdAt": "2025-06-09T15:30:00.000Z", "objective": { "name": "Learn Advanced React" }},
+      { "id": 100, "description": "You created a new objective: \"Finish Q2 Report\"", "createdAt": "2025-06-08T11:00:00.000Z", "objective": { "name": "Finish Q2 Report" }}
+    ]
+  }

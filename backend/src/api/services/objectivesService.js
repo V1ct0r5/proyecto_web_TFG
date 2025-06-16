@@ -109,21 +109,25 @@ class ObjectivesService {
     async createObjective(objectiveData, userId) {
         const transaction = await db.sequelize.transaction();
         try {
+            const isQuantitative = objectiveData.initialValue !== undefined && objectiveData.initialValue !== null;
+
             const dataToCreate = {
                 ...objectiveData,
                 userId,
-                currentValue: objectiveData.initialValue, // current value starts as the initial value
+                // Si no es cuantitativo, ambos son null. Si lo es, toma el valor proporcionado.
+                initialValue: isQuantitative ? objectiveData.initialValue : null,
+                currentValue: isQuantitative ? objectiveData.initialValue : null,
             };
 
             const newObjective = await objectiveRepository.create(dataToCreate, { transaction });
 
-            // Create initial progress entry if the objective is quantitative
-            if (newObjective.initialValue !== null) {
+            // Solo creamos una entrada de progreso si el objetivo es cuantitativo.
+            if (isQuantitative) {
                 await Progress.create({
                     objectiveId: newObjective.id,
                     userId: userId,
                     entryDate: new Date(),
-                    value: newObjective.initialValue,
+                    value: newObjective.initialValue, // Aquí, initialValue no será null
                     notes: 'Valor inicial del objetivo.'
                 }, { transaction });
             }
@@ -138,13 +142,19 @@ class ObjectivesService {
             }, { transaction });
 
             await transaction.commit();
+            
+            // Volvemos a llamar a getObjectiveById, ya que es el comportamiento esperado por el controlador.
+            // Si esto falla, el error está en getObjectiveById.
             return this.getObjectiveById(newObjective.id, userId);
 
         } catch (error) {
             await transaction.rollback();
             if (error.name === 'SequelizeValidationError') {
-                throw new AppError(`Error de validación: ${error.errors.map(e => e.message).join('. ')}`, 400);
+                const messages = error.errors.map(e => e.message).join('. ');
+                throw new AppError(`Error de validación: ${messages}`, 400);
             }
+            // Añadimos un log para ver el error original si no es de validación
+            console.error('Error no manejado en createObjective:', error);
             throw new AppError('Error al crear el objetivo.', 500, error);
         }
     }

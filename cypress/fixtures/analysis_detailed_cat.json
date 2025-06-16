@@ -1,0 +1,11 @@
+{
+    "data": [
+      {
+        "categoryName": "CAREER",
+        "objectiveCount": 2,
+        "objectives": [
+          { "id": 1, "nombre": "Get promotion", "progreso_calculado": 80 }
+        ]
+      }
+    ]
+  }

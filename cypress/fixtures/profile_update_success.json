@@ -1,0 +1,12 @@
+{
+    "data": {
+      "id": 1,
+      "username": "UsuarioActualizado",
+      "email": "test@example.com",
+      "phone": "+34123456789",
+      "location": "Madrid, España",
+      "bio": "Esta es mi biografía de prueba.",
+      "avatarUrl": null,
+      "createdAt": "2025-01-15T10:00:00.000Z"
+    }
+  }

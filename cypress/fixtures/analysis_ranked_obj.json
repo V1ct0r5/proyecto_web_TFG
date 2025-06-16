@@ -1,0 +1,10 @@
+{
+    "data": {
+      "top": [
+        { "id_objetivo": 1, "nombre": "Get promotion", "progreso_calculado": 80, "tipo_objetivo": "CAREER" }
+      ],
+      "low": [
+        { "id_objetivo": 2, "nombre": "Save $5000", "progreso_calculado": 30, "tipo_objetivo": "FINANCE" }
+      ]
+    }
+  }

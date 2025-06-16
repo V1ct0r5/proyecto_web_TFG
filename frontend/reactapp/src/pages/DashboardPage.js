@@ -69,7 +69,8 @@ function DashboardPage() {
             if (activitiesRes.status === 'fulfilled') setRecentActivities(activitiesRes.value || []);
 
         } catch (err) {
-            setError(err.message || t('toast.dashboardLoadError'));
+            const errorMessage = err?.message || (typeof err === 'string' ? err : t('toast.dashboardLoadError'));
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

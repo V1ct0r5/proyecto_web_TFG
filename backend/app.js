@@ -6,8 +6,9 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const compression = require('compression');
 const swaggerUi = require('swagger-ui-express');
-const YAML = require('yamljs');
+const YAML = require('yaml');
 const path = require('path');
+const fs = require('fs');
 
 const AppError = require('./src/utils/AppError');
 const errorHandler = require('./src/middlewares/errorHandler');
@@ -57,7 +58,9 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // Servir documentación de la API con Swagger
 try {
     const swaggerDocumentPath = path.join(__dirname, '../docs/api/swagger.yaml');
-    const swaggerDocument = YAML.load(swaggerDocumentPath);
+    const swaggerFile = fs.readFileSync(swaggerDocumentPath, 'utf8');
+    const swaggerDocument = YAML.parse(swaggerFile);
+    // ---------------------------------------------
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 } catch (e) {
     console.error("[API Docs] Error al cargar swagger.yaml:", e.message);
