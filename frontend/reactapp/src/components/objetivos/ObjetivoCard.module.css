@@ -29,12 +29,13 @@
     gap: 0; /* Espacio entre el contenido y el pie de la tarjeta */
 }
 
-.cardHeader{
+.cardHeader {
     display: flex;
-    justify-content: space-between; /* Pushes title to left, badge to right */
-    align-items: flex-start; /* Aligns items to the top if they have different heights */
-    gap: 1rem; /* Space between title and badge */
-    flex-wrap: wrap; /* Allows wrapping if space is insufficient */
+    /* 1. Alinear los items arriba */
+    align-items: flex-start; 
+    /* 2. Dejar que los items se separen */
+    justify-content: space-between;
+    gap: 0.75rem; /* Espacio entre el título y la etiqueta */
 }
 
 .cardTitle {
@@ -240,31 +241,31 @@
     margin-top: 0.5rem;
 }
 
-.statusPendiente, .statusPending {
+.statusPending {
     color: var(--warning-foreground-strong); /* Usar un color de texto fuerte para el warning suave */
     background-color: var(--warning-background-soft); /* Color de fondo suave para warning */
     border: 1px solid var(--warning-border); /* Añadir un borde sutil para definirlo mejor */
 }
 
-.statusEnprogreso, .statusInprogress {
+.statusInprogress {
     color: var(--primary); /* El texto primario puede ser el mismo azul */
     background-color: var(--primary-soft-bg); /* Color de fondo suave para primary */
     border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent); /* Un borde que combine */
 }
 
-.statusCompletado, .statusCompleted {
+.statusCompleted {
     color: var(--success-strong-text); /* Usar un color de texto fuerte para el success suave */
     background-color: var(--success-soft-bg); /* Color de fondo suave para success */
     border: 1px solid color-mix(in srgb, var(--success) 20%, transparent); /* Un borde que combine */
 }
 
-.statusFallido, .statusFailed { /* Corregido de .statusfFallido a .statusFallido */
+.statusFailed { /* Corregido de .statusfFallido a .statusFallido */
     color: var(--destructive); /* El texto destructivo puede ser el mismo rojo */
     background-color: var(--destructive-soft-bg); /* Color de fondo suave para destructive */
     border: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent); /* Un borde que combine */
 }
 
-.statusArchivado, .statusArchived { /* Corregido de .status-archivado a .statusArchived para consistencia en las clases JS */
+.statusArchived { /* Corregido de .status-archivado a .statusArchived para consistencia en las clases JS */
     color: var(--muted-foreground); /* Un color de texto neutro */
     background-color: var(--muted); /* Fondo más suave, similar al muted */
     border: 1px solid var(--border-light); /* Borde claro para un look más "archivado" */

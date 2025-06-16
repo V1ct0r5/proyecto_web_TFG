@@ -16,27 +16,34 @@ const { Objective, Progress, ActivityLog } = db;
 const calculateProgressPercentage = (objective) => {
     const { initialValue, currentValue, targetValue, isLowerBetter } = objective;
 
-    const numInitial = parseFloat(initialValue);
+    // --- CORRECCIÓN: Manejo robusto de valores ---
+    // Si initialValue no existe, asumimos que es 0. Esto es una suposición segura
+    // para la mayoría de los casos de progreso.
+    const numInitial = parseFloat(initialValue ?? 0); 
     const numTarget = parseFloat(targetValue);
-    const numCurrent = currentValue !== null ? parseFloat(currentValue) : numInitial;
 
-    if (isNaN(numInitial) || isNaN(numCurrent) || isNaN(numTarget)) {
+    // Si currentValue no se pasa, usamos el initialValue. Si tampoco existe, es 0.
+    const numCurrent = parseFloat(currentValue ?? initialValue ?? 0);
+
+    if (isNaN(numTarget)) {
+        // Si no hay un objetivo claro, no se puede calcular el progreso.
         return 0;
     }
 
     if (numTarget === numInitial) {
+        // Si el inicio y el fin son iguales, el progreso es 0% o 100%.
         return (isLowerBetter ? numCurrent <= numTarget : numCurrent >= numTarget) ? 100 : 0;
     }
 
     let progress;
-    // CORRECCIÓN: Se usa consistentemente 'numTarget' en lugar de 'targetValue' para evitar errores de tipo.
     if (isLowerBetter) {
+        // Evita división por cero y maneja la lógica inversa
         progress = ((numInitial - numCurrent) / (numInitial - numTarget)) * 100;
     } else {
         progress = ((numCurrent - numInitial) / (numTarget - numInitial)) * 100;
     }
         
-    // Se redondea el progreso y se asegura que esté entre 0 y 100.
+    // Asegurarse de que el progreso esté entre 0 y 100.
     return Math.max(0, Math.min(100, Math.round(progress)));
 };
 
@@ -109,30 +116,40 @@ class ObjectivesService {
     async createObjective(objectiveData, userId) {
         const transaction = await db.sequelize.transaction();
         try {
-            const isQuantitative = objectiveData.initialValue !== undefined && objectiveData.initialValue !== null;
+            // 1. Validar que el userId existe antes de hacer nada
+            if (!userId) {
+                throw new AppError('No se proporcionó un ID de usuario autenticado.', 401);
+            }
 
+            // 2. Determinar si es cuantitativo de forma segura
+            const isQuantitative = (
+                objectiveData.initialValue !== null && objectiveData.initialValue !== undefined &&
+                objectiveData.targetValue !== null && objectiveData.targetValue !== undefined
+            );
+
+            // 3. Construir el payload para la BD
             const dataToCreate = {
                 ...objectiveData,
-                userId,
-                // Si no es cuantitativo, ambos son null. Si lo es, toma el valor proporcionado.
+                userId, // Usar el userId validado
                 initialValue: isQuantitative ? objectiveData.initialValue : null,
+                targetValue: isQuantitative ? objectiveData.targetValue : null,
                 currentValue: isQuantitative ? objectiveData.initialValue : null,
             };
 
             const newObjective = await objectiveRepository.create(dataToCreate, { transaction });
 
-            // Solo creamos una entrada de progreso si el objetivo es cuantitativo.
+            // 4. Crear progreso SOLO si es cuantitativo
             if (isQuantitative) {
                 await Progress.create({
                     objectiveId: newObjective.id,
                     userId: userId,
                     entryDate: new Date(),
-                    value: newObjective.initialValue, // Aquí, initialValue no será null
+                    value: newObjective.initialValue,
                     notes: 'Valor inicial del objetivo.'
                 }, { transaction });
             }
 
-            // Create activity log entry
+            // 5. Crear log de actividad
             await ActivityLog.create({
                 userId,
                 objectiveId: newObjective.id,
@@ -142,23 +159,19 @@ class ObjectivesService {
             }, { transaction });
 
             await transaction.commit();
-            
-            // Volvemos a llamar a getObjectiveById, ya que es el comportamiento esperado por el controlador.
-            // Si esto falla, el error está en getObjectiveById.
             return this.getObjectiveById(newObjective.id, userId);
 
         } catch (error) {
             await transaction.rollback();
-            if (error.name === 'SequelizeValidationError') {
-                const messages = error.errors.map(e => e.message).join('. ');
-                throw new AppError(`Error de validación: ${messages}`, 400);
+            if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeForeignKeyConstraintError') {
+                const messages = error.errors ? error.errors.map(e => e.message).join('. ') : error.message;
+                throw new AppError(`Error de validación o de referencia: ${messages}`, 400);
             }
-            // Añadimos un log para ver el error original si no es de validación
             console.error('Error no manejado en createObjective:', error);
             throw new AppError('Error al crear el objetivo.', 500, error);
         }
     }
-
+    
     /**
      * Updates an existing objective. Can handle both objective data and progress updates.
      */

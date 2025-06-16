@@ -1,4 +1,3 @@
-// backend/src/api/services/analysisService.js
 const { Op, fn, col, literal } = require('sequelize');
 const db = require('../../config/database');
 const AppError = require('../../utils/AppError');
@@ -25,6 +24,8 @@ class AnalysisService {
     }
 
     async getAnalysisSummary(userId, period = '3months') {
+        // --- CORRECCIÓN 1: Importar la función ---
+        const { calculateProgressPercentage } = require('./objectivesService');
         const { startDate, endDate } = this._getDateRange(period);
         const baseWhere = { userId, status: { [Op.not]: 'ARCHIVED' } };
         try {
@@ -52,102 +53,71 @@ class AnalysisService {
     }
 
     async getMonthlyProgress(userId, period = '3months') {
-        const { calculateProgressPercentage } = require('./objectivesService');
+        // La función de cálculo en JS ya no es necesaria para este método
         const { startDate, endDate } = this._getDateRange(period);
         
         try {
-            // 1. Obtener todos los datos necesarios en dos consultas limpias
-            const objectives = await Objective.findAll({
-                where: {
-                    userId,
-                    targetValue: { [Op.ne]: null },
-                    status: { [Op.not]: 'ARCHIVED' },
-                    createdAt: { [Op.lte]: endDate }
-                },
-                raw: true
-            });
-
-            if (objectives.length === 0) {
-                return [];
-            }
-
-            const objectiveIds = objectives.map(o => o.id_objetivo);
-            const allProgressEntries = await Progress.findAll({
-                where: { objectiveId: { [Op.in]: objectiveIds } },
-                attributes: ['id_objetivo', 'fecha_registro', 'valor_actual'],
-                raw: true
-            });
-
-            // 2. Agrupar las entradas de progreso por ID para un acceso eficiente
-            const progressByObjective = allProgressEntries.reduce((acc, entry) => {
-                const id = entry.id_objetivo;
-                if (!acc[id]) acc[id] = [];
-                // `new Date('YYYY-MM-DD')` crea la fecha en UTC, lo cual es seguro.
-                acc[id].push({ date: new Date(entry.fecha_registro), value: entry.valor_actual });
-                return acc;
-            }, {});
-
-            // 3. Preparar la estructura de datos para los resultados mensuales
-            const monthlyData = {};
+            const months = [];
             let iterator = new Date(startDate);
             iterator.setDate(1);
             while (iterator <= endDate) {
-                const yearMonth = `${iterator.getFullYear()}-${String(iterator.getMonth() + 1).padStart(2, '0')}`;
-                monthlyData[yearMonth] = [];
+                months.push({
+                    year: iterator.getFullYear(),
+                    month: iterator.getMonth() + 1,
+                    // Clave para el resultado final
+                    yearMonth: `${iterator.getFullYear()}-${String(iterator.getMonth() + 1).padStart(2, '0')}`,
+                });
                 iterator.setMonth(iterator.getMonth() + 1);
             }
 
-            // 4. Procesar cada objetivo y su contribución a cada mes
-            objectives.forEach(obj => {
-                // Construir un historial completo para este objetivo
-                const history = [{ date: new Date(obj.created_at), value: obj.valor_inicial_numerico }];
-                if (progressByObjective[obj.id_objetivo]) {
-                    history.push(...progressByObjective[obj.id_objetivo]);
-                }
+            const monthlyProgressData = [];
+
+            for (const monthInfo of months) {
+                const { year, month, yearMonth } = monthInfo;
+
+                // Consulta para obtener el último valor de progreso de cada objetivo al final del mes especificado.
+                const subQuery = `
+                    (SELECT p.valor_actual FROM Progresos p
+                     WHERE p.id_objetivo = Objective.id_objetivo
+                       AND p.fecha_registro <= '${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}'
+                     ORDER BY p.fecha_registro DESC, p.created_at DESC
+                     LIMIT 1)
+                `;
+
+                const result = await Objective.findOne({
+                    attributes: [
+                        [
+                            // AVG( (COALESCE(subQuery, valor_inicial_numerico) - valor_inicial_numerico) / (valor_cuantitativo - valor_inicial_numerico) * 100 )
+                            fn('AVG', 
+                                literal(`(
+                                    (COALESCE(${subQuery}, \`Objective\`.\`valor_inicial_numerico\`) - \`Objective\`.\`valor_inicial_numerico\`) /
+                                    (\`Objective\`.\`valor_cuantitativo\` - \`Objective\`.\`valor_inicial_numerico\`) * 100
+                                )`)
+                            ),
+                            'averageProgress'
+                        ]
+                    ],
+                    where: {
+                        userId,
+                        status: { [Op.not]: 'ARCHIVED' },
+                        targetValue: { [Op.ne]: null },
+                        // El objetivo debe haber sido creado antes de que el mes termine
+                        createdAt: { [Op.lte]: `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()} 23:59:59` },
+                        // Asegurarse de que el denominador no sea cero
+                        [Op.and]: [
+                            literal('`Objective`.`valor_cuantitativo` != `Objective`.`valor_inicial_numerico`')
+                        ]
+                    },
+                    raw: true,
+                });
                 
-                // Ordenar el historial cronológicamente
-                history.sort((a, b) => a.date - b.date);
+                monthlyProgressData.push({
+                    monthYear: yearMonth,
+                    averageProgress: Math.round(parseFloat(result.averageProgress) || 0)
+                });
+            }
 
-                // Iterar sobre cada mes y encontrar el valor del objetivo al final de ese mes
-                for (const yearMonth in monthlyData) {
-                    const year = parseInt(yearMonth.split('-')[0]);
-                    const month = parseInt(yearMonth.split('-')[1]);
-                    // Forma 100% segura de obtener el último día del mes
-                    // new Date(year, month, 0) es el último día del mes ANTERIOR. 
-                    // Como los meses en JS son 0-indexed, `month` es correcto.
-                    const monthEndDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
-
-                    if (new Date(obj.created_at) > monthEndDate) {
-                        continue;
-                    }
-
-                    const relevantHistory = history.filter(h => h.date <= monthEndDate);
-                    
-                    if (relevantHistory.length > 0) {
-                        const latestValue = relevantHistory[relevantHistory.length - 1].value;
-                        
-                        const progress = calculateProgressPercentage({
-                            initialValue: obj.valor_inicial_numerico,
-                            targetValue: obj.valor_cuantitativo,
-                            isLowerBetter: obj.es_menor_mejor,
-                            currentValue: latestValue,
-                        });
-                        
-                        if (!isNaN(progress)) {
-                            monthlyData[yearMonth].push(progress);
-                        }
-                    }
-                }
-            });
-
-            // 5. Calcular el promedio final para cada mes
-            return Object.keys(monthlyData).sort().map(yearMonth => {
-                const progresses = monthlyData[yearMonth];
-                const average = progresses.length > 0
-                    ? Math.round(progresses.reduce((sum, p) => sum + p, 0) / progresses.length)
-                    : 0;
-                return { monthYear: yearMonth, averageProgress: average };
-            });
+            return monthlyProgressData;
 
         } catch (error) {
             console.error("Error fetching monthly progress:", error);
@@ -155,8 +125,9 @@ class AnalysisService {
         }
     }
    
-    
     async getRankedObjectives(userId, period = '3months', limit = 5) {
+        // --- CORRECCIÓN 2: Importar la función ---
+        const { calculateProgressPercentage } = require('./objectivesService');
         const { startDate, endDate } = this._getDateRange(period);
         const objectives = await Objective.findAll({
             where: { 
@@ -186,6 +157,8 @@ class AnalysisService {
     }
 
     async getCategoryAverageProgress(userId, period = '3months') {
+        // --- CORRECCIÓN 3: Importar la función ---
+        const { calculateProgressPercentage } = require('./objectivesService');
         const { startDate, endDate } = this._getDateRange(period);
         const objectives = await Objective.findAll({ where: { userId, updatedAt: { [Op.between]: [startDate, endDate] }, targetValue: { [Op.ne]: null }, category: { [Op.ne]: null }, status: { [Op.not]: 'ARCHIVED' } } });
         const progressByCategory = {};
@@ -208,6 +181,8 @@ class AnalysisService {
     }
 
     async getDetailedObjectivesByCategory(userId, period = '3months') {
+        // --- CORRECCIÓN 4: Importar la función ---
+        const { calculateProgressPercentage } = require('./objectivesService');
         const { startDate, endDate } = this._getDateRange(period);
         const objectives = await Objective.findAll({
             where: {
@@ -241,6 +216,8 @@ class AnalysisService {
     }
 
     async getObjectivesProgressChartData(userId, period = '3months') {
+        // --- CORRECCIÓN 5: Importar la función ---
+        const { calculateProgressPercentage } = require('./objectivesService');
         const { startDate, endDate } = this._getDateRange(period);
         const objectives = await Objective.findAll({
             where: {

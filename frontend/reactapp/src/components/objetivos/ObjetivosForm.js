@@ -23,11 +23,10 @@ function ObjectiveForm({
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, dirtyFields },
         reset,
         watch,
         control,
-        setValue
     } = useForm({
         defaultValues: {
             name: initialData?.name || '',
@@ -37,8 +36,8 @@ function ObjectiveForm({
             initialValue: initialData?.initialValue !== undefined ? initialData.initialValue : '',
             currentValue: initialData?.currentValue !== undefined ? initialData.currentValue : '',
             unit: initialData?.unit || '',
-            startDate: initialData?.startDate ? parseISO(initialData.startDate) : null,
-            endDate: initialData?.endDate ? parseISO(initialData.endDate) : null,
+            startDate: initialData?.startDate && isValid(parseISO(initialData.startDate)) ? parseISO(initialData.startDate) : null,
+            endDate: initialData?.endDate && isValid(parseISO(initialData.endDate)) ? parseISO(initialData.endDate) : null,
             status: initialData?.status || 'PENDING',
             isLowerBetter: initialData?.isLowerBetter === true,
         }
@@ -47,7 +46,6 @@ function ObjectiveForm({
     const startDateValue = watch("startDate");
     const targetValueWatch = watch("targetValue");
 
-    // Mapeo de valores de backend/formulario a claves de traducción
     const categoryKeyMap = {
         'HEALTH': "health",
         'FINANCE': "finance",
@@ -75,8 +73,8 @@ function ObjectiveForm({
                 initialValue: initialData.initialValue !== undefined ? initialData.initialValue : '',
                 currentValue: initialData.currentValue !== undefined ? initialData.currentValue : '',
                 unit: initialData.unit || '',
-                startDate: initialData.startDate ? parseISO(initialData.startDate) : null,
-                endDate: initialData.endDate ? parseISO(initialData.endDate) : null,
+                startDate: initialData.startDate && isValid(parseISO(initialData.startDate)) ? parseISO(initialData.startDate) : null,
+                endDate: initialData.endDate && isValid(parseISO(initialData.endDate)) ? parseISO(initialData.endDate) : null,
                 status: initialData.status || 'PENDING',
                 isLowerBetter: initialData.isLowerBetter === true,
             });
@@ -100,32 +98,48 @@ function ObjectiveForm({
     const onSubmitInternal = async (data) => {
         setLoading(true);
 
-        // Construye el objeto de datos que coincide con el modelo de Sequelize
-        const objectiveData = {
-            id: isEditMode ? initialData?.id : undefined,
-            name: data.name,
-            description: data.description || null,
-            category: data.category,
-            unit: data.unit || null,
-            startDate: data.startDate && isValid(data.startDate) ? format(data.startDate, 'yyyy-MM-dd') : null,
-            endDate: data.endDate && isValid(data.endDate) ? format(data.endDate, 'yyyy-MM-dd') : null,
-            status: isEditMode ? data.status : "PENDING",
-            isLowerBetter: data.isLowerBetter,
-            // Los valores numéricos se parsean a Float
-            targetValue: (data.targetValue !== '' && data.targetValue !== null && !isNaN(data.targetValue)) ? parseFloat(data.targetValue) : null,
-        };
+        const isQuantitative = (
+            (data.initialValue !== '' && data.initialValue !== null) &&
+            (data.targetValue !== '' && data.targetValue !== null)
+        );
 
-        if (!isEditMode) { // Modo Creación
-            objectiveData.initialValue = (data.initialValue !== '' && data.initialValue !== null && !isNaN(data.initialValue)) ? parseFloat(data.initialValue) : null;
-            // En creación, currentValue se inicializa igual que initialValue
-            objectiveData.currentValue = objectiveData.initialValue;
-        } else { // Modo Edición
-            objectiveData.currentValue = (data.currentValue !== '' && data.currentValue !== null && !isNaN(data.currentValue)) ? parseFloat(data.currentValue) : null;
-             // En edición, el valor inicial no se modifica, por lo que no se envía.
+        const payload = {};
+
+        // Añadir solo los campos que han sido modificados por el usuario
+        if (dirtyFields.name) payload.name = data.name;
+        if (dirtyFields.description) payload.description = data.description || null;
+        if (dirtyFields.category) payload.category = data.category;
+        if (dirtyFields.unit) payload.unit = data.unit || null;
+        if (dirtyFields.startDate) payload.startDate = data.startDate && isValid(data.startDate) ? format(data.startDate, 'yyyy-MM-dd') : null;
+        if (dirtyFields.endDate) payload.endDate = data.endDate && isValid(data.endDate) ? format(data.endDate, 'yyyy-MM-dd') : null;
+        if (dirtyFields.status) payload.status = data.status;
+        if (dirtyFields.isLowerBetter) payload.isLowerBetter = data.isLowerBetter;
+        if (dirtyFields.targetValue) payload.targetValue = isQuantitative ? parseFloat(data.targetValue) : null;
+        
+        // El caso especial: progressData solo se añade si 'currentValue' ha sido modificado
+        if (isEditMode && dirtyFields.currentValue) {
+            payload.progressData = {
+                value: isQuantitative ? parseFloat(data.currentValue) : 0,
+                notes: 'Valor actualizado desde la pantalla de edición.'
+            };
+        } else if (!isEditMode) {
+             // En modo creación, siempre se envían estos valores
+            payload.initialValue = isQuantitative ? parseFloat(data.initialValue) : null;
+            payload.currentValue = payload.initialValue;
+            // Pasamos el resto de los datos que no están en dirtyFields pero son necesarios
+            payload.name = data.name;
+            payload.category = data.category;
+        }
+
+        // Si no hay campos modificados, no hacemos nada (excepto si es creación)
+        if (isEditMode && Object.keys(payload).length === 0) {
+            toast.info("No se han detectado cambios.");
+            setLoading(false);
+            return;
         }
 
         try {
-            await handleFormSubmit(objectiveData);
+            await handleFormSubmit(isEditMode ? { id: initialData?.id, ...payload } : payload);
             if (!isEditMode) {
                 reset({
                     name: '', description: '', category: '', targetValue: '',
@@ -259,28 +273,41 @@ function ObjectiveForm({
                     <div className={objetivosStyles.dateFieldsGrid}>
                         <FormGroup label={t('objectivesForm.startDateLabel')} htmlFor="startDate" error={errors.startDate?.message}>
                             <Controller
-                                name="startDate" control={control}
+                                name="startDate"
+                                control={control}
                                 rules={{ validate: (value) => !value || isValid(value) || t('formValidation.invalidStartDate') }}
                                 render={({ field }) => (
                                     <DatePicker
-                                        {...field} selected={field.value}
-                                        onChange={(date) => setValue('startDate', date, { shouldValidate: true, shouldDirty: true })}
-                                        placeholder={t('common.selectDate')} disabled={loading} isError={!!errors.startDate}
+                                        ref={field.ref}
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        onBlur={field.onBlur}
+                                        placeholder={t('common.selectDate')}
+                                        disabled={loading}
+                                        isError={!!errors.startDate}
                                     />
                                 )}
                             />
                         </FormGroup>
-                        <FormGroup label={t('objectivesForm.endDateLabel')} htmlFor="endDate" required={true} error={errors.endDate?.message}>
+                        <FormGroup label={t('objectivesForm.endDateLabel')} htmlFor="endDate" required={false} error={errors.endDate?.message}>
                             <Controller
-                                name="endDate" control={control}
+                                name="endDate"
+                                control={control}
                                 rules={{
-                                    required: t('formValidation.endDateRequired'),
+                                    // La regla 'required' se ha eliminado.
                                     validate: (value) => {
-                                        if (!value) return t('formValidation.endDateRequired');
+                                        // Si no hay valor, es válido (opcional).
+                                        if (!value) return true;
+                                        
+                                        // Si hay valor, debe ser una fecha válida.
                                         if (!isValid(value)) return t('formValidation.invalidEndDate');
+                                        
+                                        // Si hay valor, debe ser posterior a la fecha de inicio.
                                         if (startDateValue && isValid(startDateValue) && value < startDateValue) {
                                             return t('formValidation.endDateAfterStart');
                                         }
+
+                                        // La comprobación de fecha pasada solo se aplica en modo creación si se proporciona una fecha.
                                         if (!isEditMode) {
                                             const today = new Date(); today.setHours(0,0,0,0);
                                             const selectedEndDate = new Date(value); selectedEndDate.setHours(0,0,0,0);
@@ -291,9 +318,13 @@ function ObjectiveForm({
                                 }}
                                 render={({ field }) => (
                                     <DatePicker
-                                        {...field} selected={field.value}
-                                        onChange={(date) => setValue('endDate', date, { shouldValidate: true, shouldDirty: true })}
-                                        placeholder={t('common.selectDate')} disabled={loading} isError={!!errors.endDate}
+                                        ref={field.ref}
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        onBlur={field.onBlur}
+                                        placeholder={t('common.selectDate')}
+                                        disabled={loading}
+                                        isError={!!errors.endDate}
                                         minDate={startDateValue && isValid(startDateValue) ? startDateValue : null}
                                     />
                                 )}

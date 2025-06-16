@@ -1,4 +1,3 @@
-// frontend/reactapp/src/pages/EditGoalPage.js
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -35,27 +34,10 @@ function EditGoalPage() {
         fetchObjective();
     }, [id, navigate, t]);
 
+    // El handler ahora recibe el payload ya preparado por ObjetivosForm
     const handleEditObjective = async (formData) => {
         try {
-            // Mapeo de datos del formulario al formato de la API
-            const payload = {
-                name: formData.name,
-                description: formData.description,
-                category: formData.category,
-                targetValue: formData.targetValue,
-                unit: formData.unit,
-                isLowerBetter: formData.isLowerBetter,
-                startDate: formData.startDate,
-                endDate: formData.endDate,
-                status: formData.status,
-                // Incluimos el valor actual y las notas en un objeto anidado `progressData`
-                progressData: {
-                    value: formData.currentValue,
-                    notes: formData.notes, // Asumiendo que el form tiene un campo de notas
-                }
-            };
-
-            await api.updateObjective(id, payload);
+            await api.updateObjective(id, formData);
             toast.success(t('toast.objectiveUpdateSuccess'));
             navigate('/mis-objetivos');
         } catch (err) {
@@ -64,9 +46,8 @@ function EditGoalPage() {
     };
 
     const handleCancelEdit = () => {
-        navigate('/mis-objetivos'); // Navega a la página de la lista de objetivos
+        navigate(`/objectives/${id}`); // Mejor volver a la página de detalles
     };
-
 
     if (loading) {
         return <div className={styles.loadingState}><LoadingSpinner size="large" text={t('loaders.loadingObjectiveForEdit')} /></div>;
@@ -85,7 +66,6 @@ function EditGoalPage() {
                     onSubmit={handleEditObjective}
                     isEditMode={true}
                     onCancel={handleCancelEdit}
-
                 />
             )}
         </div>

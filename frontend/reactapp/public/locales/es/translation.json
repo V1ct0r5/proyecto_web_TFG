@@ -200,6 +200,7 @@
     "status": "Estado",
     "percentageAxis": "Porcentaje (%)",
     "noMonthlyProgressData": "No hay datos de progreso mensual para mostrar.",
+    "noProgressHistory": "No hay historial de progreso para mostrar.",
     "progressAxis": "Progreso (%)",
     "monthAxis": "Mes",
     "objectiveProgressLabel": "Progreso del Objetivo (%)",
@@ -239,7 +240,9 @@
     "noDetailedObjectives": "No hay objetivos detallados por categoría para mostrar.",
     "noDataMessages": {
       "topProgress": "No hay objetivos con progreso significativo.",
-      "lowProgress": "Todos los objetivos tienen buen progreso o no hay datos."
+      "lowProgress": "Todos los objetivos tienen buen progreso o no hay datos.",
+      "monthlyProgress": "No hay datos de progreso mensual para mostrar.",
+      "objectiveProgress": "No hay datos de progreso de objetivos para mostrar."
     },
     "selectTabPrompt": "Selecciona una pestaña para ver el análisis.",
     "tabs": {

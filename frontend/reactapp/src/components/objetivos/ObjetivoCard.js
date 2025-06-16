@@ -18,6 +18,16 @@ import { useSettings } from '../../context/SettingsContext'; // Import useSettin
  * @param {object} objective - El objeto del objetivo con datos.
  * @param {function} onObjectiveArchived - Callback que se ejecuta cuando el objetivo es archivado exitosamente.
  */
+
+const categoryKeyMap = {
+    'HEALTH': "health",
+    'FINANCE': "finance",
+    'PERSONAL_DEV': "personalDevelopment",
+    'RELATIONSHIPS': "relationships",
+    'CAREER': "career",
+    'OTHER': "other",
+};
+
 function ObjetivoCard({ objective, onObjectiveArchived }) {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -28,6 +38,9 @@ function ObjetivoCard({ objective, onObjectiveArchived }) {
 
     // Obtenemos la información de estado (traducción y clase CSS) desde la utilidad.
     const { translatedStatus, statusClassName } = getStatusInfo(objective.status, t);
+
+    const categoryTranslationKey = categoryKeyMap[objective.category] || 'other';
+    const translatedCategory = t(`categories.${categoryTranslationKey}`);
 
     // Determine if objective has quantifiable values (initialValue, targetValue, currentValue)
     // The objective object passed from backend should now have `initialValue`, `targetValue`, `currentValue` from the service
@@ -82,7 +95,7 @@ function ObjetivoCard({ objective, onObjectiveArchived }) {
                     <h3 className={styles.cardTitle}>{objective.name}</h3>
                     <div className={styles.categoryBadge}>
                         {getCategoryIcon(objective.category)}
-                        <span>{t(`categories.${objective.category.toLowerCase()}`, objective.category)}</span>
+                        <span>{translatedCategory}</span>
                     </div>
                 </header>
 

@@ -68,7 +68,7 @@
   /* Colores específicos de UI que podrías necesitar (ejemplos) */
   --border-light: hsl(214.3, 31.8%, 85.4%);  /* Un borde un poco más oscuro que el general */
   --border-ultralight: hsl(214.3, 31.8%, 93.4%); /* Un borde aún más claro */
-  --primary-soft-bg: #e0e7ff; /* Para fondos suaves con el color primario */
+  --primary-soft-bg: color-mix(in srgb, var(--primary) 20%, var(--background));
   --success-soft-bg: #d1fae5;
   --success-strong-text: #065f46;
   --destructive-soft-bg: #fecaca;
@@ -147,7 +147,7 @@ html[data-theme='dark'] {
   /* Colores específicos de UI para tema oscuro */
   --border-light: hsl(217.2, 32.6%, 27.5%); 
   --border-ultralight: hsl(217.2, 32.6%, 22.5%);
-  --primary-soft-bg: rgba(99, 102, 241, 0.15); /* Primario (el azul #6366F1) con alfa */
+  --primary-soft-bg: color-mix(in srgb, var(--primary) 20%, var(--background));
   --success-soft-bg: rgba(52, 211, 153, 0.15);
   --success-strong-text: #A7F3D0; /* Texto claro para fondos de éxito oscuros */
   --destructive-soft-bg: rgba(248, 113, 113, 0.15);

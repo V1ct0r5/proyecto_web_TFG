@@ -19,6 +19,18 @@ const activityIcons = {
     DEFAULT: <FaHistory style={{ color: 'var(--muted-foreground)' }} />
 };
 
+// --- NUEVA FUNCIÓN HELPER ---
+/**
+ * Convierte un string en formato ENUM (ej. 'IN_PROGRESS') a camelCase (ej. 'inProgress').
+ * @param {string} str - El string a convertir.
+ * @returns {string} El string en camelCase.
+ */
+const toCamelCase = (str) => {
+    if (!str) return '';
+    return str.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+};
+
+
 const RecentActivityFeed = ({ activities }) => {
     const { t, i18n } = useTranslation();
     const dateFnsLocales = { es: es, en: enUS };
@@ -32,11 +44,9 @@ const RecentActivityFeed = ({ activities }) => {
         <div className={styles.feedContainer}>
             <ul className={styles.feedList}>
                 {activities.map(act => {
-                    // CORRECCIÓN: Usar los nombres de propiedad en camelCase
                     const translationKey = act.descriptionKey;
                     let params = {};
                     try {
-                        // CORRECIÓN: Usar 'additionalDetails'
                         if (typeof act.additionalDetails === 'string') {
                             params = JSON.parse(act.additionalDetails);
                         } else {
@@ -47,11 +57,15 @@ const RecentActivityFeed = ({ activities }) => {
                         params = {};
                     }
                     
-                    if (params.oldStatusKey) {
-                        params.oldStatus = t(params.oldStatusKey);
+                    // --- CORRECCIÓN FINAL ---
+                    // Usamos la función helper para normalizar AMBOS estados a camelCase.
+                    if (params.oldStatus) {
+                        const camelCaseStatus = toCamelCase(params.oldStatus);
+                        params.oldStatus = t(`status.${camelCaseStatus}`, params.oldStatus);
                     }
-                    if (params.newStatusKey) {
-                        params.newStatus = t(params.newStatusKey);
+                    if (params.newStatus) {
+                        const camelCaseStatus = toCamelCase(params.newStatus);
+                        params.newStatus = t(`status.${camelCaseStatus}`, params.newStatus);
                     }
 
                     const translatedDescription = t(translationKey, params);
@@ -63,10 +77,8 @@ const RecentActivityFeed = ({ activities }) => {
                     }
 
                     return (
-                        // CORRECIÓN: Usar 'act.id' para la key
                         <li key={act.id} className={styles.feedItem}>
                             <div className={styles.activityIcon}>
-                                {/* CORRECIÓN: Usar 'act.activityType' */}
                                 {activityIcons[act.activityType] || activityIcons.DEFAULT}
                             </div>
                             <div className={styles.activityContent}>
@@ -77,7 +89,6 @@ const RecentActivityFeed = ({ activities }) => {
                                     <span className={styles.activityTime}>
                                         {timeAgo}
                                     </span>
-
                                 )}
                             </div>
                         </li>
