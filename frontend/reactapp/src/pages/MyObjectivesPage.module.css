@@ -95,7 +95,7 @@
 @media (min-width: 992px) {
     .filtersSidebar {
         position: sticky;
-        top: 1.5rem;
+        top: 0.5rem;
         height: fit-content;
         transform: none;
         z-index: 1;
