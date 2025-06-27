@@ -11,8 +11,7 @@ El objetivo de este TFG es diseñar y desarrollar una aplicación web que permit
 1. **Gestión de usuarios:**
     - **Registro de nuevos usuarios:** Los usuarios podrán registrarse proporcionando su información personal, con validación de datos y envío de correo electrónico de activación.
     - **Inicio y cierre de sesión:** Los usuarios podrán iniciar y cerrar sesión de manera segura.
-    - **Recuperación de contraseñas:** En caso de olvido, los usuarios podrán recuperar sus contraseñas a través del envío de un enlace seguro a su correo electrónico.
-    - **Opción de "Recordar sesión":** Facilitará el acceso al sistema sin necesidad de iniciar sesión en cada visita posterior.
+    - **Cambio de contraaseña:** Los usuarios podrán cambiar su contraseña de manera segura.
 2. **Gestión de objetivos:**
     - **Creación de objetivos personales:** Los usuarios podrán definir objetivos con un nombre, una descripción opcional, el tipo de objetivo, un valor cuantitativo (que se medirá en unidades definidas por el usuario) y fechas opcionales de inicio y fin.
     - **Actualización periódica del progreso:** Los usuarios podrán actualizar el progreso de cada objetivo mediante la introducción de nuevos valores cuantitativos en intervalos establecidos (diarios, semanales, etc.).
