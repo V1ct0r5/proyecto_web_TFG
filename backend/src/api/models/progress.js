@@ -18,14 +18,8 @@ module.exports = (sequelize) => {
         objectiveId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: { model: 'Objetivos', key: 'id_objetivo' },
+            references: { model: 'objetivo', key: 'id_objetivo' },
             field: 'id_objetivo'
-        },
-        userId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            references: { model: 'Usuarios', key: 'id' },
-            field: 'id_usuario'
         },
         entryDate: {
             type: DataTypes.DATEONLY,
@@ -49,7 +43,7 @@ module.exports = (sequelize) => {
             field: 'comentarios'
         }
     }, {
-        tableName: 'Progresos',
+        tableName: 'progreso',
         timestamps: true,
         underscored: true
     });
@@ -58,12 +52,6 @@ module.exports = (sequelize) => {
         Progress.belongsTo(models.Objective, {
             foreignKey: 'objectiveId',
             as: 'objective',
-            onDelete: 'CASCADE'
-        });
-
-        Progress.belongsTo(models.User, {
-            foreignKey: 'userId',
-            as: 'user',
             onDelete: 'CASCADE'
         });
     };

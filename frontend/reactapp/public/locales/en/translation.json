@@ -240,7 +240,10 @@
     "noDataMessages": {
       "topProgress": "No objectives with significant progress.",
       "lowProgress": "All objectives have good progress or no data is available.",
-      "monthlyProgress": "No monthly progress data available."
+      "monthlyProgress": "No monthly progress data available.",
+      "categoryAverageProgress": "No average progress data by category available.",
+      "rankedObjectives": "No objectives to rank by progress.",
+      "objectiveProgress": "No individual objective progress data available."
     },
     "selectTabPrompt": "Select a tab to see the analysis.",
     "tabs": {

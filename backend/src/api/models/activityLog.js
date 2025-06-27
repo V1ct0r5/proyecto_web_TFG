@@ -17,13 +17,13 @@ module.exports = (sequelize) => {
         userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: { model: 'Usuarios', key: 'id' },
+            references: { model: 'usuario', key: 'id' },
             field: 'id_usuario'
         },
         objectiveId: {
             type: DataTypes.INTEGER,
             allowNull: true, // Permite nulos para que 'ON DELETE SET NULL' funcione
-            references: { model: 'Objetivos', key: 'id_objetivo' },
+            references: { model: 'objetivo', key: 'id_objetivo' },
             field: 'id_objetivo'
         },
         activityType: {
@@ -49,11 +49,10 @@ module.exports = (sequelize) => {
             field: 'detalles_adicionales'
         },
     }, {
-        tableName: 'ActivityLogs',
+        tableName: 'registroActividad',
         timestamps: true,
         updatedAt: false, // Log entries should be immutable
         underscored: true,
-        // Índices recomendados para optimizar el rendimiento de las consultas en producción.
         indexes: [
             { fields: ['id_usuario'] },
             { fields: ['id_objetivo'] },

@@ -18,7 +18,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(50),
       allowNull: false,
       unique: true,
-      field: 'nombre_usuario' // Mantiene el nombre de la columna en la BD por retrocompatibilidad
+      field: 'nombre_usuario'
     },
     email: {
       type: DataTypes.STRING(255),
@@ -35,6 +35,7 @@ module.exports = (sequelize) => {
     phone: {
       type: DataTypes.STRING(25),
       allowNull: true,
+      field: 'telefono'
     },
     bio: {
       type: DataTypes.TEXT,
@@ -56,16 +57,16 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('light', 'dark', 'system'),
       allowNull: false,
       defaultValue: 'system',
-      field: 'theme_preference'
+      field: 'preferencia_tema'
     },
     languagePreference: {
       type: DataTypes.ENUM('es', 'en'),
       allowNull: false,
       defaultValue: 'es',
-      field: 'language_preference'
+      field: 'preferencia_idioma'
     },
   }, {
-    tableName: 'Usuarios',
+    tableName: 'usuario',
     timestamps: true,
     underscored: true,
     hooks: {
@@ -92,7 +93,6 @@ module.exports = (sequelize) => {
 
   User.associate = (models) => {
     User.hasMany(models.Objective, { foreignKey: 'userId', as: 'objectives', onDelete: 'CASCADE' });
-    User.hasMany(models.Progress, { foreignKey: 'userId', as: 'progressEntries', onDelete: 'CASCADE' });
     User.hasMany(models.ActivityLog, { foreignKey: 'userId', as: 'activityLogs', onDelete: 'CASCADE' });
   };
 

@@ -77,7 +77,7 @@ class AnalysisService {
 
                 // Consulta para obtener el último valor de progreso de cada objetivo al final del mes especificado.
                 const subQuery = `
-                    (SELECT p.valor_actual FROM Progresos p
+                    (SELECT p.valor_actual FROM progreso p
                      WHERE p.id_objetivo = Objective.id_objetivo
                        AND p.fecha_registro <= '${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}'
                      ORDER BY p.fecha_registro DESC, p.created_at DESC

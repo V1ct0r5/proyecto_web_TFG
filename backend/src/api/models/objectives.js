@@ -72,11 +72,11 @@ module.exports = (sequelize) => {
         userId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: { model: 'Usuarios', key: 'id' },
+            references: { model: 'usuario', key: 'id' },
             field: 'id_usuario'
         },
     }, {
-        tableName: 'Objetivos',
+        tableName: 'objetivo',
         timestamps: true,
         underscored: true,
     });

@@ -242,7 +242,9 @@
       "topProgress": "No hay objetivos con progreso significativo.",
       "lowProgress": "Todos los objetivos tienen buen progreso o no hay datos.",
       "monthlyProgress": "No hay datos de progreso mensual para mostrar.",
-      "objectiveProgress": "No hay datos de progreso de objetivos para mostrar."
+      "objectiveProgress": "No hay datos de progreso de objetivos para mostrar.",
+      "categoryAverageProgress": "No hay datos de progreso promedio por categoría para mostrar.",
+      "rankedObjectives": "No hay objetivos clasificados por progreso para mostrar."
     },
     "selectTabPrompt": "Selecciona una pestaña para ver el análisis.",
     "tabs": {
