@@ -1,3 +1,4 @@
+// frontend/reactapp/src/pages/DashboardPage.js
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './DashboardPage.module.css';
@@ -5,7 +6,6 @@ import api from '../services/apiService';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 
-// Componentes
 import StatsCard from '../components/objetivos/StatsCard';
 import CategoryDonutChart from '../components/charts/CategoryDonutChart';
 import RecentObjectivesList from '../components/objetivos/RecentObjectivesList';
@@ -14,7 +14,6 @@ import ProgressBar from '../components/ui/ProgressBar';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Button from '../components/ui/Button';
 
-// Mapeo de valores ENUM del backend a claves de i18next para la UI
 const CATEGORY_MAP = {
     'HEALTH': 'categories.health',
     'FINANCE': 'categories.finance',
@@ -47,26 +46,27 @@ function DashboardPage() {
         setLoading(true);
         setError(null);
         try {
-            // --- CAMBIO 1: Se usa el nombre de función correcto de la API ---
             const [summaryRes, objectivesRes, activitiesRes] = await Promise.allSettled([
                 api.getDashboardSummary(),
                 api.getRecentObjectives(4),
                 api.getRecentActivities(5)
             ]);
 
-            if (summaryRes.status === 'fulfilled' && summaryRes.value) {
-                const summary = summaryRes.value;
+            if (summaryRes.status === 'fulfilled' && summaryRes.value.data) {
+                const summary = summaryRes.value.data;
                 setSummaryData(summary);
                 if (summary.totalObjectives === 0 && !hasBeenRedirectedRef.current) {
                     hasBeenRedirectedRef.current = true;
                     toast.info(t('toast.welcomeCreateFirst'));
-                    navigate('/objectives', { replace: true });
+                    navigate('/objectives/new', { replace: true });
                     return;
                 }
-            } else { throw summaryRes.reason; }
+            } else { throw summaryRes.reason || new Error('No se pudo cargar el resumen'); }
 
-            if (objectivesRes.status === 'fulfilled') setRecentObjectives(objectivesRes.value || []);
-            if (activitiesRes.status === 'fulfilled') setRecentActivities(activitiesRes.value || []);
+            // --- CORRECCIÓN AQUÍ ---
+            // Extraemos el array de la propiedad 'data' del objeto de respuesta.
+            if (objectivesRes.status === 'fulfilled') setRecentObjectives(objectivesRes.value.data || []);
+            if (activitiesRes.status === 'fulfilled') setRecentActivities(activitiesRes.value.data || []);
 
         } catch (err) {
             const errorMessage = err?.message || (typeof err === 'string' ? err : t('toast.dashboardLoadError'));
@@ -80,12 +80,10 @@ function DashboardPage() {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
-    // --- CAMBIO 2: Se procesa la nueva estructura de datos para el gráfico ---
     const categoryChartData = useMemo(() => {
         if (!summaryData?.categories) return [];
-        // La API devuelve un array de { category: 'HEALTH', count: 1 }
         return summaryData.categories.map(item => ({
-            name: t(CATEGORY_MAP[item.category] || item.category), // Se usa item.category para obtener la clave de traducción
+            name: t(CATEGORY_MAP[item.category] || item.category),
             value: item.count
         }));
     }, [summaryData, t]);
@@ -124,16 +122,14 @@ function DashboardPage() {
     return (
         <div className={styles.dashboardPageLayout}>
             <section className={styles.statsRowContainer}>
-                <StatsCard title={t('dashboard.stats.totalObjectives')} value={String(summaryData.totalObjectives)} linkTo="/mis-objetivos">
+                <StatsCard title={t('dashboard.stats.totalObjectives')} value={String(summaryData.totalObjectives)} linkTo="/my-objectives">
                     {summaryData.totalObjectives > 0 ? renderStatusList() : <p className={styles.noStatusData}>{t('dashboard.stats.noObjectives')}</p>}
                 </StatsCard>
                 <StatsCard title={t('dashboard.stats.averageProgress')} value={summaryData.averageProgress} valueDescription="%" decimalPlacesToShow={0}>
                     <ProgressBar percentage={summaryData.averageProgress} />
                 </StatsCard>
                 <StatsCard title={t('dashboard.stats.dueSoon')} value={String(summaryData.dueSoonCount)} valueDescription={t('dashboard.stats.objectives')} details={t('dashboard.stats.dueSoonDetails')} />
-                
-                <StatsCard title={t('dashboard.stats.categories')} linkTo="/analisis">
-                    {/* El gráfico ahora recibe los datos en el formato correcto */}
+                <StatsCard title={t('dashboard.stats.categories')} linkTo="/analysis">
                     <CategoryDonutChart data={categoryChartData} />
                 </StatsCard>
             </section>

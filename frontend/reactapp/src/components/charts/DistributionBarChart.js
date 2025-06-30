@@ -1,4 +1,3 @@
-// frontend/reactapp/src/components/charts/DistributionBarChart.js
 import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title } from 'chart.js';
@@ -6,23 +5,28 @@ import { useTranslation } from 'react-i18next';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title);
 
-const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
+const DistributionBarChart = ({ progressMade, progressRemaining, totalJourney, unit = '' }) => {
   const { t } = useTranslation();
 
   const chartData = useMemo(() => ({
-    labels: [t('charts.completed'), t('charts.remaining')],
+    labels: [t('charts.progressMade'), t('charts.progressRemaining')],
     datasets: [
       {
-        label: t('charts.percentage'),
-        data: [completedPercentage, remainingPercentage],
+        label: `${t('charts.valueIn')} ${unit}`,
+        data: [progressMade, progressRemaining], 
         backgroundColor: [
-          'rgba(75, 192, 192, 0.7)', // Color para "Completado" (var --success)
-          'rgba(201, 203, 207, 0.6)', // Color para "Restante" (var --muted)
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(201, 203, 207, 0.6)',
         ],
-        barThickness: 50,
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(201, 203, 207, 1)',
+        ],
+        borderWidth: 1,
+        barPercentage: 1,
       },
     ],
-  }), [completedPercentage, remainingPercentage, t]);
+  }), [progressMade, progressRemaining, unit, t]);
 
   const chartOptions = useMemo(() => ({
     responsive: true,
@@ -30,20 +34,25 @@ const DistributionBarChart = ({ completedPercentage, remainingPercentage }) => {
     scales: {
       y: {
         beginAtZero: true,
-        max: 100,
-        ticks: { callback: (value) => value + '%' },
+        suggestedMax: totalJourney > 0 ? totalJourney * 1.1 : undefined,
+        ticks: { 
+          callback: (value) => `${value.toLocaleString()} ${unit}` 
+        },
       },
+      x: { 
+        grid: { display: false }
+      }
     },
     plugins: {
       legend: { display: false },
       title: { display: false },
       tooltip: {
         callbacks: {
-          label: (context) => `${context.label}: ${context.parsed.y?.toFixed(1) || 0}%`,
+          label: (context) => `${context.label}: ${context.parsed.y?.toLocaleString() || 0} ${unit}`,
         },
       },
     },
-  }), [t]);
+  }), [totalJourney, unit, t]);
 
   return <Bar options={chartOptions} data={chartData} />;
 };

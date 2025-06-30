@@ -181,19 +181,27 @@ class ObjectivesService {
     async updateObjective(objectiveId, userId, updateData) {
         const transaction = await db.sequelize.transaction();
         try {
-            const { progressData, ...objectiveData } = updateData;
-
             const objective = await objectiveRepository.findById(objectiveId, userId, { transaction });
             if (!objective) {
                 throw new AppError('Objetivo no encontrado.', 404);
             }
+    
+            if (objective.status === 'ARCHIVED') {
+                const isOnlyArchiving = Object.keys(updateData).length === 1 && updateData.status === 'ARCHIVED';
+
+                if (!isOnlyArchiving) {
+                    throw new AppError('No se puede modificar un objetivo que está archivado. Debes desarchivarlo primero.', 400);
+                }
+            }
+
 
             const originalStatus = objective.status;
-
-            if (objectiveData.status === 'ARCHIVED' && originalStatus !== 'ARCHIVED') {
-                // Guardamos el estado original en nuestro nuevo campo
-                objectiveData.previousStatus = originalStatus;
+            if (updateData.status === 'ARCHIVED' && originalStatus !== 'ARCHIVED') {
+                updateData.previousStatus = originalStatus;
             }
+            
+            // Separamos los datos de progreso de los del objetivo.
+            const { progressData, ...objectiveData } = updateData;
 
             if (Object.keys(objectiveData).length > 0) {
                 await objective.update(objectiveData, { transaction });

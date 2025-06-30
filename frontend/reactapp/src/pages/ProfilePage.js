@@ -35,21 +35,31 @@ function ProfilePage() {
         bio: apiData.bio || '',
         avatarUrl: apiData.avatarUrl || '',
         memberSince: apiData.createdAt,
-        status: apiData.status,
     });
 
     const fetchPageData = useCallback(async () => {
         setIsLoading(true);
+        setError(null);
         try {
             const [profileResponse, statsResponse] = await Promise.all([
                 apiService.getUserProfile(),
                 apiService.getUserProfileStats()
             ]);
-            const normalizedProfile = mapApiDataToState(profileResponse);
+
+            // --- CORRECCIÓN AQUÍ: Extraemos la propiedad .data ---
+            const profileData = profileResponse?.data;
+            const userStats = statsResponse?.data;
+            
+            if (!profileData || !userStats) {
+                throw new Error(t('errors.profileLoadError'));
+            }
+
+            const normalizedProfile = mapApiDataToState(profileData);
             setUserData(normalizedProfile);
             setFormData(normalizedProfile);
-            setAvatarPreview(normalizedProfile.avatarUrl); //
-            setStatsData(statsResponse);
+            setAvatarPreview(normalizedProfile.avatarUrl);
+            setStatsData(userStats);
+
         } catch (err) {
             setError(err.message || t('errors.profileLoadError'));
         } finally {
@@ -70,7 +80,7 @@ function ProfilePage() {
         setIsEditMode(false);
         setFormError(null);
         setSelectedAvatarFile(null);
-        setAvatarPreview(userData.avatarUrl); //
+        setAvatarPreview(userData.avatarUrl);
         setFormData(userData);
     };
 
@@ -84,32 +94,33 @@ function ProfilePage() {
         setIsSubmitting(true);
         setFormError(null);
     
-        const submissionData = new FormData(); //
-        submissionData.append('username', formData.name); //
-        submissionData.append('phone', formData.phone || ''); //
-        submissionData.append('location', formData.location || ''); //
-        submissionData.append('bio', formData.bio || ''); //
+        const submissionData = new FormData();
+        submissionData.append('username', formData.name);
+        submissionData.append('phone', formData.phone || '');
+        submissionData.append('location', formData.location || '');
+        submissionData.append('bio', formData.bio || '');
     
         if (selectedAvatarFile) {
-            submissionData.append('avatar', selectedAvatarFile); //
+            submissionData.append('avatar', selectedAvatarFile);
         }
     
         try {
-            const updatedProfile = await apiService.updateUserProfile(submissionData); //
-    
+            const updatedProfileResponse = await apiService.updateUserProfile(submissionData);
+            const updatedProfile = updatedProfileResponse.data;
+
             const normalizedUserData = mapApiDataToState(updatedProfile);
             
             setUserData(normalizedUserData);
             setFormData(normalizedUserData);
             setSelectedAvatarFile(null);
-            setAvatarPreview(normalizedUserData.avatarUrl); //
+            setAvatarPreview(normalizedUserData.avatarUrl);
             
             toast.success(t('toast.profileUpdateSuccess'));
             setIsEditMode(false);
         } catch (err) {
-            const errorMessage = err.response?.data?.message || err.message;
+            const errorMessage = err.message || t('toast.profileUpdateError', { error: 'Unknown error' });
             setFormError(errorMessage);
-            toast.error(t('toast.profileUpdateError', { error: errorMessage }));
+            toast.error(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -118,7 +129,7 @@ function ProfilePage() {
     const handleAvatarFileChange = (event) => {
         const file = event.target.files[0];
         if (file) {
-            if (file.size > 5 * 1024 * 1024) { // Límite de 5MB
+            if (file.size > 5 * 1024 * 1024) {
                 toast.error(t('toast.avatarUpload.fileTooLarge'));
                 return;
             }
@@ -127,7 +138,7 @@ function ProfilePage() {
                 return;
             }
             setSelectedAvatarFile(file);
-            setAvatarPreview(URL.createObjectURL(file)); //
+            setAvatarPreview(URL.createObjectURL(file));
         }
     };
     
@@ -156,7 +167,7 @@ function ProfilePage() {
                     {isEditMode ? (
                         <div className={styles.editHeaderActions}>
                             <Button variant="buttonOutline" onClick={handleCancelEdit} disabled={isSubmitting} leftIcon={<FaTimes />}>{t('common.cancel')}</Button>
-                            <Button type="submit" form="profile-form" variant="primary" isLoading={isSubmitting} disabled={isSubmitting} leftIcon={<FaSave />}>{t('common.saveChanges')}</Button>
+                            <Button type="buttonSubmit" form="profile-form" variant="primary" isLoading={isSubmitting} disabled={isSubmitting} leftIcon={<FaSave />}>{t('common.saveChanges')}</Button>
                         </div>
                     ) : (
                         <Button variant="outline" onClick={handleEditClick} leftIcon={<FaEdit />}>{t('profilePage.editProfile')}</Button>

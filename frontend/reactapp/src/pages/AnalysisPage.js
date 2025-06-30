@@ -5,7 +5,6 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import StatsCard from '../components/objetivos/StatsCard';
-import { FaLayerGroup, FaArrowTrendUp, FaArrowTrendDown, FaMinus } from 'react-icons/fa6';
 import { useTranslation } from 'react-i18next';
 
 import CategoryDonutChart from '../components/charts/CategoryDonutChart';
@@ -16,7 +15,6 @@ import CategoryAverageProgressBarChart from '../components/charts/CategoryAverag
 import RankedObjectivesList from '../components/analysis/RankedObjectivesList';
 import CategoryObjectivesCard from '../components/analysis/CategoryObjectivesCard';
 
-// Las claves deben coincidir con los valores ENUM del backend.
 const categoryNameToKeyMap = {
     'HEALTH': 'categories.health',
     'FINANCE': 'categories.finance',
@@ -26,7 +24,6 @@ const categoryNameToKeyMap = {
     'OTHER': 'categories.other'
 };
 
-// Las claves deben coincidir con los valores ENUM del backend.
 const statusNameToKeyMap = {
     'IN_PROGRESS': 'status.inProgress',
     'COMPLETED': 'status.completed',
@@ -127,12 +124,11 @@ function AnalysisPage() {
             setError(null);
 
             try {
-                // Siempre se carga el resumen, independientemente de la pestaña
                 const summaryResult = await api.getAnalysisSummary({ period: timePeriod });
                 if (isMounted) {
-                    setSummaryStats(prev => ({...prev, ...summaryResult}));
+                    setSummaryStats(prev => ({...prev, ...summaryResult.data}));
                 } else {
-                    return; // Salir si el componente se desmonta
+                    return;
                 }
 
                 let tabDataPromise;
@@ -149,20 +145,20 @@ function AnalysisPage() {
                      if(isMounted) {
                         if (activeTab === 'general') {
                             const [catDistRes, statusRes, monthlyRes] = results;
-                            if (catDistRes.status === 'fulfilled') setRawCategoryDistribution(catDistRes.value || []);
-                            if (statusRes.status === 'fulfilled') setRawObjectiveStatus(statusRes.value || []);
-                            if (monthlyRes.status === 'fulfilled') setRawMonthlyProgress(monthlyRes.value || []);
+                            if (catDistRes.status === 'fulfilled') setRawCategoryDistribution(catDistRes.value.data || []);
+                            if (statusRes.status === 'fulfilled') setRawObjectiveStatus(statusRes.value.data || []);
+                            if (monthlyRes.status === 'fulfilled') setRawMonthlyProgress(monthlyRes.value.data || []);
                         } else if (activeTab === 'byObjective') {
                             const [objProgressRes, rankedRes] = results;
-                            if (objProgressRes.status === 'fulfilled') setRawObjectivesProgressData(objProgressRes.value || []);
-                            if (rankedRes.status === 'fulfilled' && rankedRes.value) {
-                                setTopProgressObjectives(rankedRes.value.top || []);
-                                setLowProgressObjectives(rankedRes.value.low || []);
+                            if (objProgressRes.status === 'fulfilled') setRawObjectivesProgressData(objProgressRes.value.data || []);
+                            if (rankedRes.status === 'fulfilled' && rankedRes.value.data) {
+                                setTopProgressObjectives(rankedRes.value.data.top || []);
+                                setLowProgressObjectives(rankedRes.value.data.low || []);
                             }
                         } else if (activeTab === 'byCategory') {
                             const [catAvgProgressRes, detailedByCatRes] = results;
-                            if (catAvgProgressRes.status === 'fulfilled') setRawCategoryAverageProgress(catAvgProgressRes.value || []);
-                            if (detailedByCatRes.status === 'fulfilled') setDetailedObjectivesByCategory(detailedByCatRes.value || []);
+                            if (catAvgProgressRes.status === 'fulfilled') setRawCategoryAverageProgress(catAvgProgressRes.value.data || []);
+                            if (detailedByCatRes.status === 'fulfilled') setDetailedObjectivesByCategory(detailedByCatRes.value.data || []);
                         }
                      }
                 }
@@ -180,8 +176,6 @@ function AnalysisPage() {
         return () => { isMounted = false; };
     }, [activeTab, timePeriod, fetchAllGeneralDataAPI, fetchObjectivesTabDataAPI, fetchCategoriesTabDataAPI, t]);
     
-    // --- TRANSFORMACIÓN DE DATOS CON USEMEMO ---
-
     const categoryDistribution = useMemo(() =>
         (rawCategoryDistribution || []).map((item, idx) => ({
             ...item,
@@ -215,29 +209,17 @@ function AnalysisPage() {
 
     const coloredTopProgressObjectives = useMemo(() =>
     (topProgressObjectives || []).map((obj, idx) => {
-        // Guardamos la clave original (ej: 'HEALTH') para usarla en la lógica
         const originalCategoryKey = obj.tipo_objetivo; 
-        
-        // Buscamos la clave de traducción (ej: 'categories.health')
         const translationKey = categoryNameToKeyMap[originalCategoryKey] || originalCategoryKey;
-        
-        // Obtenemos la traducción final (ej: 'Salud')
         const translatedCategory = t(translationKey);
-
         return {
-            ...obj, // Mantenemos todas las propiedades del objeto original
-            
-            // 1. REEMPLAZAMOS la clave por su valor traducido.
-            // El componente hijo ahora recibirá 'Salud' en la propiedad 'tipo_objetivo'.
+            ...obj, 
             tipo_objetivo: translatedCategory, 
-            
-            // 2. Usamos la CLAVE ORIGINAL para obtener el color correcto.
             color: getCategoryColor(originalCategoryKey, idx, summaryStats.categories)
         };
     })
 , [topProgressObjectives, getCategoryColor, summaryStats.categories, t]);
 
-    // CORREGIDO: Misma simplificación para los objetivos de menor progreso.
     const coloredLowProgressObjectives = useMemo(() =>
     (lowProgressObjectives || []).map((obj, idx) => {
         const originalCategoryKey = obj.tipo_objetivo;
@@ -278,7 +260,6 @@ function AnalysisPage() {
         if (error) {
             return <div className={styles.centeredStatus}><p className={styles.errorMessage}>{error}</p><Button onClick={() => {
                 const currentPeriod = timePeriod;
-                // Truco para forzar un re-render y re-lanzar el fetch
                 setTimePeriod('');
                 setTimeout(() => setTimePeriod(currentPeriod), 0);
             }} className={styles.retryButton}>{t('common.retry')}</Button></div>;

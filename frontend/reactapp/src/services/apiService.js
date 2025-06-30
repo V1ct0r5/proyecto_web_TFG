@@ -4,14 +4,14 @@ import { toast } from 'react-toastify';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3001/api";
 
-const apiService = axios.create({
+const axiosInstance = axios.create({
     baseURL: API_BASE_URL,
 });
 
-let isLogoutProcessInitiated = false;
+let isSessionExpiredMessageShown = false;
 
 // Interceptor para añadir el token de autenticación a las cabeceras
-apiService.interceptors.request.use(
+axiosInstance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
         if (token) {
@@ -23,104 +23,81 @@ apiService.interceptors.request.use(
 );
 
 // Interceptor para manejar globalmente las respuestas y los errores
-apiService.interceptors.response.use(
-    response => response.data, // Devuelve directamente la data de la respuesta
+axiosInstance.interceptors.response.use(
+    (response) => response.data, // Devuelve directamente la data de la respuesta
     async (error) => {
-        const originalRequest = error.config;
+        const { config: originalRequest, response } = error;
 
-        if (error.response) {
-            const { status, data } = error.response;
+        if (!response) {
+            toast.error('Error de red. No se pudo conectar con el servidor.');
+            return Promise.reject(error);
+        }
 
-            // Si el error es 401/403 y no es un reintento, cerrar la sesión.
-            if ((status === 401 || status === 403) && !originalRequest._retry) {
-                originalRequest._retry = true;
-                if (!isLogoutProcessInitiated) {
-                    isLogoutProcessInitiated = true;
-                    toast.error('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.', { position: "top-center" });
-                    // Dispara un evento global para que el AuthContext pueda reaccionar
-                    window.dispatchEvent(new CustomEvent('logoutUser'));
-                    setTimeout(() => { isLogoutProcessInitiated = false; }, 5000);
-                }
+        const { status, data } = response;
+        const isLoginRequest = originalRequest.url.endsWith('/auth/login');
+
+        if ((status === 401 || status === 403) && !isLoginRequest && !originalRequest._retry) {
+            originalRequest._retry = true;
+            if (!isSessionExpiredMessageShown) {
+                isSessionExpiredMessageShown = true;
+                toast.error('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
+                window.dispatchEvent(new CustomEvent('logoutUser'));
+                setTimeout(() => { isSessionExpiredMessageShown = false; }, 5000);
             }
-
-            // Propagar un error formateado para que los componentes puedan usarlo
-            const errorMessage = data?.message || (Array.isArray(data?.errors) ? data.errors.map(e => e.msg).join(', ') : 'Ocurrió un error.');
-            const errorToThrow = new Error(errorMessage);
-            errorToThrow.data = data;
-            errorToThrow.status = status;
-            return Promise.reject(errorToThrow);
         }
 
-        if (error.request) {
-            toast.error('Error de red. No se pudo conectar con el servidor.', { position: "top-center" });
-        }
+        const errorMessage = data?.message || 
+                             (Array.isArray(data?.errors) ? data.errors.map(e => e.msg).join(', ') : 'Ocurrió un error inesperado.');
         
-        return Promise.reject(error);
+        const errorToThrow = new Error(errorMessage);
+        errorToThrow.data = data;
+        errorToThrow.status = status;
+        
+        return Promise.reject(errorToThrow);
     }
 );
 
-/**
- * Objeto que contiene todos los métodos para interactuar con la API del backend.
- * Nota: El interceptor ya extrae 'res.data', por lo que podemos simplificar los '.then()'.
- */
+
 const api = {
-    // --- Auth ---
-    register: (userData) => apiService.post('/auth/register', userData),
-    login: (credentials) => apiService.post('/auth/login', credentials),
-    logout: () => apiService.post('/auth/logout'),
+    // Auth
+    register: (userData) => axiosInstance.post('/auth/register', userData),
+    login: (credentials) => axiosInstance.post('/auth/login', credentials),
+    logout: () => axiosInstance.post('/auth/logout'),
 
-    // --- Objectives ---
-    getObjectives: (filters) => apiService.get('/objectives', { params: filters }).then(res => res.data.objectives),
-    getObjectiveById: (id) => apiService.get(`/objectives/${id}`).then(res => res.data.objective),
-    createObjective: (data) => apiService.post('/objectives', data).then(res => res.data.objective),
-    updateObjective: (id, data) => apiService.put(`/objectives/${id}`, data).then(res => res.data.objective),
-    deleteObjective: (id) => apiService.delete(`/objectives/${id}`),
-    unarchiveObjective: (id) => apiService.patch(`/objectives/${id}/unarchive`).then(res => res.data.objective),
+    // Objectives
+    getObjectives: (filters) => axiosInstance.get('/objectives', { params: filters }),
+    getObjectiveById: (id) => axiosInstance.get(`/objectives/${id}`),
+    createObjective: (data) => axiosInstance.post('/objectives', data),
+    updateObjective: (id, data) => axiosInstance.put(`/objectives/${id}`, data),
+    deleteObjective: (id) => axiosInstance.delete(`/objectives/${id}`),
+    unarchiveObjective: (id) => axiosInstance.patch(`/objectives/${id}/unarchive`),
 
-    // --- Dashboard ---
-    getDashboardSummary: () => apiService.get('/dashboard/summary-stats').then(res => res.data),
-    getRecentObjectives: (limit = 4) => apiService.get(`/dashboard/recent-objectives?limit=${limit}`).then(res => res.data),
-    getRecentActivities: (limit = 5) => apiService.get(`/dashboard/recent-activities?limit=${limit}`).then(res => res.data),
+    // Dashboard
+    getDashboardSummary: () => axiosInstance.get('/dashboard/summary-stats'),
+    getRecentObjectives: (limit = 4) => axiosInstance.get(`/dashboard/recent-objectives?limit=${limit}`),
+    getRecentActivities: (limit = 5) => axiosInstance.get(`/dashboard/recent-activities?limit=${limit}`),
 
-    // --- Analysis ---
-    getAnalysisSummary: (params) => apiService.get('/analysis/summary', { params }).then(res => res.data),
-    getCategoryDistribution: (params) => apiService.get('/analysis/category-distribution', { params }).then(res => res.data),
-    getObjectiveStatusDistribution: (params) => apiService.get('/analysis/status-distribution', { params }).then(res => res.data),
-    getMonthlyProgress: (params) => apiService.get('/analysis/monthly-progress', { params }).then(res => res.data),
-    getObjectivesProgressChartData: (params) => apiService.get('/analysis/objective-progress-chart-data', { params }).then(res => res.data),
-    getRankedObjectives: (params) => apiService.get('/analysis/ranked-objectives', { params }).then(res => res.data),
-    getCategoryAverageProgress: (params) => apiService.get('/analysis/category-average-progress', { params }).then(res => res.data),
-    getDetailedObjectivesByCategory: (params) => apiService.get('/analysis/detailed-by-category', { params }).then(res => res.data),
+    // Analysis
+    getAnalysisSummary: (params) => axiosInstance.get('/analysis/summary', { params }),
+    getCategoryDistribution: (params) => axiosInstance.get('/analysis/category-distribution', { params }),
+    getObjectiveStatusDistribution: (params) => axiosInstance.get('/analysis/status-distribution', { params }),
+    getMonthlyProgress: (params) => axiosInstance.get('/analysis/monthly-progress', { params }),
+    getObjectivesProgressChartData: (params) => axiosInstance.get('/analysis/objective-progress-chart-data', { params }),
+    getRankedObjectives: (params) => axiosInstance.get('/analysis/ranked-objectives', { params }),
+    getCategoryAverageProgress: (params) => axiosInstance.get('/analysis/category-average-progress', { params }),
+    getDetailedObjectivesByCategory: (params) => axiosInstance.get('/analysis/detailed-by-category', { params }),
+    
+    // Profile
+    getUserProfile: () => axiosInstance.get('/profile'),
+    updateUserProfile: (formData) => axiosInstance.patch('/profile', formData),
+    getUserProfileStats: () => axiosInstance.get('/profile/stats'),
 
-    // --- Profile (SECCIÓN CORREGIDA) ---
-    /**
-     * Obtiene los datos del perfil del usuario.
-     * GET /api/profile
-     */
-    getUserProfile: () => apiService.get('/profile').then(res => res.data),
-
-    /**
-     * Actualiza el perfil del usuario (texto y/o avatar).
-     * Envía todos los datos en un único FormData.
-     * PATCH /api/profile
-     * @param {FormData} formData - Objeto FormData con los campos de texto y el archivo 'avatar' opcional.
-     */
-    updateUserProfile: (formData) => apiService.patch('/profile', formData).then(res => res.data),
-
-    /**
-     * Obtiene las estadísticas del perfil del usuario.
-     * GET /api/profile/stats
-     */
-    getUserProfileStats: () => apiService.get('/profile/stats').then(res => res.data),
-
-    // La función 'uploadAvatar' ya no es necesaria y se puede eliminar.
-
-    // --- Settings ---
-    getUserSettings: () => apiService.get('/settings').then(res => res.data),
-    updateUserSettings: (data) => apiService.put('/settings', data),
-    changePassword: (data) => apiService.put('/settings/change-password', data),
-    exportUserData: () => apiService.get('/settings/export-data'),
-    deleteAccount: () => apiService.delete('/settings/account'),
+    // Settings
+    getUserSettings: () => axiosInstance.get('/settings'),
+    updateUserSettings: (data) => axiosInstance.put('/settings', data),
+    changePassword: (data) => axiosInstance.put('/settings/change-password', data),
+    exportUserData: () => axiosInstance.get('/settings/export-data'),
+    deleteAccount: () => axiosInstance.delete('/settings/account'),
 };
 
 export default api;

@@ -1,15 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import PropTypes from 'prop-types'; // <-- IMPORTACIÓN CLAVE
+import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import api from '../../services/apiService';
 import styles from './ObjetivoCard.module.css';
 
-// Utilidades y Componentes UI
 import { getCategoryIcon, getStatusInfo } from '../../utils/ObjectiveUtils';
 import Button from '../ui/Button';
-import { FaEdit, FaEye, FaArchive, FaUndo, FaCalendarAlt } from 'react-icons/fa'; // Se mantiene FaUndo por si lo quieres usar
+import { FaEdit, FaEye, FaArchive, FaUndo, FaCalendarAlt } from 'react-icons/fa';
 import { formatDateByPreference } from '../../utils/dateUtils';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -22,7 +21,6 @@ const categoryKeyMap = {
     OTHER: "other",
 };
 
-// Helper para obtener la clase CSS de la barra de progreso
 const getProgressClass = (percentage) => {
     if (percentage < 33) return styles.progressFillLow;
     if (percentage < 66) return styles.progressFillMedium;
@@ -43,7 +41,6 @@ function ObjetivoCard({ objective, onObjectiveArchived, onObjectiveUnarchived })
     const targetValueDisplay = hasQuantitativeValues ? `${objective.targetValue.toLocaleString(settings.language)} ${objective.unit || ''}` : 'N/A';
     const lastUpdated = objective.updatedAt ? formatDateByPreference(objective.updatedAt, settings.dateFormat, settings.language) : 'N/A';
     
-    // Navega a la página de detalles cuando se hace clic en la tarjeta
     const handleViewDetails = () => navigate(`/objectives/${objective.id}`);
 
     const handleEdit = (e) => {
@@ -66,7 +63,6 @@ function ObjetivoCard({ objective, onObjectiveArchived, onObjectiveUnarchived })
         }
     };
 
-    // Nueva función para desarchivar, que ya habías implementado
     const handleUnarchive = async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -74,9 +70,7 @@ function ObjetivoCard({ objective, onObjectiveArchived, onObjectiveUnarchived })
             try {
                 await api.unarchiveObjective(objective.id);
                 toast.success(t('toast.objectiveUnarchiveSuccess'));
-                if (onObjectiveUnarchived) {
-                    onObjectiveUnarchived();
-                }
+                if (onObjectiveUnarchived) onObjectiveUnarchived();
             } catch (error) {
                 toast.error(error.message || t('toast.objectiveUnarchiveError'));
             }
@@ -84,8 +78,7 @@ function ObjetivoCard({ objective, onObjectiveArchived, onObjectiveUnarchived })
     };
 
     return (
-        // MANTENEMOS TU ESTRUCTURA ORIGINAL
-        <a className={styles.objetivoCard} onClick={handleViewDetails} onKeyPress={(e) => { if (e.key === 'Enter') handleViewDetails(); }} role="button" tabIndex="0" aria-label={`Ver detalles de ${objective.name}`} href={`/objectives/${objective.id}`}>
+        <a href={`/objectives/${objective.id}`} className={styles.objetivoCard} onClick={handleViewDetails} onKeyPress={(e) => { if (e.key === 'Enter') handleViewDetails(e); }} role="button" tabIndex="0" aria-label={`Ver detalles de ${objective.name}`}>
             <div className={styles.cardContent}>
                 <header className={styles.cardHeader}>
                     <h3 className={styles.cardTitle}>{objective.name}</h3>
@@ -132,7 +125,7 @@ function ObjetivoCard({ objective, onObjectiveArchived, onObjectiveUnarchived })
 
             <footer className={styles.cardFooter}>
                 <div className={styles.cardActions}>
-                    <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleEdit} leftIcon={<FaEdit />}>{t('common.edit')}</Button>
+                    <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleEdit} leftIcon={<FaEdit />} disabled={objective.status === 'ARCHIVED'}>{t('common.edit')}</Button>
                     
                     {objective.status === 'ARCHIVED' ? (
                         <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleUnarchive} leftIcon={<FaUndo />}>{t('common.unarchive')}</Button>

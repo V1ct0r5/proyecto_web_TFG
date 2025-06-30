@@ -232,6 +232,11 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     text-align: center;
     color: var(--foreground);
+    display: flex;
+    flex-direction: column; /* Apila los elementos verticalmente */
+    align-items: center;    /* Centra los elementos horizontalmente */
+    gap: 1.25rem;            /* Espacio consistente entre los elementos */
+    text-align: center;
 }
 
 .nonQuantitativeMessageTitle {

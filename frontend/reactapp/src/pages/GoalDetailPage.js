@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { differenceInDays, parseISO, format, isValid, isPast, subDays, startOfDay } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 
-// Utilidades y Servicios
 import api from '../services/apiService';
 import { calculateProgressPercentage } from '../utils/progressUtils';
 
-// Iconos y Componentes
 import { FaCalendarAlt, FaFlagCheckered, FaExclamationTriangle, FaEdit, FaPlusCircle, FaTrashAlt } from 'react-icons/fa';
 import { FiTrendingUp, FiClock } from 'react-icons/fi';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -39,7 +37,13 @@ function GoalDetailPage() {
 
     useEffect(() => {
         api.getObjectiveById(id)
-            .then(data => setObjective(data))
+            .then(response => {
+                const objectiveData = response?.data?.objective;
+                if (!objectiveData) {
+                    throw new Error(t('errors.objectiveNotFound'));
+                }
+                setObjective(objectiveData);
+            })
             .catch(err => {
                 setError(err.message || t('errors.objectiveLoadError'));
                 toast.error(err.message || t('errors.objectiveLoadError'));
@@ -110,7 +114,7 @@ function GoalDetailPage() {
             try {
                 await api.deleteObjective(id);
                 toast.success(t('toast.objectiveDeleteSuccess'));
-                navigate('/mis-objetivos');
+                navigate('/my-objectives');
             } catch (err) {
                 toast.error(err.message || t('toast.objectiveDeleteError'));
             }
@@ -132,8 +136,8 @@ function GoalDetailPage() {
                     <p className={styles.goalDescription}>{objective.description || t('common.noDescription')}</p>
                 </div>
                 <div className={styles.headerActions}>
-                    <Button onClick={() => navigate(`/objectives/edit/${id}`)} leftIcon={<FaEdit />}>{t('common.edit')}</Button>
-                    {isQuantitative && <Button onClick={() => navigate(`/objectives/${id}/update-progress`)} leftIcon={<FaPlusCircle />}>{t('goalDetail.buttons.updateProgress')}</Button>}
+                    <Button onClick={() => navigate(`/objectives/edit/${id}`)} leftIcon={<FaEdit />} disabled={objective.status === 'ARCHIVED'}>{t('common.edit')}</Button>
+                    {isQuantitative && <Button onClick={() => navigate(`/objectives/${id}/update-progress`)} leftIcon={<FaPlusCircle />} disabled={objective.status === 'ARCHIVED'}>{t('goalDetail.buttons.updateProgress')}</Button>}
                     <Button onClick={handleDelete} variant="destructive" leftIcon={<FaTrashAlt />}>{t('goalDetail.buttons.delete')}</Button>
                 </div>
             </header>
@@ -169,7 +173,7 @@ function GoalDetailPage() {
                 {isQuantitative && (
                     <div className={`${styles.card} ${styles.distributionCard}`}>
                         <h2 className={styles.cardTitle}>{t('goalDetail.cards.progressDistribution')}</h2>
-                        <div className={styles.chartContainer}><DistributionBarChart completedPercentage={progressPercentage} remainingPercentage={100 - progressPercentage} /></div>
+                        <div className={styles.chartContainer}><DistributionBarChart currentValue={objective.currentValue} targetValue={objective.targetValue} unit={objective.unit} /></div>
                     </div>
                 )}
             </div>
@@ -187,7 +191,6 @@ function GoalDetailPage() {
                     <div className={styles.chartArea}>
                         {filteredProgressHistory.length >= 2 ? (
                             <ProgressLineChart
-                                // --- ESTA ES LA ÚNICA LÍNEA CORREGIDA ---
                                 progressHistory={filteredProgressHistory}
                                 unitMeasure={objective.unit}
                                 targetValue={parseFloat(objective.targetValue)}

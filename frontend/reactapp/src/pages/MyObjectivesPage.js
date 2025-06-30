@@ -55,8 +55,9 @@ function MyObjectivesPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await api.getObjectives(filters);
-            setObjectives(Array.isArray(data) ? data : []);
+            const response = await api.getObjectives(filters);
+            const objectivesArray = response?.data?.objectives;
+            setObjectives(Array.isArray(objectivesArray) ? objectivesArray : []);
         } catch (err) {
             setError(err.message || t('errors.objectivesLoadError'));
             setObjectives([]);

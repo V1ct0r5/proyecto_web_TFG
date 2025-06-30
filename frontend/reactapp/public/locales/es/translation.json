@@ -211,7 +211,9 @@
     "objectiveStatusLabel": "Estado de Objetivos",
     "noStatusData": "No hay datos de estados para mostrar.",
     "progressLabelWithUnit": "Progreso {{unit}}",
-    "notEnoughDataForChart": "No hay datos suficientes para mostrar la evolución del progreso (se requieren al menos 2 puntos)."
+    "notEnoughDataForChart": "No hay datos suficientes para mostrar la evolución del progreso (se requieren al menos 2 puntos).",
+    "progressMade": "Progreso realizado",
+    "progressRemaining": "Progreso restante"
   },
   "analysis": {
     "trends": {
