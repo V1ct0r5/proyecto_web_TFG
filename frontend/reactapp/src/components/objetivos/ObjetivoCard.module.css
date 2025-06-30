@@ -270,4 +270,19 @@
     background-color: var(--muted); /* Fondo más suave, similar al muted */
     border: 1px solid var(--border-light); /* Borde claro para un look más "archivado" */
 }
-/* --- FIN DE LA CORRECCIÓN --- */
+
+.cardLink {
+    text-decoration: none;
+    color: inherit;
+    display: block; /* Asegura que el Link ocupe todo el espacio */
+  }
+  
+  .cardLink:hover, .cardLink:focus {
+    outline: none; /* Quitamos el outline por defecto del navegador */
+  }
+  
+  /* El card tendrá ahora el efecto visual */
+  .cardLink:hover .objetivoCard, .cardLink:focus .objetivoCard {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }

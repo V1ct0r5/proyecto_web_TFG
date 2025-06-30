@@ -37,6 +37,11 @@ class SettingsService {
         // Con claves consistentes entre frontend y backend, el mapeo ya no es necesario.
         // Se asume que `settingsData` contiene claves como `themePreference`, `languagePreference`.
         await user.update(settingsData);
+        await ActivityLog.create({
+            userId,
+            activityType: 'USER_SETTINGS_UPDATED',
+            descriptionKey: 'activityLog.settingsUpdated',
+        });
         return { message: 'Configuración actualizada con éxito.' };
     }
 
@@ -61,6 +66,11 @@ class SettingsService {
         // El hook 'beforeUpdate' en el modelo User se encargará de hashear la nueva contraseña.
         user.password = newPassword;
         await user.save();
+        await ActivityLog.create({
+            userId,
+            activityType: 'USER_PASSWORD_CHANGED',
+            descriptionKey: 'activityLog.passwordChanged',
+        });
         return { message: 'Contraseña actualizada con éxito.' };
     }
 
@@ -73,14 +83,30 @@ class SettingsService {
         const user = await User.findByPk(userId, {
             attributes: { exclude: ['password'] },
             include: [
-                { model: Objective, as: 'objectives' },
-                { model: Progress, as: 'progressEntries' },
-                { model: ActivityLog, as: 'activityLogs' },
+                { 
+                    model: Objective, 
+                    as: 'objectives',
+                    // Incluimos los Progress DENTRO de cada Objective
+                    include: [{
+                        model: Progress,
+                        as: 'progressEntries'
+                    }]
+                },
+                { 
+                    model: ActivityLog, 
+                    as: 'activityLogs'
+                },
             ]
         });
         if (!user) {
             throw new AppError('Usuario no encontrado para exportar datos.', 404);
         }
+
+        await ActivityLog.create({
+            userId,
+            activityType: 'USER_DATA_EXPORTED',
+            descriptionKey: 'activityLog.dataExported',
+        });
         return user.toJSON();
     }
 
@@ -98,8 +124,12 @@ class SettingsService {
                 throw new AppError('Usuario no encontrado para eliminar.', 404);
             }
 
-            // `onDelete: 'CASCADE'` en las asociaciones se encarga de eliminar los datos relacionados.
-            // La destrucción del usuario disparará la cascada.
+            await ActivityLog.create({
+                userId,
+                activityType: 'USER_ACCOUNT_DELETED',
+                descriptionKey: 'activityLog.accountDeleted',
+                additionalDetails: { username: user.username } // Guardamos el nombre de usuario
+            }, { transaction });
             await user.destroy({ transaction });
             await transaction.commit();
             return { message: 'Cuenta de usuario eliminada con éxito.' };

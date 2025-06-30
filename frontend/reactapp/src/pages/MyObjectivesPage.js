@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import api from '../services/apiService';
 
-// --- NUEVO: Importar icono de filtros ---
 import { FaFilter } from 'react-icons/fa';
 
 import ObjetivoCard from '../components/objetivos/ObjetivoCard';
@@ -79,10 +78,18 @@ function MyObjectivesPage() {
         setShowAllObjectives(false);
     };
 
-    const handleObjectiveChange = useCallback(() => {
+    const handleObjectiveArchived = useCallback(() => {
         toast.info(t('toast.listUpdated'));
         fetchObjectives();
     }, [fetchObjectives, t]);
+
+    const handleObjectiveUnarchived = useCallback(() => {
+        toast.info(t('toast.listUpdated'));
+        setFilters(prevFilters => ({
+            ...prevFilters,
+            includeArchived: false,
+        }));
+    }, [t]);
 
     const objectivesToRender = showAllObjectives ? objectives : objectives.slice(0, INITIAL_DISPLAY_LIMIT);
 
@@ -100,7 +107,7 @@ function MyObjectivesPage() {
                     >
                         <FaFilter />
                     </Button>
-                    <Button onClick={() => navigate('/objectives')} variant="primary">
+                    <Button onClick={() => navigate('/objectives/new')} variant="primary">
                         {t('myObjectives.addNewObjective')}
                     </Button>
                 </div>
@@ -143,7 +150,8 @@ function MyObjectivesPage() {
                                     <ObjetivoCard 
                                         key={objective.id} 
                                         objective={objective} 
-                                        onObjectiveArchived={handleObjectiveChange}
+                                        onObjectiveArchived={handleObjectiveArchived}
+                                        onObjectiveUnarchived={handleObjectiveUnarchived}
                                     />
                                 ))}
                             </div>

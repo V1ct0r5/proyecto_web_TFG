@@ -18,6 +18,7 @@
     "edit": "Editar",
     "details": "Detalles",
     "archive": "Archivar",
+    "unarchive": "Desarchivar",
     "selectDate": "Selecciona una fecha",
     "status": "Estado",
     "cancel": "Cancelar",
@@ -108,6 +109,7 @@
     "objectiveDeleteError": "Error al eliminar el objetivo: {{error}}",
     "objectiveLoadDetailsError": "Error al cargar los detalles del objetivo.",
     "objectiveArchiveSuccess": "¡Objetivo archivado con éxito!",
+    "objectiveUnarchiveSuccess": "¡Objetivo desarchivado con éxito!",
     "objectiveArchiveError": "Error al archivar el objetivo: {{error}}",
     "noObjectivesYet": "Aún no tienes objetivos. ¡Vamos a crear el primero!",
     "listUpdated": "Lista actualizada.",
@@ -186,7 +188,8 @@
     "defaultTitle": "Confirmar Acción",
     "defaultMessage": "¿Estás seguro de que deseas realizar esta acción?",
     "deleteObjective": "¿Estás seguro de que quieres eliminar este objetivo?",
-    "archiveObjective": "¿Estás seguro de que quieres archivar el objetivo '{{name}}'?"
+    "archiveObjective": "¿Estás seguro de que quieres archivar el objetivo '{{name}}'?",
+    "unarchiveObjective": "¿Estás seguro de que quieres desarchivar el objetivo '{{name}}'?"
   },
   "charts": {
     "averageProgressLabel": "Progreso Promedio (%)",
@@ -567,6 +570,12 @@
     "objectiveCreated": "Nuevo objetivo '{{objectiveName}}' creado.",
     "progressUpdated": "Progreso para '{{objectiveName}}' actualizado a {{newValue}} {{unit}}.",
     "statusChanged": "Estado del objetivo \"{{objectiveName}}\" cambiado de \"{{oldStatus}}\" a \"{{newStatus}}\".",
-    "objectiveDeleted": "Objetivo '{{objectiveName}}' eliminado."
+    "objectiveDeleted": "Objetivo '{{objectiveName}}' eliminado.",
+    "objectiveArchived": "Objetivo '{{objectiveName}}' archivado.",
+    "objectiveUnarchived": "Objetivo '{{objectiveName}}' desarchivado.",
+    "settingsUpdated": "Se ha actualizado la configuración de la aplicación.",
+    "passwordChanged": "Se ha cambiado la contraseña.",
+    "dataExported": "Se han exportado los datos de la cuenta.",
+    "accountDeleted": "Se ha eliminado la cuenta del usuario {{username}}."
   }
 }

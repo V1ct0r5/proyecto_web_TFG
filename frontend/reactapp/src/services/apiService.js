@@ -75,6 +75,7 @@ const api = {
     createObjective: (data) => apiService.post('/objectives', data).then(res => res.data.objective),
     updateObjective: (id, data) => apiService.put(`/objectives/${id}`, data).then(res => res.data.objective),
     deleteObjective: (id) => apiService.delete(`/objectives/${id}`),
+    unarchiveObjective: (id) => apiService.patch(`/objectives/${id}/unarchive`).then(res => res.data.objective),
 
     // --- Dashboard ---
     getDashboardSummary: () => apiService.get('/dashboard/summary-stats').then(res => res.data),

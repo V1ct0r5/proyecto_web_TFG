@@ -1,94 +1,94 @@
 // cypress/e2e/4_profile_and_security_flow.cy.js
 
 describe('Spec 4: Flujos de Perfil, Configuración y Seguridad', () => {
-    
-  beforeEach(() => {
-      cy.login('test@example.com', 'password123');
-      cy.intercept('GET', '/api/profile', { fixture: 'profile_user.json' }).as('getProfile');
-      cy.intercept('GET', '/api/profile/stats', { fixture: 'profile_stats.json' }).as('getStats');
-      cy.intercept('GET', '/api/settings', { fixture: 'settings.json' }).as('getSettings');
-  });
 
-  context('Gestión del Perfil de Usuario', () => {
-      it('debería permitir a un usuario ver y actualizar su nombre de usuario', () => {
-          cy.visit('/profile');
-          cy.wait(['@getProfile', '@getStats']);
+    beforeEach(() => {
+        cy.login('test@example.com', 'password123');
+        cy.intercept('GET', '/api/profile', { fixture: 'profile_user.json' }).as('getProfile');
+        cy.intercept('GET', '/api/profile/stats', { fixture: 'profile_stats.json' }).as('getStats');
+        cy.intercept('GET', '/api/settings', { fixture: 'settings.json' }).as('getSettings');
+    });
 
-          cy.contains('button', 'Editar Perfil').click();
+    context('Gestión del Perfil de Usuario', () => {
+        it('debería permitir a un usuario ver y actualizar su nombre de usuario', () => {
+            cy.visit('/profile');
+            cy.wait(['@getProfile', '@getStats']);
 
-          const newUsername = 'UsuarioActualizado';
-          cy.get('input[name="name"]').clear().type(newUsername);
+            cy.contains('button', 'Editar Perfil').click();
 
-          cy.intercept('PATCH', '/api/profile', { fixture: 'profile_update_success.json' }).as('updateProfile');
-          cy.get('form#profile-form').submit();
+            const newUsername = 'UsuarioActualizado';
+            cy.get('input[name="name"]').clear().type(newUsername);
 
-          cy.wait('@updateProfile');
-          cy.contains('Perfil actualizado con éxito!').should('be.visible');
-          cy.get('header').contains(newUsername).should('be.visible');
-      });
-  });
+            cy.intercept('PATCH', '/api/profile', { fixture: 'profile_update_success.json' }).as('updateProfile');
+            cy.get('form#profile-form').submit();
 
-  context('Gestión de la Configuración y Seguridad', () => {
-      it('debería permitir a un usuario cambiar su contraseña correctamente', () => {
-          cy.visit('/settings');
-          cy.wait('@getSettings');
-          
-          const currentPassword = 'password123';
-          const newPassword = `newPassword_${Date.now()}`;
+            cy.wait('@updateProfile');
+            cy.contains('Perfil actualizado con éxito!').should('be.visible');
+            cy.get('header').contains(newUsername).should('be.visible');
+        });
+    });
 
-          cy.intercept('PUT', '/api/settings/change-password', { statusCode: 200, body: { message: 'Password updated successfully' } }).as('changePassword');
+    context('Gestión de la Configuración y Seguridad', () => {
+        it('debería permitir a un usuario cambiar su contraseña correctamente', () => {
+            cy.visit('/settings');
+            cy.wait('@getSettings');
 
-          cy.get('input[name="currentPassword"]').type(currentPassword);
-          cy.get('input[name="newPassword"]').type(newPassword);
-          cy.get('input[name="confirmNewPassword"]').type(newPassword);
+            const currentPassword = Cypress.env('TEST_USER_PASSWORD');
+            const newPassword = `newPassword_${Date.now()}`;
 
-          cy.get('input[name="currentPassword"]').closest('form').submit();
+            cy.intercept('PUT', '/api/settings/change-password', { statusCode: 200, body: { message: 'Password updated successfully' } }).as('changePassword');
 
-          cy.wait('@changePassword');
-          cy.contains('Contraseña actualizada con éxito.').should('be.visible');
-      });
+            cy.get('input[name="currentPassword"]').type(currentPassword);
+            cy.get('input[name="newPassword"]').type(newPassword);
+            cy.get('input[name="confirmNewPassword"]').type(newPassword);
 
-      it('debería permitir a un usuario cambiar el idioma y verificar que persiste', () => {
-          cy.visit('/settings');
-          cy.wait('@getSettings');
-          
-          cy.contains('h1', 'Configuración de la Cuenta').should('be.visible');
-          
-          cy.get('select[name="language"]').select('en');
+            cy.get('input[name="currentPassword"]').closest('form').submit();
 
-          const saveButton = cy.contains('button', 'Save Changes');
-          saveButton.scrollIntoView().should('be.visible');
+            cy.wait('@changePassword');
+            cy.contains('Contraseña actualizada con éxito.').should('be.visible');
+        });
 
-          cy.intercept('PUT', '/api/settings', { statusCode: 200 }).as('saveSettings');
-          saveButton.click();
-          
-          cy.wait('@saveSettings');
-          cy.contains('Settings saved successfully').should('be.visible');
-          
-          cy.intercept('GET', '/api/settings', { 
-              body: { data: { language: 'en', themePreference: 'dark', dateFormat: 'dd/MM/yyyy' } } 
-          }).as('getEnglishSettings');
+        it('debería permitir a un usuario cambiar el idioma y verificar que persiste', () => {
+            cy.visit('/settings');
+            cy.wait('@getSettings');
 
-          cy.reload();
+            cy.contains('h1', 'Configuración de la Cuenta').should('be.visible');
 
-          // --- CORRECCIÓN FINAL: La prueba termina aquí. ---
-          // El `wait` confirma que la app pidió la configuración en inglés.
-          // La aserción final falla por un bug en el código de React, no del test.
-          // Al eliminarla, el test pasa y cumple su objetivo principal.
-          cy.wait('@getEnglishSettings');
-      });
+            cy.get('select[name="language"]').select('en');
 
-      it('NO debería permitir que un usuario vea un objetivo de otro usuario', () => {
-          const otroUsuarioObjetivoId = 999; 
+            const saveButton = cy.contains('button', 'Save Changes');
+            saveButton.scrollIntoView().should('be.visible');
 
-          cy.intercept('GET', `/api/objectives/${otroUsuarioObjetivoId}`, { statusCode: 404, body: { message: 'Objective not found' } }).as('getObjective');
-          
-          cy.visit(`/objectives/${otroUsuarioObjetivoId}`, { failOnStatusCode: false });
+            cy.intercept('PUT', '/api/settings', { statusCode: 200 }).as('saveSettings');
+            saveButton.click();
 
-          cy.wait('@getObjective');
-          
-          // Verificamos que un botón clave de la página de detalles NO exista.
-          cy.contains('button', 'Actualizar Progreso').should('not.exist');
-      });
-  });
+            cy.wait('@saveSettings');
+            cy.contains('Settings saved successfully').should('be.visible');
+
+            cy.intercept('GET', '/api/settings', {
+                body: { data: { language: 'en', themePreference: 'dark', dateFormat: 'dd/MM/yyyy' } }
+            }).as('getEnglishSettings');
+
+            cy.reload();
+
+            // --- CORRECCIÓN FINAL: La prueba termina aquí. ---
+            // El `wait` confirma que la app pidió la configuración en inglés.
+            // La aserción final falla por un bug en el código de React, no del test.
+            // Al eliminarla, el test pasa y cumple su objetivo principal.
+            cy.wait('@getEnglishSettings');
+        });
+
+        it('NO debería permitir que un usuario vea un objetivo de otro usuario', () => {
+            const otroUsuarioObjetivoId = 999;
+
+            cy.intercept('GET', `/api/objectives/${otroUsuarioObjetivoId}`, { statusCode: 404, body: { message: 'Objective not found' } }).as('getObjective');
+
+            cy.visit(`/objectives/${otroUsuarioObjetivoId}`, { failOnStatusCode: false });
+
+            cy.wait('@getObjective');
+
+            // Verificamos que un botón clave de la página de detalles NO exista.
+            cy.contains('button', 'Actualizar Progreso').should('not.exist');
+        });
+    });
 });

@@ -5,10 +5,10 @@ describe('Flujo de Autenticación', () => {
   it('debería registrar un usuario y redirigir al dashboard', () => {
     cy.intercept('POST', '/api/auth/register').as('registerRequest');
 
-    const uniqueId = Date.now();
-    const username = `cypress_user_${uniqueId}`;
-    const email = `cypress_${uniqueId}@example.com`;
-    const password = 'test-password-123';
+    
+    const email = Cypress.env('TEST_USER_EMAIL');
+    const password = Cypress.env('TEST_USER_PASSWORD');
+    const username = `cypress_user_${Date.now()}`;
 
     cy.visit('/register');
 

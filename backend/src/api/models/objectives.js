@@ -69,6 +69,13 @@ module.exports = (sequelize) => {
             allowNull: false,
             field: 'estado'
         },
+        previousStatus: {
+            type: DataTypes.ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED'), // Sin 'ARCHIVED'
+            allowNull: true,
+            defaultValue: null,
+            field: 'estado_anterior',
+            comment: 'Almacena el estado anterior del objetivo al ser archivado.'
+        },
         userId: {
             type: DataTypes.INTEGER,
             allowNull: false,

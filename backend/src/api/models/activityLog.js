@@ -31,7 +31,13 @@ module.exports = (sequelize) => {
                 'OBJECTIVE_CREATED',
                 'PROGRESS_UPDATED',
                 'OBJECTIVE_STATUS_CHANGED',
-                'OBJECTIVE_DELETED'
+                'OBJECTIVE_DELETED',
+                'OBJECTIVE_ARCHIVED',
+                'OBJECTIVE_UNARCHIVED',
+                'USER_SETTINGS_UPDATED',
+                'USER_PASSWORD_CHANGED',
+                'USER_DATA_EXPORTED',
+                'USER_ACCOUNT_DELETED'
             ),
             allowNull: false,
             field: 'tipo_actividad'

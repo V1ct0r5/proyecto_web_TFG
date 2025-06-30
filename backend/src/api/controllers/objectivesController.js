@@ -97,3 +97,27 @@ exports.deleteObjective = async (req, res, next) => {
         next(error);
     }
 };
+
+/**
+ * Handles the request to unarchive an objective.
+ */
+exports.unarchiveObjective = async (req, res, next) => {
+    try {
+        // Obtenemos el ID del usuario del token para seguridad
+        const userId = getAuthUserId(req);
+        // Obtenemos el ID del objetivo de los parámetros de la URL
+        const { id: objectiveId } = req.params;
+        
+        // Llamamos a la nueva función del servicio que creamos
+        const objective = await objectivesService.unarchiveObjective(objectiveId, userId);
+        
+        // Enviamos una respuesta exitosa
+        res.status(200).json({
+            status: 'success',
+            data: { objective }
+        });
+    } catch (error) {
+        // Si algo falla, lo pasamos al manejador de errores central
+        next(error);
+    }
+};

@@ -60,7 +60,7 @@ class AnalysisService {
             const months = [];
             let iterator = new Date(startDate);
             iterator.setDate(1);
-            while (iterator <= endDate) {
+            while (iterator.getTime() <= endDate.getTime()) {
                 months.push({
                     year: iterator.getFullYear(),
                     month: iterator.getMonth() + 1,

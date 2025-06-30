@@ -32,7 +32,8 @@ const calculateProgressPercentage = (objective) => {
 
     if (numTarget === numInitial) {
         // Si el inicio y el fin son iguales, el progreso es 0% o 100%.
-        return (isLowerBetter ? numCurrent <= numTarget : numCurrent >= numTarget) ? 100 : 0;
+        const isProgressComplete = isLowerBetter ? numCurrent <= numTarget : numCurrent >= numTarget;
+        return isProgressComplete ? 100 : 0;
     }
 
     let progress;
@@ -63,6 +64,21 @@ const checkAndUpdateOverdueStatus = (objectiveJson) => {
     return objectiveJson;
 };
 
+const processObjectiveForResponse = (objective) => {
+    let objectiveJson = objective.toJSON();
+    objectiveJson = checkAndUpdateOverdueStatus(objectiveJson);
+    objectiveJson.progressPercentage = calculateProgressPercentage(objectiveJson);
+    
+    // --- SOLUCIÓN DEL WARNING ---
+    // El unary plus (+) es un atajo para convertir a número.
+    // Manejamos el caso de que el valor sea null para no convertirlo en 0.
+    objectiveJson.initialValue = objectiveJson.initialValue != null ? +objectiveJson.initialValue : null;
+    objectiveJson.currentValue = objectiveJson.currentValue != null ? +objectiveJson.currentValue : null;
+    objectiveJson.targetValue = objectiveJson.targetValue != null ? +objectiveJson.targetValue : null;
+    
+    return objectiveJson;
+};
+
 
 /**
  * Service layer for objectives-related business logic.
@@ -75,14 +91,8 @@ class ObjectivesService {
     async getAllObjectives(userId, filters = {}) {
         const objectives = await objectiveRepository.findAll(userId, filters);
         
-        let processedObjectives = objectives.map(obj => {
-            let objectiveJson = obj.toJSON();
-            objectiveJson = checkAndUpdateOverdueStatus(objectiveJson); // Check if overdue
-            objectiveJson.progressPercentage = calculateProgressPercentage(objectiveJson);
-            return objectiveJson;
-        });
+        let processedObjectives = objectives.map(processObjectiveForResponse);
 
-        // Sort by calculated progress if specified, as this can't be done in the DB.
         if (filters.sortBy === 'progressAsc') {
             processedObjectives.sort((a, b) => a.progressPercentage - b.progressPercentage);
         } else if (filters.sortBy === 'progressDesc') {
@@ -92,22 +102,15 @@ class ObjectivesService {
         return processedObjectives;
     }
 
-    /**
-     * Retrieves a single objective by its ID, including progress history.
-     */
     async getObjectiveById(objectiveId, userId) {
         const objective = await objectiveRepository.findById(objectiveId, userId, {
-            include: [{ model: Progress, as: 'progressEntries', order: [['entryDate', 'ASC'], ['createdAt', 'ASC']] }]
+            include: [{ model: Progress, as: 'progressEntries', order: [['entryDate', 'ASC']] }]
         });
         if (!objective) {
             throw new AppError('Objetivo no encontrado.', 404);
         }
-
-        let objectiveJson = objective.toJSON();
-        objectiveJson = checkAndUpdateOverdueStatus(objectiveJson);
-        objectiveJson.progressPercentage = calculateProgressPercentage(objectiveJson);
         
-        return objectiveJson;
+        return processObjectiveForResponse(objective);
     }
 
     /**
@@ -187,6 +190,11 @@ class ObjectivesService {
 
             const originalStatus = objective.status;
 
+            if (objectiveData.status === 'ARCHIVED' && originalStatus !== 'ARCHIVED') {
+                // Guardamos el estado original en nuestro nuevo campo
+                objectiveData.previousStatus = originalStatus;
+            }
+
             if (Object.keys(objectiveData).length > 0) {
                 await objective.update(objectiveData, { transaction });
             }
@@ -242,13 +250,76 @@ class ObjectivesService {
      * Private helper to log status changes within a transaction.
      */
     async _logStatusChange(objective, originalStatus, userId, transaction) {
+        let activityType = 'OBJECTIVE_STATUS_CHANGED';
+        let descriptionKey = 'activityLog.statusChanged';
+        if (objective.status === 'ARCHIVED') {
+            activityType = 'OBJECTIVE_ARCHIVED';
+            descriptionKey = 'activityLog.objectiveArchived';
+        }
         await ActivityLog.create({
             userId,
             objectiveId: objective.id,
-            activityType: 'OBJECTIVE_STATUS_CHANGED',
-            descriptionKey: 'activityLog.statusChanged',
-            additionalDetails: { objectiveName: objective.name, oldStatus: originalStatus, newStatus: objective.status }
+            activityType,
+            descriptionKey,
+            additionalDetails: { 
+                objectiveName: objective.name,
+                oldStatus: originalStatus, 
+                newStatus: objective.status 
+            }
         }, { transaction });
+    }
+
+    /**
+     * Unarchives an objective by setting its status back to a default active state.
+     * @param {number} objectiveId The ID of the objective to unarchive.
+     * @param {number} userId The ID of the authenticated user.
+     * @returns {Promise<object>} The updated objective.
+     */
+    async unarchiveObjective(objectiveId, userId) {
+        // La transacción asegura que todas las operaciones se completen o ninguna lo haga.
+        const transaction = await db.sequelize.transaction();
+        try {
+            const objective = await objectiveRepository.findById(objectiveId, userId, { transaction });
+            
+            if (!objective) {
+                console.error(`[SERVICE] ERROR: Objetivo ${objectiveId} no encontrado.`); // LOG 2
+                throw new AppError('Objetivo no encontrado o no tienes permiso.', 404);
+            }
+
+
+            if (objective.status !== 'ARCHIVED') {
+                console.error('[SERVICE] ERROR: El objetivo no está archivado.');
+                throw new AppError('Este objetivo no está archivado.', 400);
+            }
+
+            const newStatus = objective.previousStatus || 'PENDING';
+            // Actualizamos el estado del objetivo
+            await objective.update({ status: newStatus, previousStatus: null }, { transaction });
+
+            const objectiveAfterUpdate = await objectiveRepository.findById(objectiveId, userId, { transaction });
+            console.log(`[SERVICE] Estado después de 'update': ${objectiveAfterUpdate.status}`);
+            // Creamos un registro de esta actividad
+            await ActivityLog.create({
+                userId,
+                objectiveId: objective.id,
+                activityType: 'OBJECTIVE_UNARCHIVED',
+                descriptionKey: 'activityLog.objectiveUnarchived',
+                additionalDetails: { objectiveName: objective.name }
+            }, { transaction });
+
+            await transaction.commit();
+            
+            const finalObjective = await this.getObjectiveById(objective.id, userId);
+            console.log(`[SERVICE] Desarchivado completado. Estado final: ${finalObjective.status}`); // LOG 7
+
+            return finalObjective;
+
+        } catch (error) {
+            await transaction.rollback();
+            // Re-lanzamos el error para que sea capturado por el manejador global
+            if (error instanceof AppError) throw error;
+            throw new AppError('Error al desarchivar el objetivo.', 500, error);
+        }
     }
 
     /**

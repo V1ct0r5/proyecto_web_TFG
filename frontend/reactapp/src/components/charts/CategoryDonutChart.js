@@ -36,18 +36,28 @@ const CategoryDonutChart = ({ data }) => {
     }, [data, t]);
 
     // Las opciones se obtienen de chartUtils.js, que ya incluye maintainAspectRatio: false
-    const chartOptions = useMemo(() => getDefaultDonutOptions(t), [t]);
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false, 
+
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: 'var(--muted-foreground, #64748b)',
+                    font: { size: 12 }
+                }
+            },
+            title: {
+                display: false
+            },
+        },
+    }
 
     if (!data || data.length === 0) {
         return <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{t('charts.noCategoryData')}</p>;
     }
-    return (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-            <Doughnut data={chartData} options={chartOptions} />
-        </div>
-    );
-    // <-- FIN DE LA CORRECCIÓN FINAL -->
-    // ==================================================================
+    return <Doughnut data={chartData} options={chartOptions} />;
 };
 
 export default CategoryDonutChart;

@@ -45,19 +45,26 @@ function AppContent() {
                     <main className="main-content-area">
                         <Routes>
                             <Route path="/dashboard" element={<DashboardPage />} />
-                            <Route path="/objectives" element={<CreateGoalPage />} />
                             <Route path="/mis-objetivos" element={<MyObjectivesPage />} />
+                            <Route path="/objectives/new" element={<CreateGoalPage />} />
+                            <Route path="/objectives/edit/:id" element={<EditGoalPage />} />
+                            <Route path="/objectives/:id/update-progress" element={<UpdateProgressPage />} />
+                            <Route path="/objectives/:id" element={<GoalDetailPage />} />
                             <Route path="/analisis" element={<AnalysisPage />} />
                             <Route path="/profile" element={<ProfilePage />} />
                             <Route path="/settings" element={<SettingsPage />} />
-                            <Route path="/objectives/edit/:id" element={<EditGoalPage />} />
-                            <Route path="/objectives/:id" element={<GoalDetailPage />} />
-                            <Route path="/objectives/:id/update-progress" element={<UpdateProgressPage />} />
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />
                         </Routes>
                     </main>
                 </div>
-                {isSidebarOpen && <div className="sidebarOverlay" onClick={() => setSidebarOpen(false)} />}
+                {isSidebarOpen && (
+                    <button
+                        className="sidebarOverlay"
+                        onClick={() => setSidebarOpen(false)}
+                        onKeyDown={(e) => e.key === 'Enter' && setSidebarOpen(false)}
+                        aria-label="Close sidebar"
+                    />
+                )}
             </div>
         );
     }

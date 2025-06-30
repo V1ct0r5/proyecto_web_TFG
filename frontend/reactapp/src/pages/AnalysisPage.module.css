@@ -139,6 +139,7 @@
     flex-direction: column;
     min-height: 280px;
     flex-grow: 1;
+    position: relative;
 }
 .chartContainerFullWidth {
     min-height: 200px;

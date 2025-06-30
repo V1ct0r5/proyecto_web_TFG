@@ -18,6 +18,7 @@
     "edit": "Edit",
     "details": "Details",
     "archive": "Archive",
+    "unarchive": "Unarchive",
     "selectDate": "Select a date",
     "status": "Status",
     "cancel": "Cancel",
@@ -108,6 +109,7 @@
     "objectiveDeleteError": "Error deleting objective: {{error}}",
     "objectiveLoadDetailsError": "Error loading objective details.",
     "objectiveArchiveSuccess": "Objective archived successfully!",
+    "objectiveUnarchiveSuccess": "Objective unarchived successfully!",
     "objectiveArchiveError": "Error archiving objective: {{error}}",
     "noObjectivesYet": "You don't have any objectives yet. Let's create the first one!",
     "listUpdated": "List updated.",
@@ -186,7 +188,8 @@
     "defaultTitle": "Confirm Action",
     "defaultMessage": "Are you sure you want to perform this action?",
     "deleteObjective": "Are you sure you want to delete this objective?",
-    "archiveObjective": "Are you sure you want to archive the objective '{{name}}'?"
+    "archiveObjective": "Are you sure you want to archive the objective '{{name}}'?",
+    "unarchiveObjective": "Are you sure you want to unarchive the objective '{{name}}'?"
   },
   "charts": {
     "averageProgressLabel": "Average Progress (%)",
@@ -566,6 +569,13 @@
     "objectiveCreated": "New objective '{{objectiveName}}' created.",
     "progressUpdated": "Progress for '{{objectiveName}}' updated to {{newValue}} {{unit}}.",
     "statusChanged": "Objective \"{{objectiveName}}\" status changed from \"{{oldStatus}}\" to \"{{newStatus}}\".",
-    "objectiveDeleted": "Objective '{{objectiveName}}' deleted."
+    "objectiveDeleted": "Objective '{{objectiveName}}' deleted.",
+    "objectiveArchived": "Objective '{{objectiveName}}' archived.",
+    "objectiveUnarchived": "Objective '{{objectiveName}}' unarchived.",
+    "settingsUpdated": "The application settings have been updated.",
+    "passwordChanged": "The password has been changed.",
+    "dataExported": "The account data has been exported.",
+    "accountDeleted": "The user account {{username}} has been deleted."
+
   }
 }

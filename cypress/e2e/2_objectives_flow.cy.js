@@ -6,9 +6,9 @@ describe('Flujo de Gestión de Objetivos', () => {
     // Se crea un usuario único para cada ejecución del test para evitar conflictos
     const testUser = {
       username: `test_obj_user_${Date.now()}`,
-      email: 'test_objectives@example.com',
-      password: 'password123',
-      confirmPassword: 'password123'
+      email: Cypress.env('TEST_USER_EMAIL'), // Usa la variable de entorno
+            password: Cypress.env('TEST_USER_PASSWORD'), // Usa la variable de entorno
+            confirmPassword: Cypress.env('TEST_USER_PASSWORD')
     };
     cy.request({
       method: 'POST',
@@ -19,8 +19,8 @@ describe('Flujo de Gestión de Objetivos', () => {
   });
 
   beforeEach(() => {
-    cy.login('test_objectives@example.com', 'password123');
-  });
+    cy.login(Cypress.env('TEST_USER_EMAIL'), Cypress.env('TEST_USER_PASSWORD'));
+    });
 
   it('debería crear, editar y eliminar un objetivo correctamente', () => {
     const objectiveTitle = `Mi Objetivo E2E - ${Date.now()}`;
