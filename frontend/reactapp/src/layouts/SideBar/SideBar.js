@@ -25,7 +25,7 @@ const Sidebar = ({ isSidebarOpen }) => {
                 <span className={styles.appName}>GoalMaster</span>
             </div>
 
-            <NavLink to="/objectives" className={`${styles.createButton} btn-shine`}>
+            <NavLink to="/objectives/new" className={`${styles.createButton} btn-shine`}>
                 <FaPlus className={styles.icon} /> {t('sidebar.newObjective')}
             </NavLink>
 

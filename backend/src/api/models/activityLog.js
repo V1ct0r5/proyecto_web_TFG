@@ -12,7 +12,7 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
-            field: 'id_activity_log'
+            field: 'id'
         },
         userId: {
             type: DataTypes.INTEGER,
@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
         objectiveId: {
             type: DataTypes.INTEGER,
             allowNull: true, // Permite nulos para que 'ON DELETE SET NULL' funcione
-            references: { model: 'objetivo', key: 'id_objetivo' },
+            references: { model: 'objetivo', key: 'id' },
             field: 'id_objetivo'
         },
         activityType: {

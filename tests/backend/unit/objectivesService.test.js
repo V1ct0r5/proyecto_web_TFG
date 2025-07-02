@@ -19,16 +19,16 @@ describe('ObjectivesService', () => {
   });
 
   it('createObjective debería llamar a los métodos de creación', async () => {
-    const objectiveData = { name: 'Aprender', initialValue: 10 };
+    const objectiveData = { name: 'Aprender', initialValue: 10, targetValue: 100 };
     const newObjective = { id: 1, ...objectiveData, userId: 1, toJSON: () => newObjective };
     
     objectiveRepository.create.mockResolvedValue(newObjective);
-    objectiveRepository.findById.mockResolvedValue(newObjective);
+    objectivesService.getObjectiveById = jest.fn().mockResolvedValue(newObjective.toJSON());
 
     await objectivesService.createObjective(objectiveData, 1);
 
     expect(objectiveRepository.create).toHaveBeenCalled();
-    expect(Progress.create).toHaveBeenCalled();
+    expect(Progress.create).toHaveBeenCalled(); 
     expect(ActivityLog.create).toHaveBeenCalled();
     expect(mockTransaction.commit).toHaveBeenCalled();
   });

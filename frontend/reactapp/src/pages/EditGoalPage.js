@@ -17,16 +17,27 @@ function EditGoalPage() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        if (isNaN(parseInt(id))) {
+            toast.error(t('errors.invalidObjectiveId'));
+            navigate('/my-objectives');
+            return;
+        }
         const fetchObjective = async () => {
-            if (!id) return;
             setLoading(true);
             try {
-                const data = await api.getObjectiveById(id);
-                setObjective(data);
+                const response = await api.getObjectiveById(id);
+                
+                const objective = response?.data?.objective;
+                
+                if (!objective) {
+                    throw new Error(t('errors.objectiveNotFound'));
+                }
+                
+                setObjective(objective);
             } catch (err) {
-                setError(t('errors.objectiveLoadError'));
+                setError(err.message || t('errors.objectiveLoadError'));
                 toast.error(err.message || t('toast.objectiveLoadForEditError'));
-                navigate('/mis-objetivos');
+                navigate('/my-objectives');
             } finally {
                 setLoading(false);
             }

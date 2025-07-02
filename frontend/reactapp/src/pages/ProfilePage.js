@@ -46,7 +46,6 @@ function ProfilePage() {
                 apiService.getUserProfileStats()
             ]);
 
-            // --- CORRECCIÓN AQUÍ: Extraemos la propiedad .data ---
             const profileData = profileResponse?.data;
             const userStats = statsResponse?.data;
             
@@ -167,7 +166,7 @@ function ProfilePage() {
                     {isEditMode ? (
                         <div className={styles.editHeaderActions}>
                             <Button variant="buttonOutline" onClick={handleCancelEdit} disabled={isSubmitting} leftIcon={<FaTimes />}>{t('common.cancel')}</Button>
-                            <Button type="buttonSubmit" form="profile-form" variant="primary" isLoading={isSubmitting} disabled={isSubmitting} leftIcon={<FaSave />}>{t('common.saveChanges')}</Button>
+                            <Button type="submit" form="profile-form" variant="primary" isLoading={isSubmitting} disabled={isSubmitting} leftIcon={<FaSave />}>{t('common.saveChanges')}</Button>
                         </div>
                     ) : (
                         <Button variant="outline" onClick={handleEditClick} leftIcon={<FaEdit />}>{t('profilePage.editProfile')}</Button>
@@ -180,11 +179,21 @@ function ProfilePage() {
                      <h2 className={styles.cardTitle}>{t('profilePage.cards.personalInfo.title')}</h2>
                     {isEditMode ? (
                         <form id="profile-form" onSubmit={handleSaveChanges}>
-                            <FormGroup label={t('profilePage.labels.fullName')} htmlFor="name"><Input type="text" id="name" name="name" value={formData.name} onChange={handleInputChange} /></FormGroup>
-                            <FormGroup label={t('profilePage.labels.email')} htmlFor="email"><Input type="email" id="email" name="email" value={formData.email} readOnly disabled title={t('profilePage.emailReadonly')} /></FormGroup>
-                            <FormGroup label={t('profilePage.labels.phone')} htmlFor="phone"><Input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleInputChange} /></FormGroup>
-                            <FormGroup label={t('profilePage.labels.location')} htmlFor="location"><Input type="text" id="location" name="location" value={formData.location} onChange={handleInputChange} /></FormGroup>
-                            <FormGroup label={t('profilePage.labels.bio')} htmlFor="bio"><textarea id="bio" name="bio" value={formData.bio} onChange={handleInputChange} className={styles.bioTextarea} rows="4" /></FormGroup>
+                            <FormGroup label={t('profilePage.labels.fullName')} htmlFor="name">
+                                <Input type="text" id="name" name="name" value={formData.name} onChange={handleInputChange} />
+                            </FormGroup>
+                            <FormGroup label={t('profilePage.labels.email')} htmlFor="email">
+                                <Input type="email" id="email" name="email" value={formData.email} readOnly disabled title={t('profilePage.emailReadonly')} />
+                            </FormGroup>
+                            <FormGroup label={t('profilePage.labels.phone')} htmlFor="phone">
+                                <Input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleInputChange} placeholder={t('profilePage.placeholders.phone')} />
+                            </FormGroup>
+                            <FormGroup label={t('profilePage.labels.location')} htmlFor="location">
+                                <Input type="text" id="location" name="location" value={formData.location} onChange={handleInputChange} placeholder={t('profilePage.placeholders.location')} />
+                            </FormGroup>
+                            <FormGroup label={t('profilePage.labels.bio')} htmlFor="bio">
+                                <textarea id="bio" name="bio" value={formData.bio} onChange={handleInputChange} className={styles.bioTextarea} rows="4" placeholder={t('profilePage.placeholders.bio')} />
+                            </FormGroup>
                             {formError && <p className={styles.formErrorMessage}>{formError}</p>}
                         </form>
                     ) : (

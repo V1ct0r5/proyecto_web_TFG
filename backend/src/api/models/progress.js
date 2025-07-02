@@ -13,12 +13,12 @@ module.exports = (sequelize) => {
             primaryKey: true,
             autoIncrement: true,
             allowNull: false,
-            field: 'id_progreso'
+            field: 'id'
         },
         objectiveId: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: { model: 'objetivo', key: 'id_objetivo' },
+            references: { model: 'objetivo', key: 'id' },
             field: 'id_objetivo'
         },
         entryDate: {

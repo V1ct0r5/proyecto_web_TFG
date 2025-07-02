@@ -12,7 +12,7 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
-            field: 'id_objetivo'
+            field: 'id'
         },
         name: {
             type: DataTypes.STRING(255),
@@ -80,7 +80,7 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: { model: 'usuario', key: 'id' },
-            field: 'id_usuario'
+            field: 'id'
         },
     }, {
         tableName: 'objetivo',

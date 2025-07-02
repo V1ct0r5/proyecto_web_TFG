@@ -411,6 +411,11 @@
         "completed": "Completados",
         "inProgress": "En Progreso",
         "successRate": "Tasa de Éxito"
+      },
+      "placeholders": {
+        "phone": "Ej: +34 123 456 789",
+        "location": "Ej: Madrid, España",
+        "bio": "Cuéntanos un poco sobre ti..."
       }
     },
     "labels": {

@@ -1,10 +1,11 @@
 
 .editGoalContainer {
-    /* --- CORREGIDO: Simplificado y centrado --- */
     max-width: 800px;
     margin: 0 auto; /* Centra el contenedor */
     padding: 2rem 1rem; /* Padding para móviles */
     width: 100%;
+    padding-bottom: 0;
+    overflow-y: hidden;
 }
 
 .header {
