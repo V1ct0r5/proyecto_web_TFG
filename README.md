@@ -118,10 +118,6 @@ El proyecto cuenta con una suite completa de pruebas. Para ejecutarlas, sitúate
     npm run cypress:open
     ```
 
-## 📜 Licencia
-
-Este proyecto está bajo la Licencia MIT. Consulta el fichero `LICENSE` para más detalles.
-
 ---
 
 **Desarrollado por Víctor Moreno Bueno** - *TFG Ingeniería del Software 2025*
