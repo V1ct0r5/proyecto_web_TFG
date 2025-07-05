@@ -1,59 +1,42 @@
-// backend/src/api/services/objectivesService.js
 const objectiveRepository = require('../repositories/objectiveRepository');
 const db = require('../../config/database');
 const AppError = require('../../utils/AppError');
 
 const { Objective, Progress, ActivityLog } = db;
 
-// --- Helper Functions ---
-
-/**
- * Calculates the progress percentage of an objective.
- * This function is exported to be reused by other services (analysis, dashboard).
- * @param {object} objective - The objective object.
- * @returns {number} The progress percentage (0-100).
- */
 const calculateProgressPercentage = (objective) => {
-    const { initialValue, currentValue, targetValue, isLowerBetter } = objective;
+    const initial = parseFloat(objective.initialValue);
+    const current = parseFloat(objective.currentValue);
+    const target = parseFloat(objective.targetValue);
+    const isLowerBetter = !!objective.isLowerBetter;
 
-    // --- CORRECCIÓN: Manejo robusto de valores ---
-    // Si initialValue no existe, asumimos que es 0. Esto es una suposición segura
-    // para la mayoría de los casos de progreso.
-    const numInitial = parseFloat(initialValue ?? 0); 
-    const numTarget = parseFloat(targetValue);
-
-    // Si currentValue no se pasa, usamos el initialValue. Si tampoco existe, es 0.
-    const numCurrent = parseFloat(currentValue ?? initialValue ?? 0);
-
-    if (isNaN(numTarget)) {
-        // Si no hay un objetivo claro, no se puede calcular el progreso.
+    if (isNaN(initial) || isNaN(target) || isNaN(current)) {
         return 0;
     }
 
-    if (numTarget === numInitial) {
-        // Si el inicio y el fin son iguales, el progreso es 0% o 100%.
-        const isProgressComplete = isLowerBetter ? numCurrent <= numTarget : numCurrent >= numTarget;
-        return isProgressComplete ? 100 : 0;
+    if (target === initial) {
+        if (isLowerBetter) {
+            return current <= target ? 100 : 0;
+        }
+        return current >= target ? 100 : 0;
     }
 
     let progress;
     if (isLowerBetter) {
-        // Evita división por cero y maneja la lógica inversa
-        progress = ((numInitial - numCurrent) / (numInitial - numTarget)) * 100;
+        const totalJourney = initial - target;
+        const progressMade = initial - current;
+        progress = (progressMade / totalJourney) * 100;
     } else {
-        progress = ((numCurrent - numInitial) / (numTarget - numInitial)) * 100;
+        const totalJourney = target - initial;
+        const progressMade = current - initial;
+        progress = (progressMade / totalJourney) * 100;
     }
         
-    // Asegurarse de que el progreso esté entre 0 y 100.
     return Math.max(0, Math.min(100, Math.round(progress)));
 };
 
-// Export the helper function for use in other services
 exports.calculateProgressPercentage = calculateProgressPercentage;
 
-/**
- * Checks if an objective is overdue and updates its status in memory.
- */
 const checkAndUpdateOverdueStatus = (objectiveJson) => {
     const deadline = objectiveJson.endDate ? new Date(objectiveJson.endDate) : null;
     const isOverdue = deadline && deadline < new Date() && !['COMPLETED', 'ARCHIVED'].includes(objectiveJson.status);
@@ -69,9 +52,6 @@ const processObjectiveForResponse = (objective) => {
     objectiveJson = checkAndUpdateOverdueStatus(objectiveJson);
     objectiveJson.progressPercentage = calculateProgressPercentage(objectiveJson);
     
-    // --- SOLUCIÓN DEL WARNING ---
-    // El unary plus (+) es un atajo para convertir a número.
-    // Manejamos el caso de que el valor sea null para no convertirlo en 0.
     objectiveJson.initialValue = objectiveJson.initialValue != null ? +objectiveJson.initialValue : null;
     objectiveJson.currentValue = objectiveJson.currentValue != null ? +objectiveJson.currentValue : null;
     objectiveJson.targetValue = objectiveJson.targetValue != null ? +objectiveJson.targetValue : null;
@@ -79,15 +59,8 @@ const processObjectiveForResponse = (objective) => {
     return objectiveJson;
 };
 
-
-/**
- * Service layer for objectives-related business logic.
- */
 class ObjectivesService {
 
-    /**
-     * Retrieves all objectives for a user, applying filters and calculating progress.
-     */
     async getAllObjectives(userId, filters = {}) {
         const objectives = await objectiveRepository.findAll(userId, filters);
         
@@ -113,27 +86,21 @@ class ObjectivesService {
         return processObjectiveForResponse(objective);
     }
 
-    /**
-     * Creates a new objective and its initial progress log.
-     */
     async createObjective(objectiveData, userId) {
         const transaction = await db.sequelize.transaction();
         try {
-            // 1. Validar que el userId existe antes de hacer nada
             if (!userId) {
                 throw new AppError('No se proporcionó un ID de usuario autenticado.', 401);
             }
 
-            // 2. Determinar si es cuantitativo de forma segura
             const isQuantitative = (
                 objectiveData.initialValue !== null && objectiveData.initialValue !== undefined &&
                 objectiveData.targetValue !== null && objectiveData.targetValue !== undefined
             );
 
-            // 3. Construir el payload para la BD
             const dataToCreate = {
                 ...objectiveData,
-                userId, // Usar el userId validado
+                userId,
                 initialValue: isQuantitative ? objectiveData.initialValue : null,
                 targetValue: isQuantitative ? objectiveData.targetValue : null,
                 currentValue: isQuantitative ? objectiveData.initialValue : null,
@@ -141,7 +108,6 @@ class ObjectivesService {
 
             const newObjective = await objectiveRepository.create(dataToCreate, { transaction });
 
-            // 4. Crear progreso SOLO si es cuantitativo
             if (isQuantitative) {
                 await Progress.create({
                     objectiveId: newObjective.id,
@@ -152,7 +118,6 @@ class ObjectivesService {
                 }, { transaction });
             }
 
-            // 5. Crear log de actividad
             await ActivityLog.create({
                 userId,
                 objectiveId: newObjective.id,
@@ -175,9 +140,6 @@ class ObjectivesService {
         }
     }
     
-    /**
-     * Updates an existing objective. Can handle both objective data and progress updates.
-     */
     async updateObjective(objectiveId, userId, updateData) {
         const transaction = await db.sequelize.transaction();
         try {
@@ -194,13 +156,11 @@ class ObjectivesService {
                 }
             }
 
-
             const originalStatus = objective.status;
             if (updateData.status === 'ARCHIVED' && originalStatus !== 'ARCHIVED') {
                 updateData.previousStatus = originalStatus;
             }
             
-            // Separamos los datos de progreso de los del objetivo.
             const { progressData, ...objectiveData } = updateData;
 
             if (Object.keys(objectiveData).length > 0) {
@@ -225,9 +185,6 @@ class ObjectivesService {
         }
     }
     
-    /**
-     * Private helper to log progress updates within a transaction.
-     */
     async _logProgressUpdate(objective, progressData, userId, transaction) {
         const newValue = parseFloat(progressData.value);
         if (isNaN(newValue)) {
@@ -254,9 +211,6 @@ class ObjectivesService {
         }, { transaction });
     }
 
-    /**
-     * Private helper to log status changes within a transaction.
-     */
     async _logStatusChange(objective, originalStatus, userId, transaction) {
         let activityType = 'OBJECTIVE_STATUS_CHANGED';
         let descriptionKey = 'activityLog.statusChanged';
@@ -277,36 +231,16 @@ class ObjectivesService {
         }, { transaction });
     }
 
-    /**
-     * Unarchives an objective by setting its status back to a default active state.
-     * @param {number} objectiveId The ID of the objective to unarchive.
-     * @param {number} userId The ID of the authenticated user.
-     * @returns {Promise<object>} The updated objective.
-     */
     async unarchiveObjective(objectiveId, userId) {
-        // La transacción asegura que todas las operaciones se completen o ninguna lo haga.
         const transaction = await db.sequelize.transaction();
         try {
             const objective = await objectiveRepository.findById(objectiveId, userId, { transaction });
-            
-            if (!objective) {
-                console.error(`[SERVICE] ERROR: Objetivo ${objectiveId} no encontrado.`); // LOG 2
-                throw new AppError('Objetivo no encontrado o no tienes permiso.', 404);
-            }
-
-
-            if (objective.status !== 'ARCHIVED') {
-                console.error('[SERVICE] ERROR: El objetivo no está archivado.');
-                throw new AppError('Este objetivo no está archivado.', 400);
-            }
+            if (!objective) throw new AppError('Objetivo no encontrado o no tienes permiso.', 404);
+            if (objective.status !== 'ARCHIVED') throw new AppError('Este objetivo no está archivado.', 400);
 
             const newStatus = objective.previousStatus || 'PENDING';
-            // Actualizamos el estado del objetivo
             await objective.update({ status: newStatus, previousStatus: null }, { transaction });
 
-            const objectiveAfterUpdate = await objectiveRepository.findById(objectiveId, userId, { transaction });
-            console.log(`[SERVICE] Estado después de 'update': ${objectiveAfterUpdate.status}`);
-            // Creamos un registro de esta actividad
             await ActivityLog.create({
                 userId,
                 objectiveId: objective.id,
@@ -316,30 +250,20 @@ class ObjectivesService {
             }, { transaction });
 
             await transaction.commit();
-            
-            const finalObjective = await this.getObjectiveById(objective.id, userId);
-            console.log(`[SERVICE] Desarchivado completado. Estado final: ${finalObjective.status}`); // LOG 7
-
-            return finalObjective;
+            return this.getObjectiveById(objective.id, userId);
 
         } catch (error) {
             await transaction.rollback();
-            // Re-lanzamos el error para que sea capturado por el manejador global
             if (error instanceof AppError) throw error;
             throw new AppError('Error al desarchivar el objetivo.', 500, error);
         }
     }
 
-    /**
-     * Deletes an objective.
-     */
     async deleteObjective(objectiveId, userId) {
         const transaction = await db.sequelize.transaction();
         try {
             const objective = await objectiveRepository.findById(objectiveId, userId, { transaction });
-            if (!objective) {
-                throw new AppError('Objetivo no encontrado.', 404);
-            }
+            if (!objective) throw new AppError('Objetivo no encontrado.', 404);
             
             await ActivityLog.create({
                 userId,
@@ -361,9 +285,6 @@ class ObjectivesService {
         }
     }
 
-    /**
-     * Checks if a user has any objectives.
-     */
     async userHasObjectives(userId) {
         const count = await Objective.count({ where: { userId } });
         return count > 0;

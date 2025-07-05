@@ -28,7 +28,6 @@ const RecentObjectivesList = ({ objectives }) => {
                             <FaChartLine />
                         </div>
                         <div className={styles.objectiveInfo}>
-                            {/* CORRECCIÓN: Usar obj.id para el enlace y obj.name para el texto */}
                             <Link to={`/objectives/${obj.id}`} className={styles.objectiveNameLink}>
                                 {obj.name}
                             </Link>
@@ -37,14 +36,11 @@ const RecentObjectivesList = ({ objectives }) => {
                             </span>
                         </div>
                         <div className={styles.objectiveActions}>
-                            {/* CORRECCIÓN: Usar obj.progressPercentage */}
                             <span className={styles.progressPercent}>{obj.progressPercentage}%</span>
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                // CORRECCIÓN: Usar obj.id para la navegación
                                 onClick={() => navigate(`/objectives/${obj.id}`)}
-                                // CORRECCIÓN: Usar obj.name para el aria-label
                                 aria-label={t('recentObjectives.viewDetailsAria', {name: obj.name})}
                                 className={styles.detailsButton}
                             >

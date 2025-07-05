@@ -1,33 +1,132 @@
-const { Op, fn, col, literal } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const db = require('../../config/database');
 const AppError = require('../../utils/AppError');
 const { calculateProgressPercentage } = require('./objectivesService'); 
 
 const { Objective, Progress } = db;
 
+const CATEGORY_COLORS = {
+    HEALTH: { border: 'rgba(255, 99, 132, 1)', bg: 'rgba(255, 99, 132, 0.2)' },
+    FINANCE: { border: 'rgba(75, 192, 192, 1)', bg: 'rgba(75, 192, 192, 0.2)' },
+    PERSONAL_DEV: { border: 'rgba(255, 206, 86, 1)', bg: 'rgba(255, 206, 86, 0.2)' },
+    RELATIONSHIPS: { border: 'rgba(255, 159, 64, 1)', bg: 'rgba(255, 159, 64, 0.2)' },
+    CAREER: { border: 'rgba(54, 162, 235, 1)', bg: 'rgba(54, 162, 235, 0.2)' },
+    OTHER: { border: 'rgba(153, 102, 255, 1)', bg: 'rgba(153, 102, 255, 0.2)' },
+    default: { border: 'rgba(201, 203, 207, 1)', bg: 'rgba(201, 203, 207, 0.2)' },
+};
+
 class AnalysisService {
     _getDateRange(period) {
         const endDate = new Date();
-        let startDate = new Date(endDate); // Clonamos para no modificar la misma instancia
-
+        let startDate = new Date();
         if (period === 'all') {
-            return { startDate: new Date(0), endDate };
+            const fiveMonthsAgo = new Date();
+            fiveMonthsAgo.setMonth(endDate.getMonth() - 5);
+            startDate = fiveMonthsAgo;
+        } else {
+            const monthsToSubtract = { '1month': 1, '3months': 3, '6months': 6, '1year': 12 }[period] || 3;
+            startDate.setMonth(endDate.getMonth() - (monthsToSubtract - 1));
         }
-        
-        const monthsToSubtract = {
-            '1month': 1,
-            '3months': 3,
-            '6months': 6,
-            '1year': 12
-        }[period] || 3;
-
-        startDate.setMonth(startDate.getMonth() - monthsToSubtract + 1, 1);
-
-        endDate.setHours(23, 59, 59, 999);
+        startDate.setDate(1);
         startDate.setHours(0, 0, 0, 0);
-
+        endDate.setHours(23, 59, 59, 999);
         return { startDate, endDate };
     }
+    
+    async getMonthlyProgress(userId, period = '3months') {
+        const { startDate, endDate } = this._getDateRange(period);
+        try {
+            const objectives = await Objective.findAll({
+                where: {
+                    userId,
+                    status: { [Op.not]: 'ARCHIVED' },
+                    targetValue: { [Op.ne]: null },
+                    createdAt: { [Op.lte]: endDate },
+                },
+                include: [{
+                    model: Progress,
+                    as: 'progressEntries',
+                    where: { entryDate: { [Op.lte]: endDate } },
+                    required: false,
+                    // --- CORRECCIÓN 1: Ordenar DESC para obtener el más nuevo primero ---
+                    // Añadimos 'id' como segundo criterio para desempates en el mismo día.
+                    order: [['entryDate', 'DESC'], ['id', 'DESC']],
+                }],
+            });
+
+            if (objectives.length === 0) {
+                return { labels: [], datasets: [] };
+            }
+
+            const objectivesByCategory = objectives.reduce((acc, obj) => {
+                const category = obj.category || 'OTHER';
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(obj.toJSON());
+                return acc;
+            }, {});
+
+            const labels = [];
+            const monthLocale = 'es-ES';
+            let currentDate = new Date(startDate);
+            while (currentDate <= endDate) {
+                labels.push(
+                    currentDate.toLocaleDateString(monthLocale, { month: 'long', year: 'numeric' })
+                    .replace(/^\w/, c => c.toUpperCase())
+                );
+                currentDate.setMonth(currentDate.getMonth() + 1);
+            }
+            
+            const datasets = Object.entries(objectivesByCategory).map(([category, categoryObjectives]) => {
+                const colors = CATEGORY_COLORS[category] || CATEGORY_COLORS.default;
+                
+                let monthIterator = new Date(startDate);
+                const dataPoints = labels.map(() => {
+                    const endOfMonth = new Date(monthIterator.getFullYear(), monthIterator.getMonth() + 1, 0, 23, 59, 59);
+                    
+                    const activeObjectivesInMonth = categoryObjectives.filter(obj => new Date(obj.createdAt) <= endOfMonth);
+
+                    if (activeObjectivesInMonth.length === 0) {
+                        monthIterator.setMonth(monthIterator.getMonth() + 1);
+                        return null; 
+                    }
+
+                    const progressesForMonth = activeObjectivesInMonth.map(obj => {
+                        const latestEntry = (obj.progressEntries || [])
+                            .filter(p => new Date(p.entryDate) <= endOfMonth)[0]; // Tomamos el primero
+                        
+                        const progressValue = latestEntry ? latestEntry.value : obj.initialValue;
+                        return calculateProgressPercentage({ ...obj, currentValue: progressValue });
+                    });
+
+                    monthIterator.setMonth(monthIterator.getMonth() + 1);
+                    const totalProgress = progressesForMonth.reduce((sum, p) => sum + p, 0);
+                    return Math.round(totalProgress / progressesForMonth.length);
+                });
+
+                for (let i = 1; i < dataPoints.length; i++) {
+                    if (dataPoints[i] === null) dataPoints[i] = dataPoints[i - 1];
+                }
+                if (dataPoints[0] === null) dataPoints[0] = 0;
+
+
+                return {
+                    label: category,
+                    data: dataPoints.map(p => p === null ? 0 : p),
+                    borderColor: colors.border,
+                    backgroundColor: colors.bg,
+                    fill: true,
+                    tension: 0.3,
+                };
+            });
+            
+            return { labels, datasets };
+
+        } catch (error) {
+            console.error("Error fetching monthly progress by category:", error);
+            throw new AppError('Error al obtener el progreso mensual por categoría.', 500, error);
+        }
+    }
+
 
     async getAnalysisSummary(userId, period = '3months') {
         try {
@@ -35,11 +134,7 @@ class AnalysisService {
             const wherePeriod = startDate.getFullYear() > 1970 ? { updatedAt: { [Op.between]: [startDate, endDate] } } : {};
 
             const [
-                totalObjectives,
-                activeObjectives,
-                completedInPeriod,
-                quantitativeObjectives,
-                categoriesRaw
+                totalObjectives, activeObjectives, completedInPeriod, quantitativeObjectives, categoriesRaw
             ] = await Promise.all([
                 Objective.count({ where: { userId } }),
                 Objective.count({ where: { userId, status: { [Op.in]: ['IN_PROGRESS', 'PENDING'] } } }),
@@ -48,12 +143,7 @@ class AnalysisService {
                 Objective.findAll({ attributes: [['tipo_objetivo', 'name'], [fn('COUNT', col('tipo_objetivo')), 'value']], where: { userId, status: { [Op.not]: 'ARCHIVED' } }, group: ['tipo_objetivo'], raw: true }),
             ]);
 
-            const averageProgress = quantitativeObjectives.length > 0
-                ? Math.round(quantitativeObjectives.reduce((sum, obj) => {
-                    const p = calculateProgressPercentage(obj.toJSON());
-                    return sum + (isNaN(p) ? 0 : p);
-                }, 0) / quantitativeObjectives.length)
-                : 0;
+            const averageProgress = quantitativeObjectives.length > 0 ? Math.round(quantitativeObjectives.reduce((sum, obj) => sum + calculateProgressPercentage(obj.toJSON()), 0) / quantitativeObjectives.length) : 0;
             
             let trend;
             if (completedInPeriod >= 2) {
@@ -85,71 +175,16 @@ class AnalysisService {
     async getObjectiveStatusDistribution(userId) {
         return Objective.findAll({ attributes: [['estado', 'name'], [fn('COUNT', col('estado')), 'value']], where: { userId, status: { [Op.not]: 'ARCHIVED' } }, group: ['estado'], raw: true, });
     }
-
-    async getMonthlyProgress(userId, period = '3months') {
-        const { startDate, endDate } = this._getDateRange(period);
-        try {
-            const objectives = await Objective.findAll({
-                where: { userId, status: { [Op.not]: 'ARCHIVED' }, targetValue: { [Op.ne]: null }, createdAt: { [Op.lte]: endDate } },
-                include: [{ model: Progress, as: 'progressEntries', where: { entryDate: { [Op.lte]: endDate } }, required: false }]
-            });
-    
-            if (objectives.length === 0) return [];
-    
-            const monthlyProgressData = [];
-            let currentDate = new Date(startDate);
-    
-            while (currentDate.getTime() <= endDate.getTime()) {
-                const year = currentDate.getFullYear();
-                const month = currentDate.getMonth() + 1;
-                const yearMonth = `${year}-${String(month).padStart(2, '0')}`;
-                const endOfMonth = new Date(year, month, 0, 23, 59, 59);
-    
-                const progressesForMonth = objectives
-                    .filter(obj => new Date(obj.createdAt) <= endOfMonth)
-                    .map(obj => {
-                        const objData = obj.toJSON();
-                        
-                        const relevantEntries = (objData.progressEntries || [])
-                            .filter(p => new Date(p.entryDate) <= endOfMonth)
-                            .sort((a, b) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime());
-                        
-                        objData.currentValue = relevantEntries.length > 0 ? relevantEntries[0].value : objData.initialValue;
-                        return calculateProgressPercentage(objData);
-                    });
-                
-                const validProgresses = progressesForMonth.filter(p => !isNaN(p));
-                const totalProgress = validProgresses.reduce((sum, p) => sum + p, 0);
-                const averageProgress = validProgresses.length > 0 ? Math.round(totalProgress / validProgresses.length) : 0;
-                
-                monthlyProgressData.push({ monthYear: yearMonth, averageProgress });
-                currentDate.setMonth(currentDate.getMonth() + 1);
-            }
-    
-            return monthlyProgressData;
-        } catch (error) {
-            console.error("Error fetching monthly progress:", error);
-            throw new AppError('Error al obtener el progreso mensual.', 500, error);
-        }
-    }
    
     async getRankedObjectives(userId, period = '3months', limit = 5) {
         const { startDate, endDate } = this._getDateRange(period);
         const objectives = await Objective.findAll({ where: { userId, status: { [Op.not]: 'ARCHIVED' }, updatedAt: { [Op.between]: [startDate, endDate] }, targetValue: { [Op.ne]: null } } });
         const objectivesWithProgress = objectives.map(objModel => {
             const obj = objModel.toJSON();
-            return {
-                id: obj.id,
-                nombre: obj.name,
-                tipo_objetivo: obj.category,
-                progreso_calculado: calculateProgressPercentage(obj),
-            };
+            return { id: obj.id, nombre: obj.name, tipo_objetivo: obj.category, progreso_calculado: calculateProgressPercentage(obj) };
         }).sort((a, b) => b.progreso_calculado - a.progreso_calculado);
         
-        return { 
-            top: objectivesWithProgress.slice(0, limit), 
-            low: objectivesWithProgress.slice(-limit).reverse() 
-        };
+        return { top: objectivesWithProgress.slice(0, limit), low: objectivesWithProgress.slice(-limit).reverse() };
     }
 
     async getCategoryAverageProgress(userId, period = '3months') {

@@ -78,7 +78,7 @@ function ObjetivoCard({ objective, onObjectiveArchived, onObjectiveUnarchived })
     };
 
     return (
-        <a href={`/objectives/${objective.id}`} className={styles.objetivoCard} onClick={handleViewDetails} onKeyPress={(e) => { if (e.key === 'Enter') handleViewDetails(e); }} role="button" tabIndex="0" aria-label={`Ver detalles de ${objective.name}`}>
+        <a data-cy={`objetivo-card-${objective.id}`} href={`/objectives/${objective.id}`} className={styles.objetivoCard} onClick={handleViewDetails} onKeyPress={(e) => { if (e.key === 'Enter') handleViewDetails(e); }} role="button" tabIndex="0" aria-label={`Ver detalles de ${objective.name}`}>
             <div className={styles.cardContent}>
                 <header className={styles.cardHeader}>
                     <h3 className={styles.cardTitle}>{objective.name}</h3>
@@ -125,15 +125,15 @@ function ObjetivoCard({ objective, onObjectiveArchived, onObjectiveUnarchived })
 
             <footer className={styles.cardFooter}>
                 <div className={styles.cardActions}>
-                    <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleEdit} leftIcon={<FaEdit />} disabled={objective.status === 'ARCHIVED'}>{t('common.edit')}</Button>
+                    <Button data-cy="edit-button" className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleEdit} leftIcon={<FaEdit />} disabled={objective.status === 'ARCHIVED'}>{t('common.edit')}</Button>
                     
                     {objective.status === 'ARCHIVED' ? (
-                        <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleUnarchive} leftIcon={<FaUndo />}>{t('common.unarchive')}</Button>
+                        <Button data-cy="unarchive-button" className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleUnarchive} leftIcon={<FaUndo />}>{t('common.unarchive')}</Button>
                     ) : (
-                        <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleArchive} leftIcon={<FaArchive />}>{t('common.archive')}</Button>
+                        <Button data-cy="archive-button" className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall}`} variant="outline" size="small" onClick={handleArchive} leftIcon={<FaArchive />}>{t('common.archive')}</Button>
                     )}
 
-                    <Button className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall} ${styles.buttonArchive}`} variant="outline" size="small" onClick={handleViewDetails} leftIcon={<FaEye />}>{t('common.details')}</Button>
+                    <Button data-cy="details-button" className={`${styles.button} ${styles.buttonOutline} ${styles.buttonSmall} ${styles.buttonArchive}`} variant="outline" size="small" onClick={handleViewDetails} leftIcon={<FaEye />}>{t('common.details')}</Button>
                 </div>
             </footer>
         </a>

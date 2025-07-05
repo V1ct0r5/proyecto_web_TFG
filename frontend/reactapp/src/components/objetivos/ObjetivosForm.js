@@ -98,23 +98,22 @@ function ObjectiveForm({
     const onSubmitInternal = async (data) => {
         setLoading(true);
 
-        const isQuantitative = (
-            (data.initialValue !== '' && data.initialValue !== null) &&
-            (data.targetValue !== '' && data.targetValue !== null)
-        );
+        const isQuantitative = data.targetValue !== '' && data.targetValue !== null;
 
-        const payload = {};
-
-        // Añadir solo los campos que han sido modificados por el usuario
-        if (dirtyFields.name) payload.name = data.name;
-        if (dirtyFields.description) payload.description = data.description || null;
-        if (dirtyFields.category) payload.category = data.category;
-        if (dirtyFields.unit) payload.unit = data.unit || null;
-        if (dirtyFields.startDate) payload.startDate = data.startDate && isValid(data.startDate) ? format(data.startDate, 'yyyy-MM-dd') : null;
-        if (dirtyFields.endDate) payload.endDate = data.endDate && isValid(data.endDate) ? format(data.endDate, 'yyyy-MM-dd') : null;
-        if (dirtyFields.status) payload.status = data.status;
-        if (dirtyFields.isLowerBetter) payload.isLowerBetter = data.isLowerBetter;
-        if (dirtyFields.targetValue) payload.targetValue = isQuantitative ? parseFloat(data.targetValue) : null;
+    // --- CORRECCIÓN DEL PAYLOAD ---
+    // Construimos el payload solo con lo necesario
+    const payload = {
+        name: data.name,
+        description: data.description || null,
+        category: data.category,
+        unit: data.unit || null,
+        startDate: data.startDate ? format(data.startDate, 'yyyy-MM-dd') : null,
+        endDate: data.endDate ? format(data.endDate, 'yyyy-MM-dd') : null,
+        isLowerBetter: data.isLowerBetter,
+        // Valores cuantitativos solo si es de ese tipo
+        initialValue: isQuantitative ? parseFloat(data.initialValue || 0) : null,
+        targetValue: isQuantitative ? parseFloat(data.targetValue) : null,
+    };
         
         // El caso especial: progressData solo se añade si 'currentValue' ha sido modificado
         if (isEditMode && dirtyFields.currentValue) {
@@ -147,8 +146,6 @@ function ObjectiveForm({
                     startDate: null, endDate: null, status: 'PENDING', isLowerBetter: false,
                 });
             }
-        } catch (err) {
-            // El error es manejado por el componente padre
         } finally {
             setLoading(false);
         }
@@ -178,7 +175,7 @@ function ObjectiveForm({
                 <div className={objetivosStyles.formGroupContainer}>
                     <FormGroup label={t('objectivesForm.nameLabel')} htmlFor="name" required={true} error={errors.name?.message}>
                         <Input
-                            type="text" id="name" placeholder={t('objectivesForm.namePlaceholder')}
+                            data-cy="objective-name-input" type="text" id="name" placeholder={t('objectivesForm.namePlaceholder')}
                             {...register("name", {
                                 required: t('formValidation.nameRequired'),
                                 minLength: { value: 3, message: t('formValidation.nameMinLength', { count: 3 }) },
@@ -189,7 +186,7 @@ function ObjectiveForm({
 
                     <FormGroup label={t('objectivesForm.descriptionLabel')} htmlFor="description" error={errors.description?.message}>
                         <Input
-                            type="textarea" id="description" placeholder={t('objectivesForm.descriptionPlaceholder')}
+                            data-cy="objective-description-input" type="textarea" id="description" placeholder={t('objectivesForm.descriptionPlaceholder')}
                             {...register("description")}
                             disabled={loading} isError={!!errors.description}
                         />
@@ -197,7 +194,7 @@ function ObjectiveForm({
 
                     <FormGroup label={t('objectivesForm.typeLabel')} htmlFor="category" required={true} error={errors.category?.message}>
                         <Input
-                            type="select" id="category"
+                            data-cy="objective-category-select" type="select" id="category"
                             {...register("category", {
                                 required: t('formValidation.typeRequired'),
                                 validate: (value) => value !== "" || t('formValidation.typeRequired'),
@@ -215,7 +212,7 @@ function ObjectiveForm({
                         {!isEditMode && (
                             <FormGroup label={t('objectivesForm.initialValueLabel')} htmlFor="initialValue" required={true} error={errors.initialValue?.message}>
                                 <Input
-                                    type="number" id="initialValue" step="any" placeholder="Ej. 78"
+                                    data-cy="objective-initial-value-input" type="number" id="initialValue" step="any" placeholder="Ej. 78"
                                     {...register("initialValue", {
                                         valueAsNumber: true,
                                         required: t('formValidation.initialValueRequired'),
@@ -242,7 +239,7 @@ function ObjectiveForm({
                         )}
                         <FormGroup label={t('objectivesForm.targetValueLabel')} htmlFor="targetValue" required={true} error={errors.targetValue?.message}>
                             <Input
-                                type="number" id="targetValue" step="any" placeholder="Ej. 81"
+                                data-cy="objective-target-value-input" type="number" id="targetValue" step="any" placeholder="Ej. 81"
                                 {...register("targetValue", {
                                     valueAsNumber: true,
                                     required: t('formValidation.targetValueRequired'),
@@ -346,7 +343,7 @@ function ObjectiveForm({
                                 {t('common.cancel')}
                             </Button>
                         )}
-                        <Button type="submit" disabled={loading} variant="primary">
+                        <Button data-cy="objective-submit-button" type="submit" disabled={loading} variant="primary">
                             {loading ? (isEditMode ? t('common.updating') : t('common.creating')) : finalButtonText}
                         </Button>
                     </div>

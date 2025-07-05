@@ -60,6 +60,29 @@ function GoalDetailPage() {
         return calculateProgressPercentage(objective);
     }, [objective, isQuantitative]);
 
+    const chartValues = useMemo(() => {
+        const defaults = { progressMade: 0, progressRemaining: 0, totalJourney: 0 };
+        if (!isQuantitative || !objective) {
+            return defaults;
+        }
+
+        const initial = parseFloat(objective.initialValue ?? 0);
+        const current = parseFloat(objective.currentValue ?? initial);
+        const target = parseFloat(objective.targetValue);
+
+        if (isNaN(initial) || isNaN(current) || isNaN(target)) {
+            return defaults;
+        }
+
+        const totalJourney = Math.abs(target - initial);
+        const progressMade = Math.abs(current - initial);
+        // Nos aseguramos de que el progreso restante nunca sea negativo
+        const progressRemaining = Math.max(0, totalJourney - progressMade);
+
+        return { progressMade, progressRemaining, totalJourney };
+        
+    }, [objective, isQuantitative]);
+
     const derivedData = useMemo(() => {
         const defaults = { daysRemaining: t('common.notAvailable'), isPastDue: false, trendText: t('goalDetail.trends.notApplicable') };
         if (!objective || !objective.endDate) return defaults;
@@ -138,7 +161,7 @@ function GoalDetailPage() {
                 <div className={styles.headerActions}>
                     <Button onClick={() => navigate(`/objectives/edit/${id}`)} leftIcon={<FaEdit />} disabled={objective.status === 'ARCHIVED'}>{t('common.edit')}</Button>
                     {isQuantitative && <Button onClick={() => navigate(`/objectives/${id}/update-progress`)} leftIcon={<FaPlusCircle />} disabled={objective.status === 'ARCHIVED'}>{t('goalDetail.buttons.updateProgress')}</Button>}
-                    <Button onClick={handleDelete} variant="destructive" leftIcon={<FaTrashAlt />}>{t('goalDetail.buttons.delete')}</Button>
+                    <Button data-cy="delete-objective-button" onClick={handleDelete} variant="destructive" leftIcon={<FaTrashAlt />}>{t('goalDetail.buttons.delete')}</Button>
                 </div>
             </header>
 
@@ -173,7 +196,14 @@ function GoalDetailPage() {
                 {isQuantitative && (
                     <div className={`${styles.card} ${styles.distributionCard}`}>
                         <h2 className={styles.cardTitle}>{t('goalDetail.cards.progressDistribution')}</h2>
-                        <div className={styles.chartContainer}><DistributionBarChart currentValue={objective.currentValue} targetValue={objective.targetValue} unit={objective.unit} /></div>
+                        <div className={styles.chartContainer}>
+                            <DistributionBarChart 
+                                progressMade={chartValues.progressMade}
+                                progressRemaining={chartValues.progressRemaining}
+                                totalJourney={chartValues.totalJourney}
+                                unit={objective.unit}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
@@ -196,7 +226,7 @@ function GoalDetailPage() {
                                 targetValue={parseFloat(objective.targetValue)}
                                 isLowerBetter={objective.isLowerBetter}
                             />
-                        ) : (<p className={styles.noDataMessage}>{t('goalDetail.noData.notEnoughEvolutionData')}</p>)}
+                        ) : (<p className={styles.noDataMessage}>{t('goalDetail.noData.notEnoughEvolutionData', { count: filteredProgressHistory.length })}</p>)}
                     </div>
                 </div>
             )}

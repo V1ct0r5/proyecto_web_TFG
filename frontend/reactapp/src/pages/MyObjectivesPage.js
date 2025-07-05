@@ -130,21 +130,24 @@ function MyObjectivesPage() {
                         </Input>
                     </FormGroup>
                     <FormGroup className={styles.checkboxGroup}>
-                        <input type="checkbox" id="include-archived" name="includeArchived" className={styles.hiddenCheckbox} checked={filters.includeArchived} onChange={handleFilterChange} />
+                        <input data-cy="include-archived-checkbox" type="checkbox" id="include-archived" name="includeArchived" className={styles.hiddenCheckbox} checked={filters.includeArchived} onChange={handleFilterChange} />
                         <label htmlFor="include-archived" className={styles.checkboxLabel}>{t('myObjectives.labels.includeArchived')}</label>
                     </FormGroup>
                 </aside>
                 
                 <main className={styles.objectivesArea}>
-                    {isLoading ? (
+                    {isLoading && (
                          <div className={styles.centeredStatus}><LoadingSpinner size="large" text={t('loaders.loadingObjectives')} /></div>
-                    ) : error ? (
+                    )}
+                    {error && (
                          <div className={styles.centeredStatus}><p className={styles.errorMessage}>{t('common.errorPrefix', { error })}</p><Button onClick={fetchObjectives} variant="outline">{t('common.retryLoad')}</Button></div>
-                    ) : objectives.length === 0 ? (
+                    )}
+                    {objectives.length === 0 && (
                         <div className={styles.centeredStatus}>
                             <p className={styles.noGoalsMessage}>{filters.searchTerm || filters.category !== 'all' || filters.includeArchived ? t('myObjectives.noResults') : t('myObjectives.noObjectives')}</p>
                         </div>
-                    ) : (
+                    )}
+                    {objectives.length > 0 && (
                         <>
                             <div className={styles.goalsGrid}>
                                 {objectivesToRender.map((objective) => (
