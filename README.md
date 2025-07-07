@@ -67,7 +67,7 @@ Para ejecutar este proyecto en tu entorno local, sigue los siguientes pasos.
 
 2.  **Configura las variables de entorno del Backend:**
     *   Navega a la carpeta `/backend`.
-    *   Crea una copia del fichero `.env.example` y renómbralo a `.env`.
+    *   Crea una copia del fichero `.env`.
     *   Abre el fichero `.env` y rellena las variables de configuración de tu base de datos MySQL (host, puerto, nombre de usuario, contraseña, nombre de la base de datos) y el secreto para los JWT.
 
 3.  **Instala las dependencias del Backend:**
@@ -117,10 +117,6 @@ El proyecto cuenta con una suite completa de pruebas. Para ejecutarlas, sitúate
     ```bash
     npm run cypress:open
     ```
-
-## 📜 Licencia
-
-Este proyecto está bajo la Licencia MIT. Consulta el fichero `LICENSE` para más detalles.
 
 ---
 
