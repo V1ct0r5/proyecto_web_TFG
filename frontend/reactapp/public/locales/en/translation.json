@@ -537,9 +537,12 @@
     "targetValueLabel": "Target value",
     "unitLabel": "Unit of measure",
     "unitPlaceholder": "e.g., km, hours, euros, etc.",
-    "lowerIsBetter": "A lower value is better",
     "startDateLabel": "Start date",
-    "endDateLabel": "End date"
+    "endDateLabel": "End date",
+    "isLowerBetter": {
+      "label": "Is lower value better?",
+      "tooltip": "Enable this option for objectives where the goal is to reduce a value. For example: run 5km in under 25 minutes, or drop from 80kg to 70kg. Progress will be calculated based on the reduction."
+    }
   },
   "progressBar": {
     "excellent": "Excellent progress",

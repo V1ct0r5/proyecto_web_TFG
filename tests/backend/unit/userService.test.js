@@ -47,10 +47,9 @@ describe('UserService', () => {
             expect(result.user.id).toBe(mockUser.id);
             expect(mockUser.comparePassword).toHaveBeenCalledWith('password');
 
-            // --- CORRECCIÓN ---
             // Usar la misma variable de entorno que usa el servicio en modo test.
             const secret = process.env.JWT_SECRET_TEST;
-            expect(secret).toBeDefined(); // Pequeña guarda para asegurar que la variable existe.
+            expect(secret).toBeDefined();
 
             const decoded = jwt.verify(result.token, secret);
             expect(decoded.id).toBe(mockUser.id);

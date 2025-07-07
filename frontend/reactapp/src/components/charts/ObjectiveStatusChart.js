@@ -18,7 +18,6 @@ const ObjectiveStatusChart = ({ data }) => {
             datasets: [{
                 label: t('charts.objectiveStatusLabel'),
                 data: data.map(item => item.value),
-                // --- CORRECCIÓN: Usar la propiedad 'color' que ya se está pasando ---
                 backgroundColor: data.map(item => item.color || 'rgba(201, 203, 207, 0.8)'),
             }],
         };

@@ -239,7 +239,7 @@ a:hover {
   /* align-items: center; */
   height: 100vh;
   overflow: hidden;
-  background-color: var(--background); /* Ya usa variable */
+  background-color: var(--background); 
 }
 
 .main-content-area {
@@ -247,7 +247,7 @@ a:hover {
   box-sizing: border-box;
   overflow-y: auto;
   padding: 1.5rem;
-  background-color: var(--background); /* Ya usa variable */
+  background-color: var(--background); 
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -262,7 +262,7 @@ a:hover {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: var(--background); /* Ya usa variable */
+  background-color: var(--background); 
   padding: 1.5rem;
   overflow-y: auto;
 }
@@ -270,7 +270,7 @@ a:hover {
 .page-title {
   font-size: 1.6rem;
   font-weight: 700;
-  color: var(--foreground); /* Ya usa variable */
+  color: var(--foreground); 
   margin-bottom: 1.5rem;
   margin-top: 0;
 }
@@ -330,7 +330,7 @@ html[data-theme='dark'] .btn-shine::after {
 .progress-indicator {
   position: relative;
   height: 0.5rem;
-  background-color: var(--muted); /* Ya usa variable */
+  background-color: var(--muted); 
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -341,7 +341,7 @@ html[data-theme='dark'] .btn-shine::after {
   top: 0;
   left: 0;
   height: 100%;
-  background-color: var(--secondary); /* Ya usa variable */
+  background-color: var(--secondary); 
   border-radius: 9999px;
   transition: all 500ms ease;
 }
@@ -357,15 +357,15 @@ html[data-theme='dark'] .btn-shine::after {
   border-width: 0;
 }
 
-.focus-ring:focus-visible { /* Ya usa variables */
+.focus-ring:focus-visible { 
   outline: none;
   box-shadow: 0 0 0 2px var(--ring), 0 0 0 4px var(--background);
 }
 
 .formContainer {
-  background-color: var(--card); /* Ya usa variable */
-  box-shadow: var(--shadow-md); /* MODIFICADO: Usar variable de sombra */
-  border-radius: var(--radius); /* Ya usa variable */
+  background-color: var(--card); 
+  box-shadow: var(--shadow-md); 
+  border-radius: var(--radius); 
   border: 1px solid var(--border); /* AÑADIDO: Un borde sutil usando variable */
   padding: 1.2rem;
   width: 100%;
@@ -378,13 +378,13 @@ html[data-theme='dark'] .btn-shine::after {
 }
 
 .error-message {
-  color: var(--destructive); /* Ya usa variable */
+  color: var(--destructive); 
   margin-top: 0.4rem;
   font-size: 0.7rem;
 }
 
 .success-message {
-  color: var(--success); /* Ya usa variable */
+  color: var(--success); 
   margin-top: 0.5rem;
   font-size: 0.875rem;
 }
@@ -396,13 +396,13 @@ html[data-theme='dark'] .btn-shine::after {
   width: 100%;
   height: 100%;
   /* Para tema oscuro, un overlay claro no se verá bien. Usar una variable o color-mix */
-  background-color: color-mix(in srgb, var(--background) 85%, transparent); /* MODIFICADO */
+  background-color: color-mix(in srgb, var(--background) 85%, transparent); 
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
   font-size: 1.5rem;
-  color: var(--foreground); /* Ya usa variable */
+  color: var(--foreground); 
 }
 
 

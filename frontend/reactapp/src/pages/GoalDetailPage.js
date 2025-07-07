@@ -85,7 +85,7 @@ function GoalDetailPage() {
 
     const derivedData = useMemo(() => {
         const defaults = { daysRemaining: t('common.notAvailable'), isPastDue: false, trendText: t('goalDetail.trends.notApplicable') };
-        if (!objective || !objective.endDate) return defaults;
+        if (!objective?.endDate) return defaults;
         
         const endDate = parseISO(objective.endDate);
         if (!isValid(endDate)) return defaults;

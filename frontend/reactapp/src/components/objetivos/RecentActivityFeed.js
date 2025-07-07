@@ -63,8 +63,6 @@ const RecentActivityFeed = ({ activities }) => {
                         params = {};
                     }
                     
-                    // --- CORRECCIÓN FINAL ---
-                    // Usamos la función helper para normalizar AMBOS estados a camelCase.
                     if (params.oldStatus) {
                         const camelCaseStatus = toCamelCase(params.oldStatus);
                         params.oldStatus = t(`status.${camelCaseStatus}`, params.oldStatus);

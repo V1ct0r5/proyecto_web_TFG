@@ -1,9 +1,9 @@
 /* frontend/reactapp/src/components/ui/ObjetivosForm.module.css */
 .formContainer {
-    background-color: var(--card); /* MODIFICADO */
-    box-shadow: var(--shadow-lg); /* MODIFICADO: Usar variable de sombra */
-    border: 1px solid var(--border); /* MODIFICADO */
-    border-radius: var(--radius-md, 0.5rem); /* Usar variable global o mantener fallback */
+    background-color: var(--card); 
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border); 
+    border-radius: var(--radius-md, 0.5rem); 
     padding: 1.5rem;
     width: 100%;
     max-width: 768px;
@@ -52,23 +52,23 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--foreground); /* MODIFICADO */
+    color: var(--foreground); 
     font-size: 0.9rem;
 }
 
 .checkboxLabel input[type="checkbox"] {
     width: 1.1rem;
     height: 1.1rem;
-    accent-color: var(--primary); /* MODIFICADO */
+    accent-color: var(--primary); 
 }
 
 .buttonContainer {
     display: flex;
     justify-content: space-between;
     gap: 1rem;
-    border-top: 1px solid var(--border-light); /* MODIFICADO: Usar --border-light u otra variable de borde adecuada */
-    padding-top: 1.5rem; /* Añadido padding para separar de la línea */
-    margin-top: 1.5rem;  /* Añadido margen para separar del último form group */
+    border-top: 1px solid var(--border-light); 
+    padding-top: 1.5rem; 
+    margin-top: 1.5rem;  
 }
 
 .firstObjectiveButtons {
@@ -83,18 +83,45 @@
     justify-content: flex-end;
 }
 
-/* La clase .cancelButton aquí podría ser redundante si usas el componente Button con variant="secondary" o "outline" */
-/* Si la mantienes, asegúrate de tematizarla también: */
+
 .cancelButton {
-    /* Ejemplo de cómo tematizarlo si es un estilo específico y no un <Button variant="secondary" /> */
     background-color: var(--muted); 
     color: var(--muted-foreground);
     border: 1px solid var(--border);
-    /* ...hereda padding, border-radius, etc. de una clase base de botón o defínelos aquí ... */
 }
 
 .cancelButton:hover {
-    background-color: var(--accent); /* O un color de hover más específico */
+    background-color: var(--accent);
     color: var(--accent-foreground);
-    border-color: var(--border); /* O un color de borde de hover */
+    border-color: var(--border);
+}
+
+
+
+.checkboxWithTooltipContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Espacio entre el checkbox y el icono de info */
+}
+
+.tooltipIcon {
+    color: var(--muted-foreground);
+    font-size: 1rem;
+    cursor: help; /* Cursor de ayuda para indicar que es informativo */
+    transition: color 0.2s ease-in-out;
+}
+
+.tooltipIcon:hover {
+    color: var(--primary);
+}
+
+:global(#info-tooltip) {
+    /* Define un ancho máximo para que el texto se ajuste y no sea tan largo */
+    max-width: 220px !important;
+    
+    /* Para mejor legibilidad en múltiples líneas */
+    text-align: left !important;
+    
+    /* Asegura que el texto largo pase a la siguiente línea */
+    white-space: normal !important;
 }

@@ -4,6 +4,7 @@ import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title } from 'chart.js';
 import { useTranslation } from 'react-i18next';
 import { getDefaultHorizontalBarOptions } from '../../utils/chartUtils';
+import PropTypes from 'prop-types';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title);
 
@@ -12,6 +13,14 @@ const MIN_CHART_HEIGHT_PX = 200;
 
 const CategoryAverageProgressBarChart = ({ data }) => {
     const { t } = useTranslation();
+
+    CategoryAverageProgressBarChart.propTypes = {
+        data: PropTypes.arrayOf(PropTypes.shape({
+            categoryName: PropTypes.string.isRequired,
+            averageProgress: PropTypes.number.isRequired,
+            color: PropTypes.string,
+        })).isRequired,
+    };
 
     const chartData = useMemo(() => {
         if (!data || data.length === 0) return { labels: [], datasets: [] };
@@ -27,7 +36,6 @@ const CategoryAverageProgressBarChart = ({ data }) => {
 
     const chartOptions = useMemo(() => {
         const options = getDefaultHorizontalBarOptions(t, t('charts.averageProgressAxis'));
-        // CORRECCIÓN: Forzar el eje X a empezar en 0 para evitar la barra "flotante".
         options.scales.x.min = 0;
         options.scales.x.max = 100;
         return options;

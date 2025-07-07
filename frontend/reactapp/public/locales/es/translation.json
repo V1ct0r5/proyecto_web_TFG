@@ -543,9 +543,12 @@
     "targetValueLabel": "Valor meta",
     "unitLabel": "Unidad de medida",
     "unitPlaceholder": "Ej. km, horas, euros, etc.",
-    "lowerIsBetter": "Un valor más bajo es mejor",
     "startDateLabel": "Fecha de inicio",
-    "endDateLabel": "Fecha de finalización"
+    "endDateLabel": "Fecha de finalización",
+    "isLowerBetter": {
+      "label": "Un valor más bajo es mejor",
+      "tooltip": "Activa esta opción para objetivos donde la meta es reducir un valor. Por ejemplo: correr 5km en menos de 25 minutos, o bajar de 80kg a 70kg. El progreso se calculará en base a la reducción."
+    }
   },
   "progressBar": {
     "excellent": "Excelente progreso",

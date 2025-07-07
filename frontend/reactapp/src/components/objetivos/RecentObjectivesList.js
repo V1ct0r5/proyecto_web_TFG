@@ -22,7 +22,6 @@ const RecentObjectivesList = ({ objectives }) => {
         <div className={styles.listContainer}>
             <ul className={styles.list}>
                 {objectives.map(obj => (
-                    // CORRECCIÓN: Usar obj.id para la key
                     <li key={obj.id} className={styles.listItem}>
                         <div className={styles.objectiveIcon}>
                             <FaChartLine />

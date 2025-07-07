@@ -48,7 +48,6 @@ class AnalysisService {
                     as: 'progressEntries',
                     where: { entryDate: { [Op.lte]: endDate } },
                     required: false,
-                    // --- CORRECCIÓN 1: Ordenar DESC para obtener el más nuevo primero ---
                     // Añadimos 'id' como segundo criterio para desempates en el mismo día.
                     order: [['entryDate', 'DESC'], ['id', 'DESC']],
                 }],
@@ -91,8 +90,9 @@ class AnalysisService {
                     }
 
                     const progressesForMonth = activeObjectivesInMonth.map(obj => {
-                        const latestEntry = (obj.progressEntries || [])
-                            .filter(p => new Date(p.entryDate) <= endOfMonth)[0]; // Tomamos el primero
+                        const entries = obj.progressEntries || [];
+                        const validEntries = entries.filter(p => new Date(p.entryDate) <= endOfMonth);
+                        const latestEntry = validEntries[0]; // Tomamos el primero
                         
                         const progressValue = latestEntry ? latestEntry.value : obj.initialValue;
                         return calculateProgressPercentage({ ...obj, currentValue: progressValue });

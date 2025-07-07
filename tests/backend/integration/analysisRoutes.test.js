@@ -18,8 +18,6 @@ describe('Analysis Routes', () => {
 
     it('GET /api/analysis/category-distribution - debería devolver la distribución por categoría', async () => {
         const res = await request(app).get('/api/analysis/category-distribution').set('Authorization', `Bearer ${token}`).expect(200);
-        // --- CORRECCIÓN ---
-        // Comparamos con un número, no con un string.
         expect(res.body.data.find(d => d.name === 'HEALTH').value).toBe(2);
     });
 });

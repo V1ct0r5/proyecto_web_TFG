@@ -14,7 +14,6 @@ export const getCategoryIcon = (category) => {
     return categoryIconMap[category] || <FaStar />;
 };
 
-// --- CORRECCIÓN: Nombres de clase estandarizados a camelCase ---
 const statusInfoMap = {
     PENDING: { key: 'status.pending', className: 'statusPending' },
     IN_PROGRESS: { key: 'status.inProgress', className: 'statusInProgress' }, // <-- Asegurarse que es 'statusInProgress'

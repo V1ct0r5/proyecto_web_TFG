@@ -63,7 +63,6 @@ function DashboardPage() {
                 }
             } else { throw summaryRes.reason || new Error('No se pudo cargar el resumen'); }
 
-            // --- CORRECCIÓN AQUÍ ---
             // Extraemos el array de la propiedad 'data' del objeto de respuesta.
             if (objectivesRes.status === 'fulfilled') setRecentObjectives(objectivesRes.value.data || []);
             if (activitiesRes.status === 'fulfilled') setRecentActivities(activitiesRes.value.data || []);

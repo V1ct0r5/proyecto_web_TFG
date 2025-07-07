@@ -8,6 +8,8 @@ import DatePicker from '../ui/DatePicker/DatePicker';
 import { format, isValid, parseISO } from 'date-fns';
 import { toast } from 'react-toastify';
 import { useTranslation } from "react-i18next";
+import { FaInfoCircle } from 'react-icons/fa';
+import PropTypes from 'prop-types';
 
 function ObjectiveForm({
     initialData = null,
@@ -17,6 +19,15 @@ function ObjectiveForm({
     isEditMode = false,
     onCancel
 }) {
+
+ObjectiveForm.propTypes = {
+    initialData: PropTypes.object,
+    onSubmit: PropTypes.func.isRequired,
+    buttonText: PropTypes.string.isRequired,
+    isFirstObjective: PropTypes.bool,
+    isEditMode: PropTypes.bool,
+    onCancel: PropTypes.func,
+};
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
 
@@ -100,7 +111,6 @@ function ObjectiveForm({
 
         const isQuantitative = data.targetValue !== '' && data.targetValue !== null;
 
-    // --- CORRECCIÓN DEL PAYLOAD ---
     // Construimos el payload solo con lo necesario
     const payload = {
         name: data.name,
@@ -258,11 +268,21 @@ function ObjectiveForm({
                         </FormGroup>
                         {(targetValueWatch !== null && targetValueWatch !== '' && !isNaN(parseFloat(targetValueWatch))) && (
                             <FormGroup htmlFor="isLowerBetter">
-                                <label className={objetivosStyles.checkboxLabel}>
-                                    <input type="checkbox" id="isLowerBetter" {...register("isLowerBetter")} disabled={loading} />
-                                    <span>{t('objectivesForm.lowerIsBetter')}</span>
-                                </label>
+                                <div className={objetivosStyles.checkboxWrapper}>
+                                <div className={objetivosStyles.checkboxWithTooltipContainer}>
+                                    <label className={objetivosStyles.checkboxLabel}>
+                                        <input type="checkbox" id="isLowerBetter" {...register("isLowerBetter")} disabled={loading} />
+                                        <span>{t('objectivesForm.isLowerBetter.label')}</span>
+                                    </label>
+                                    <FaInfoCircle
+                                        className={objetivosStyles.tooltipIcon}
+                                        data-tooltip-id="info-tooltip"
+                                        data-tooltip-place="right"
+                                        data-tooltip-content={t('objectivesForm.isLowerBetter.tooltip')}
+                                    />
+                                </div>
                                 {errors.isLowerBetter && (<p className={objetivosStyles.errorText}>{errors.isLowerBetter.message}</p>)}
+                            </div>
                             </FormGroup>
                         )}
                     </div>
@@ -291,20 +311,15 @@ function ObjectiveForm({
                                 name="endDate"
                                 control={control}
                                 rules={{
-                                    // La regla 'required' se ha eliminado.
                                     validate: (value) => {
-                                        // Si no hay valor, es válido (opcional).
                                         if (!value) return true;
                                         
-                                        // Si hay valor, debe ser una fecha válida.
                                         if (!isValid(value)) return t('formValidation.invalidEndDate');
                                         
-                                        // Si hay valor, debe ser posterior a la fecha de inicio.
                                         if (startDateValue && isValid(startDateValue) && value < startDateValue) {
                                             return t('formValidation.endDateAfterStart');
                                         }
 
-                                        // La comprobación de fecha pasada solo se aplica en modo creación si se proporciona una fecha.
                                         if (!isEditMode) {
                                             const today = new Date(); today.setHours(0,0,0,0);
                                             const selectedEndDate = new Date(value); selectedEndDate.setHours(0,0,0,0);
@@ -339,7 +354,7 @@ function ObjectiveForm({
                     )}
                     <div className={buttonContainerClass.join(' ').trim()}>
                         {(isEditMode || !isFirstObjective) && (
-                            <Button type="button" onClick={handleCancelClick} disabled={loading} variant="secondary" >
+                            <Button type="button" onClick={handleCancelClick} disabled={loading} variant="buttonOutline" >
                                 {t('common.cancel')}
                             </Button>
                         )}

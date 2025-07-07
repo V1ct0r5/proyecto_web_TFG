@@ -5,6 +5,8 @@ import { ToastContainer } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
+import { Tooltip } from 'react-tooltip';
+import 'react-tooltip/dist/react-tooltip.css';
 
 // Importaciones de Páginas
 import LoginPage from './pages/LoginPage';
@@ -101,6 +103,7 @@ function App() {
                     pauseOnHover
                     theme="colored"
                 />
+                <Tooltip className="custom-tooltip" id="info-tooltip" />
             </SettingsProvider>
         </AuthProvider>
     );

@@ -69,9 +69,7 @@ describe('Flujos de Perfil, Configuración y Seguridad', () => {
 
             cy.get('select[name="language"]').select('en');
 
-            // --- CORRECCIÓN SUGERIDA: Usar un selector más robusto si el texto cambia con el idioma ---
-            // En este caso, el texto "Save Changes" podría no existir si el idioma actual es español.
-            // Para este test, asumimos que inicialmente está en español y el botón dirá "Guardar Cambios".
+
             const saveButton = cy.contains('button', 'Guardar Cambios');
             saveButton.scrollIntoView().should('be.visible');
 

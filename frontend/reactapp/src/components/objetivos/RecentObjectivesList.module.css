@@ -19,7 +19,6 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1rem;
-    /* CORRECCIÓN: Usar variables de tema sin fallbacks fijos */
     background-color: var(--card); 
     border: 1px solid var(--border);
     border-radius: var(--radius-lg); /* Usar el radio más grande para consistencia */
@@ -44,7 +43,6 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    /* CORRECCIÓN: Usar variables y color-mix para un fondo dinámico */
     color: var(--primary);
     background-color: color-mix(in srgb, var(--primary) 15%, transparent);
 }
@@ -59,7 +57,6 @@
 
 .objectiveNameLink {
     font-weight: 600;
-    /* CORRECCIÓN: Usar variable de texto principal */
     color: var(--foreground);
     text-decoration: none;
     font-size: 0.95rem;
@@ -93,7 +90,6 @@
 }
 
 .detailsButton {
-    /* CORRECCIÓN: Simplificar y usar variables */
     color: var(--muted-foreground) !important;
     padding: 0.2rem !important;
 }

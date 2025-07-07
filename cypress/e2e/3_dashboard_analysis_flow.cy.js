@@ -20,7 +20,6 @@ describe('Flujo de Dashboard y Análisis', () => {
         cy.intercept('GET', '/api/dashboard/recent-objectives*', { fixture: 'recent_objectives.json' }).as('getRecentObjectives');
         cy.intercept('GET', '/api/dashboard/recent-activities*', { fixture: 'recent_activities.json' }).as('getRecentActivities');
         
-        // --- CORRECCIÓN: Se usa el usuario definido para el login ---
         cy.login(testUser.email, testUser.password);
     });
   

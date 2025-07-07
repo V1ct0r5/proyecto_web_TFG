@@ -80,10 +80,8 @@ export const SettingsProvider = ({ children }) => {
             setIsLoadingSettings(false);
             setIsApplyingTheme(false);
         }
-    // CORRECCIÓN: Se eliminan 'i18n' y 't' de las dependencias.
     }, [isAuthenticated, user, applyThemeToDocument]);
 
-    // Este useEffect no necesita cambios
     useEffect(() => {
         const savedTheme = localStorage.getItem('app-theme');
         const root = document.documentElement;
@@ -121,7 +119,6 @@ export const SettingsProvider = ({ children }) => {
             loadUserSettings();
             throw error;
         }
-    // CORRECCIÓN: Se elimina 't' de las dependencias. loadUserSettings ahora es estable.
     }, [isAuthenticated, settings, loadUserSettings, applyThemeToDocument]);
 
     const contextValue = useMemo(() => ({

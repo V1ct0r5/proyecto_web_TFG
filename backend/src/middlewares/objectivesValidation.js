@@ -26,7 +26,6 @@ exports.validateCreateObjective = [
     body('category')
         .isIn(ALLOWED_CATEGORIES).withMessage('La categoría proporcionada no es válida.'),
 
-    // --- CORRECCIÓN DE LA VALIDACIÓN NUMÉRICA ---
     body('initialValue')
         .optional({ checkFalsy: true })
         .trim()

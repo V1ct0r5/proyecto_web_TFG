@@ -66,7 +66,6 @@
 /* Contenedor del calendario */
 .date-picker-dropdown {
     position: absolute;
-    /* --- CORRECCIÓN: Posicionar hacia arriba --- */
     bottom: calc(100% + 4px); /* Posiciona el borde inferior del calendario 4px POR ENCIMA del input */
     left: 0;
     z-index: 100;

@@ -21,8 +21,6 @@ const ProgressLineChart = ({ progressHistory, unitMeasure, targetValue, isLowerB
             index === 0 ? true : isSameDay(parseISO(entry.entryDate), parseISO(arr[0].entryDate))
         );
         
-        // --- CORRECCIÓN 1: Formato de hora más explícito ---
-        // 'p' es ambiguo, 'HH:mm' es explícito para hora y minutos.
         const labelFormat = areAllOnSameDay ? 'HH:mm' : 'd MMM';
 
         const data = {
@@ -46,7 +44,6 @@ const ProgressLineChart = ({ progressHistory, unitMeasure, targetValue, isLowerB
                         display: true, 
                         text: unitMeasure || t('common.value', 'Valor') 
                     },
-                    // --- CORRECCIÓN 2: Invertir el eje Y si es necesario ---
                     reverse: isLowerBetter,
                 },
                 x: {

@@ -25,7 +25,6 @@ const authMiddleware = (req, res, next) => {
         return next(new AppError('Acceso denegado. Token no encontrado en la cabecera.', 401));
     }
 
-    // --- CORRECCIÓN ---
     // Hacemos que la carga del secreto sea consciente del entorno.
     const secret = process.env.NODE_ENV === 'test' 
         ? process.env.JWT_SECRET_TEST 

@@ -16,15 +16,15 @@
 .loaderContent {
     text-align: center;
     padding: 30px 40px;
-    background-color: var(--card); /* MODIFICADO */
+    background-color: var(--card); 
     border-radius: var(--radius-md, 10px); /* Usar variable o mantener */
-    box-shadow: var(--shadow-lg, 0 4px 20px rgba(0, 0, 0, 0.15)); /* MODIFICADO: Usar variable o sombra adaptable */
+    box-shadow: var(--shadow-lg, 0 4px 20px rgba(0, 0, 0, 0.15)); 
     border: 1px solid var(--border); /* Añadido borde para mejor definición en algunos temas */
 }
 
 .loaderMessage {
     margin-top: 20px;
     font-size: 1.15em;
-    color: var(--card-foreground); /* MODIFICADO */
+    color: var(--card-foreground); 
     font-weight: 500;
 }

@@ -41,7 +41,6 @@ function AnalysisPage() {
     const [rawCategoryDistribution, setRawCategoryDistribution] = useState([]);
     const [rawObjectiveStatus, setRawObjectiveStatus] = useState([]);
     
-    // --- CORRECCIÓN 1: Inicializar el estado con la estructura de objeto correcta ---
     const [rawMonthlyProgress, setRawMonthlyProgress] = useState({ labels: [], datasets: [] });
 
     const [rawObjectivesProgressData, setRawObjectivesProgressData] = useState([]);
@@ -222,7 +221,6 @@ function AnalysisPage() {
                         <h3 className={styles.chartTitle}>{t('analysis.chartTitles.monthlyProgress')}</h3>
                         <span className={styles.chartSubtitle}>{t('analysis.chartTitles.monthlyProgressSubtitle')}</span>
                         <div className={`${styles.chartContainer} ${styles.chartContainerFullWidth}`}>
-                            {/* --- CORRECCIÓN 2: Comprobar la propiedad correcta (.datasets.length) --- */}
                             {(rawMonthlyProgress?.datasets?.length > 0) ? (
                                 <MonthlyProgressChart data={rawMonthlyProgress} />
                             ) : (
