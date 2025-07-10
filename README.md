@@ -86,7 +86,7 @@ Para ejecutar este proyecto en tu entorno local, sigue los siguientes pasos.
 5.  **Ejecuta el Backend:**
     *   Desde la carpeta `/backend`:
     ```bash
-    npm run dev  # O el script que tengas configurado para iniciar el servidor
+    node index.js
     ```
     La API estará escuchando en el puerto especificado (ej. `http://localhost:3001`).
 
